@@ -2,12 +2,29 @@ import * as _ from 'lodash';
 import {prisma_cloud_policies, prisma_cloud_alerts} from '../app/assets/datasets.js';
 import {baseFrameWithAutoLayout, clone, transpose} from '../shared/utils';
 
+// const table
+var meta_tables: {id: string, cols: number
+
+}[] = [];
+
 figma.showUI(__html__);
 
 figma.ui.onmessage = (msg) => {
-    if (msg.type === 'create-table') {
+    switch(msg.type) {
+        case 'create-table':
+            drawTable();
+            console.log("controller::: create-table did run!");
+            break;
+        case 'update-row-height':
+            console.log("update selected row height");
+            updateSelectedRowHeight();
+            break;
+        default:
+            break;
+    }
+    // if (msg.type === 'create-table') {
        
-        drawTable();
+        
         
 
         // const nodes = [];
@@ -28,11 +45,10 @@ figma.ui.onmessage = (msg) => {
         //     type: 'create-rectangles',
         //     message: `Created ${msg.count} Rectangles`,
         // });
-        console.log("controller::: create-table runs!");
         
-    }
+    // }
 
-    figma.closePlugin();
+    // figma.closePlugin();
 };
 async function drawTable_simple() {
     await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
@@ -44,6 +60,62 @@ async function drawTable_simple() {
     const cell = baseFrameWithAutoLayout({name: "cell", layoutMode: 'HORIZONTAL', width: 120, height: 36});
     cell.appendChild(t);
     // t.constraints = {horizontal: 'STRETCH', vertical: 'MIN'};
+}
+function updateSelectedRowHeight() {
+    console.log("current selection:", figma.currentPage.selection);
+
+    const sel = figma.currentPage.selection.concat();
+    if(sel.length !== 1) {
+        console.log("pls select the cell on the row for which you want to update the height of");
+    } else {
+        // If it looks like a cell in a row, attempt to update all the cells in that row
+        // TMP
+        if (sel[0].type === 'FRAME') {
+            const reg = /\d+/;
+            const rowMatches = sel[0].name.match(reg);
+            // console.log("rowMatches", rowMatches);
+            if(rowMatches.length > 0) {
+                const rowIndex = rowMatches[0];
+                console.log("rownIndex", rowIndex);
+                // how many coloumns do we have?
+                // TODO: first make sure we are looking at the right table: is the same id as the one we select?
+                console.log("meta tables?", meta_tables);
+                // TMP. just
+                // const rols = meta_tables[0].cols;
+                let cellEl = sel[0] as FrameNode;
+                const tableEl =  cellEl.parent.parent;
+                // console.log("tableEl:", tableEl);
+                
+                // for(var i = 0; i < rols; i++) {
+                    
+                    // }
+                // var sel = figma.currentPage.selection;
+
+                tableEl.children.forEach((colNode, j) => {
+                    // console.log("col:", colNode);
+                    const colEl = colNode as FrameNode;
+                    // cell-row-0-col-0
+                    const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);
+                    console.log("cellEl:", celEl);
+                   
+                    sel.push(celEl);
+                })
+
+                figma.currentPage.selection = sel;
+
+                // const colEl = tableEl.findChildren(colNode => {
+                //     const colEl = colNode as FrameNode;
+                //     colEl.findChild(cellNode => {
+                //         const cellEl = cellNode as FrameNode;
+                //         cellEl.
+                //     })
+                // })
+                
+                // select all the rows 
+            }
+        }
+    }
+    
 }
 async function drawTable() {
     // FIXME: Load Lato font
@@ -59,23 +131,9 @@ async function drawTable() {
     // console.log("style::", style);
 
     const datagrid = _.chain(prisma_cloud_policies.rows)
-            .take(25)
-            // .map(d=>({
-            //     "Category": d["Category"], 
-            //     "Class": d["Class"], 
-            //     "Compliance Standard": d["Compliance Standard"],
-            //     "Labels": d["Labels"],
-            //     "Last Modified": d["Last Modified"],
-            //     "Last Modified By": d["Last Modified By"],
-            //     "Policy Name": d["Policy Name"],
-            //     "Policy Type": d["Policy Type"],
-            //     "Remediable": d["Remediable"],
-            //     "Severity": d["Severity"],
-            //     "Status": d["Status"],
-            // }))
+            .take(10)
             .value();
     // const datagrid = _.take(prisma_cloud_alerts.rows, 2);
-    console.log("datagrid:", datagrid);
     
     // Transpose data set from rows to columns
     const dataframe = {
@@ -87,6 +145,8 @@ async function drawTable() {
     };
 
     const bodyContainer = baseFrameWithAutoLayout({ name: "table-body", margin: 0 }) as FrameNode;
+    console.log("bodyContainer id:", bodyContainer.id);
+    
 
     const columnContent = dataframe.columns;
 
@@ -96,6 +156,9 @@ async function drawTable() {
     });
 
     bodyContainer.resize(160*columnContent.length, 960);
+
+    // Update meta data so that we can update the table later when asked
+    meta_tables.push({'id': bodyContainer.id, 'cols': columnContent.length});
 }
 function drawColumn(
 { frameName, columnTexts, columnWidth = 400, height = 400, padding = 0, margin = 0, cellPadding = 8 }: 

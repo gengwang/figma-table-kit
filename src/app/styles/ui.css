@@ -35,3 +35,10 @@ button:focus {
 input:focus {
     box-shadow: inset 0 0 0 2px #18a0fb;
 }
+
+/* TMP: Should be replaced by some libraries for common controls */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}

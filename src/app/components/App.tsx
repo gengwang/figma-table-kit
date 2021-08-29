@@ -17,8 +17,12 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'create-table', dataset}}, '*');
     };
 
+    const onUpdateRowHeight = () => {
+        parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
+    }
     const onCancel = () => {
         parent.postMessage({pluginMessage: {type: 'cancel'}}, '*');
+
     };
 
     React.useEffect(() => {
@@ -32,11 +36,14 @@ const App = ({}) => {
     }, []);
 
     return (
-        <div>
+        <div className="list">
             <img src={require('../assets/logo.svg')} />
-            <h2>Create Table</h2>
+            
             <button id="create" onClick={onCreate}>
                 Create Table
+            </button>
+            <button id="update-row" onClick={onUpdateRowHeight}>
+                Update Selected Row
             </button>
             <button onClick={onCancel}>Cancel</button>
         </div>
