@@ -7,26 +7,24 @@ var meta_tables: {id: string, cols: number
 
 }[] = [];
 
-figma.showUI(__html__);
+figma.showUI(__html__, {height: 320});
 
 figma.ui.onmessage = (msg) => {
     switch(msg.type) {
         case 'create-table':
             drawTable();
-            console.log("controller::: create-table did run!");
+            break;
+        case 'select-row':
+            selectRow();
             break;
         case 'update-row-height':
-            console.log("update selected row height");
-            updateSelectedRowHeight();
+            updateRowHeight();
             break;
         default:
             break;
     }
     // if (msg.type === 'create-table') {
        
-        
-        
-
         // const nodes = [];
 
         // for (let i = 0; i < msg.count; i++) {
@@ -59,63 +57,61 @@ async function drawTable_simple() {
     t.layoutGrow = 1;
     const cell = baseFrameWithAutoLayout({name: "cell", layoutMode: 'HORIZONTAL', width: 120, height: 36});
     cell.appendChild(t);
-    // t.constraints = {horizontal: 'STRETCH', vertical: 'MIN'};
 }
-function updateSelectedRowHeight() {
-    console.log("current selection:", figma.currentPage.selection);
+function updateRowHeight() {
+    console.log("update row height");
+    const sel = figma.currentPage.selection.concat();
 
+    // TODO: First make sure we select a cell
+    // TMP
+    let cellEl = sel[0] as FrameNode;
+    // what's the height of the current selected cell?
+    console.log("cellEl:", cellEl);
+    let cellHeight = cellEl.height;
+    let row = rowForSelectedCell();
+    row.forEach(cel => {
+        cel.resize(cel.width, cellHeight);
+    })
+}
+
+function rowForSelectedCell(): SceneNode[] {
     const sel = figma.currentPage.selection.concat();
     if(sel.length !== 1) {
-        console.log("pls select the cell on the row for which you want to update the height of");
+        console.log("pls select a cell on the row first");
+        return null;
     } else {
         // If it looks like a cell in a row, attempt to update all the cells in that row
-        // TMP
         if (sel[0].type === 'FRAME') {
+            // TODO. TMP. Match a pattern like 'cell-row-6-col-0'
             const reg = /\d+/;
             const rowMatches = sel[0].name.match(reg);
-            // console.log("rowMatches", rowMatches);
             if(rowMatches.length > 0) {
                 const rowIndex = rowMatches[0];
-                console.log("rownIndex", rowIndex);
+                // console.log("rownIndex", rowIndex);
                 // how many coloumns do we have?
                 // TODO: first make sure we are looking at the right table: is the same id as the one we select?
-                console.log("meta tables?", meta_tables);
-                // TMP. just
-                // const rols = meta_tables[0].cols;
+                // console.log("meta tables?", meta_tables);
                 let cellEl = sel[0] as FrameNode;
                 const tableEl =  cellEl.parent.parent;
-                // console.log("tableEl:", tableEl);
-                
-                // for(var i = 0; i < rols; i++) {
-                    
-                    // }
-                // var sel = figma.currentPage.selection;
 
                 tableEl.children.forEach((colNode, j) => {
-                    // console.log("col:", colNode);
                     const colEl = colNode as FrameNode;
                     // cell-row-0-col-0
-                    const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);
-                    console.log("cellEl:", celEl);
-                   
+                    const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);                   
                     sel.push(celEl);
                 })
 
-                figma.currentPage.selection = sel;
-
-                // const colEl = tableEl.findChildren(colNode => {
-                //     const colEl = colNode as FrameNode;
-                //     colEl.findChild(cellNode => {
-                //         const cellEl = cellNode as FrameNode;
-                //         cellEl.
-                //     })
-                // })
-                
-                // select all the rows 
+                // figma.currentPage.selection = sel;
+                return sel;
             }
         }
+        return null;
     }
-    
+}
+// Select all the cells in the row where the user needs to select a cell on this row first.
+function selectRow() {
+    const _row = rowForSelectedCell();
+    if(_row) figma.currentPage.selection = _row;
 }
 async function drawTable() {
     // FIXME: Load Lato font

@@ -17,8 +17,16 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'create-table', dataset}}, '*');
     };
 
+    const onSelectRow = () => {
+        parent.postMessage({pluginMessage: {type: 'select-row'}}, '*');
+    }
+
     const onUpdateRowHeight = () => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
+    }
+
+    const onCheckboxChange = () => {
+
     }
     const onCancel = () => {
         parent.postMessage({pluginMessage: {type: 'cancel'}}, '*');
@@ -37,14 +45,27 @@ const App = ({}) => {
 
     return (
         <div className="list">
-            <img src={require('../assets/logo.svg')} />
+            {/* <img src={require('../assets/logo.svg')} /> */}
             
             <button id="create" onClick={onCreate}>
                 Create Table
             </button>
-            <button id="update-row" onClick={onUpdateRowHeight}>
-                Update Selected Row
+
+            <div className="checkbox-group" onClick={onCheckboxChange}>
+                <input
+                    name="vectorsCheckbox"
+                    type="checkbox"
+                    />
+                <label>Striped</label>
+            </div>
+
+            <button id="update-row" onClick={onSelectRow}>
+                Select Row
             </button>
+            <button id="update-row" onClick={onUpdateRowHeight}>
+                Update Selected Row Height
+            </button>
+
             <button onClick={onCancel}>Cancel</button>
         </div>
     );

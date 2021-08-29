@@ -42,3 +42,10 @@ input:focus {
     flex-direction: column;
     gap: 16px;
 }
+.checkbox-group {
+    display: flex;
+    margin: 2px 8px 0 0;
+}
+.checkbox-group label {
+    margin-top: 2px;
+}
