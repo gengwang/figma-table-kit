@@ -10,6 +10,7 @@ const App = ({}) => {
     //     if (element) element.value = '5';
     //     textbox.current = element;
     // }, []);
+    var striped = true;
 
     const onCreate = () => {
         // const count = parseInt(textbox.current.value, 10);
@@ -25,8 +26,9 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
     }
 
-    const onCheckboxChange = () => {
-
+    const onStripedChange = (event) => {
+        striped = event.target.checked;
+        parent.postMessage({pluginMessage: {type: 'update-striped', striped: striped}}, '*');
     }
     const onCancel = () => {
         parent.postMessage({pluginMessage: {type: 'cancel'}}, '*');
@@ -51,10 +53,12 @@ const App = ({}) => {
                 Create Table
             </button>
 
-            <div className="checkbox-group" onClick={onCheckboxChange}>
+            <div className="checkbox-group">
                 <input
-                    name="vectorsCheckbox"
+                    name="stripedCheckbox"
                     type="checkbox"
+                    // checked={striped}
+                    onChange={onStripedChange}
                     />
                 <label>Striped</label>
             </div>

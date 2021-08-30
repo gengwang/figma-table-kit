@@ -14,6 +14,9 @@ figma.ui.onmessage = (msg) => {
         case 'create-table':
             drawTable();
             break;
+        case 'update-striped':
+            updateStriped(msg.striped);
+            break;
         case 'select-row':
             selectRow();
             break;
@@ -58,6 +61,55 @@ async function drawTable_simple() {
     const cell = baseFrameWithAutoLayout({name: "cell", layoutMode: 'HORIZONTAL', width: 120, height: 36});
     cell.appendChild(t);
 }
+function updateStriped(striped:boolean) {
+    console.log("we'll update striped to ", striped);
+    // return;
+
+    // First select the table body, pls
+    // TMP
+    const tableEl = figma.currentPage.selection[0] as FrameNode;
+    const color = striped? {r: 234/255, g: 235/255, b: 235/255} :{r: 1, g: 1, b: 1};
+    if(tableEl.name === 'table-body') {
+        console.log("table!!!");
+        const reg = /(?<=cell-row-)\d*/;
+        tableEl.children.forEach(colEl => {
+            const col = colEl as FrameNode;
+            // TODO: Find all the even rows
+            // const reg = /(?<=cell-row-)\d*/
+            // const evenCells = col.findChildren(cell => {
+            //     const cellMatches = cell.name.match(reg);
+            //     if(cellMatches.length > 0) {
+            //         console.log("match::", cellMatches[0]);
+            //         const rowNum = cellMatches[0] as unknown;
+            //         const rowNum1 = rowNum as number;
+            //         console.log("rowNum1::", rowNum1);
+            //         return rowNum1 % 2 === 0;
+            //     }
+            //     return false;
+            // })
+            // figma.currentPage.selection = evenCells;
+
+            col.children.forEach(cellEl => {
+                const cell = cellEl as FrameNode;
+                const cellMatches = cell.name.match(reg);
+                if(cellMatches.length > 0) {
+                    const rowNum = cellMatches[0] as unknown;
+                    const rowNum1 = rowNum as number;
+                    if (rowNum1 % 2 === 0 ) {
+                        cell.fills = [{type: 'SOLID', color: color}]; 
+                    }
+                }
+            })
+            // TMP. Here we simply update all cells
+            // col.children.forEach(cell => {
+            //     const cellEl = cell as FrameNode;
+            //     cellEl.fills = [{type: 'SOLID', color: {r: 1, g: 1, b: 1}}];
+            // })
+        })
+    }
+    // Select all the cells in the even rows
+    // Fill background color
+}
 function updateRowHeight() {
     console.log("update row height");
     const sel = figma.currentPage.selection.concat();
@@ -66,7 +118,7 @@ function updateRowHeight() {
     // TMP
     let cellEl = sel[0] as FrameNode;
     // what's the height of the current selected cell?
-    console.log("cellEl:", cellEl);
+    // console.log("cellEl:", cellEl);
     let cellHeight = cellEl.height;
     let row = rowForSelectedCell();
     row.forEach(cel => {
