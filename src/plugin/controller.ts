@@ -2,10 +2,12 @@ import * as _ from 'lodash';
 import {prisma_cloud_policies, prisma_cloud_alerts} from '../app/assets/datasets.js';
 import {baseFrameWithAutoLayout, clone, transpose} from '../shared/utils';
 
-// const table
+// FIXME: If some columns are deleted, things will stop working
 var meta_tables: {id: string, cols: number
 
 }[] = [];
+
+const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 
 figma.showUI(__html__, {height: 320});
 
@@ -22,6 +24,9 @@ figma.ui.onmessage = (msg) => {
             break;
         case 'update-row-height':
             updateRowHeight();
+            break;
+        case 'cancel':
+            testStyle();
             break;
         default:
             break;
@@ -51,6 +56,19 @@ figma.ui.onmessage = (msg) => {
 
     // figma.closePlugin();
 };
+function testStyle() {
+    // const style = figma.getStyleById('Body/S (12px)/Regular');
+    const sel = figma.currentPage.selection[0] as TextNode;
+    const textStyleId = sel.textStyleId;
+    // const txtStyle = figma.getStyleById(textStyleId);
+    const txtStyle = figma.getStyleById('S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33');
+    // sel.textStyleId = txtStyle;
+    console.log("text length", sel.characters.length);
+    
+    console.log("test style....", txtStyle);
+    sel.setRangeTextStyleId(0, sel.characters.length-1, 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33');
+
+}
 async function drawTable_simple() {
     await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
     const text = "By default, parented under figma.currentPage. Without setting additional properties, the text has no characters. You can assign a string, to the .characters property of the returned node to provide it with text.";
@@ -241,9 +259,12 @@ function drawColumn(
             fills[0].color.b = 235/255;
             cellContainer.fills = fills;
         }
-
         const t = figma.createText();
         t.characters = txt.toString();
+        // TMP
+        if(t.characters.length > 0) {
+            t.setRangeTextStyleId(0, t.characters.length - 1, bodySRegularStyleId);
+        }
        
         // Set up resizing
         t.layoutAlign = 'STRETCH';
