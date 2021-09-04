@@ -1473,8 +1473,81 @@ const prisma_cloud_policies = {
       }
   ]
 }
+const artists = {
+    title: 'Notable Artists',
+    rows: [
+        {
+            Artist: 'Edward Hopper',
+            'Notable Work': 'Automat (1927)',
+            Born: 'July 22, 1882, Nyack, New York, U.S.',
+        },
+        {
+            Artist: 'George Bridgman',
+            'Notable Work': 'Rescue of a Youth Fallen Overboard from a Fishing Boat (1888)',
+            Born: 'November 5, 1864 United Province of Canada',
+        },
+        {
+            Artist: 'Giorgio Morandi',
+            'Notable Work': 'Natura Morta (1961)',
+            Born: 'July 20, 1890, Bologna, Italy',
+        },
+        {
+            Artist: '藤田嗣治',
+            'Notable Work': 'Book of Cats (1930)',
+            Born: '27 November 1886, Tokyo, Japan',
+        },
+        {
+            Artist: 'Reuven Rubin‎',
+            'Notable Work': 'The Beginnings of Tel-Aviv (1912)',
+            Born: 'November 13, 1893, Galaţi, Romania',
+        },
+        {
+            Artist: 'Raja Ravi Varma‎',
+            'Notable Work': 'Shakuntala looking for Dushyanta (1898)',
+            Born: '29 April 1848, Kilimanoor, Travancore',
+        },
+    ],
+};
+
+const songs = {
+    title: 'Spotify Today\'s Top Hits',
+    rows: [
+        {
+            Rank: 1,
+            Title: 'Girls Want Girls (with Lil Baby)',
+            Artists: 'Drake, Lil Baby',
+            Album: 'Certified Lover Boy'
+        },
+        {
+            Rank: 2,
+            Title: 'Hurricane',
+            Artists: 'Kanye West',
+            Album: 'Donda'
+        },
+        {
+            Rank: 3,
+            Title: 'STAY (with Justin Bieber)',
+            Artists: 'The Kid LAROI, Justin Bieber',
+            Album: 'STAY (with Justin Bieber)'
+        },
+        {
+            Rank: 4,
+            Title: 'INDUSTRY BABY (feat. Jack Harlow)',
+            Artists: 'Lil Nas X, Jack Harlow',
+            Album: 'INDUSTRY BABY (feat. Jack Harlow)'
+        },
+        {
+            Rank: 5,
+            Title: 'Bad Habits',
+            Artists: 'Ed Sheeran',
+            Album: 'Bad Habits'
+        }
+    ]
+};
 
 export {
    prisma_cloud_alerts,
    prisma_cloud_policies,
+   artists,
+   songs,
 }

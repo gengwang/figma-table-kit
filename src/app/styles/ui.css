@@ -45,7 +45,12 @@ input:focus {
 .checkbox-group {
     display: flex;
     margin: 2px 8px 0 0;
+    gap: 8px;
+    margin: 0 5px;
 }
 .checkbox-group label {
     margin-top: 2px;
+}
+.checkbox-group > select {
+    flex-grow: 1;
 }

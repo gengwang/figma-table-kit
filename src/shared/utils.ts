@@ -1,14 +1,14 @@
 function baseFrameWithAutoLayout(
 { 
     name = '_frame', 
-    layoutMode = 'HORIZONTAL', 
+    direction = 'HORIZONTAL', 
     nodeType = 'FRAME', 
     width = 240, height = 160, 
     padding = 8, margin = 8,
 }: 
 { 
     name?: string; 
-    layoutMode?: BaseFrameMixin['layoutMode'];
+    direction?: BaseFrameMixin['layoutMode'];
     nodeType?: 'FRAME' | 'COMPONENT';
     width?: number;
     height?: number;
@@ -24,7 +24,7 @@ function baseFrameWithAutoLayout(
             frame = figma.createFrame();
             break;
     }
-    frame.layoutMode = layoutMode;
+    frame.layoutMode = direction;
     frame.primaryAxisSizingMode = 'AUTO';
     frame.counterAxisSizingMode = 'AUTO';
     frame.layoutAlign = 'STRETCH';

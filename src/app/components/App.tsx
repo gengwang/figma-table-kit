@@ -1,5 +1,6 @@
 import * as React from 'react';
 import '../styles/ui.css';
+import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../assets/datasets.js';
 
 declare function require(path: string): any;
 
@@ -11,12 +12,22 @@ const App = ({}) => {
     //     textbox.current = element;
     // }, []);
     var striped = true;
+    const data = {
+        prisma_cloud_alerts: prisma_cloud_alerts,
+        prisma_cloud_policies: prisma_cloud_policies,
+        artists: artists,
+        songs: songs,
+    }
 
     const onCreate = () => {
         // const count = parseInt(textbox.current.value, 10);
-        const dataset = "prisma-cloud-alerts"
-        parent.postMessage({pluginMessage: {type: 'create-table', dataset}}, '*');
+        // const dataset = "prisma-cloud-alerts"
+        parent.postMessage({pluginMessage: {type: 'create-table', dataset: data.artists}}, '*');
     };
+    
+    const onDataSetChange = (dsName) => {
+        parent.postMessage({pluginMessage: {type: 'update-table', dataset: data[dsName]}}, '*');
+    }
 
     const onSelectRow = () => {
         parent.postMessage({pluginMessage: {type: 'select-row'}}, '*');
@@ -32,8 +43,10 @@ const App = ({}) => {
     }
     const onCancel = () => {
         parent.postMessage({pluginMessage: {type: 'cancel'}}, '*');
-
     };
+    const _onTest = (msg) => {
+        parent.postMessage({pluginMessage: {type: 'test', action: msg}}, '*');
+    }
 
     React.useEffect(() => {
         // This is how we read messages sent from the plugin controller
@@ -54,6 +67,17 @@ const App = ({}) => {
             </button>
 
             <div className="checkbox-group">
+                <label>Data sets</label>
+
+                <select onChange={(val) => onDataSetChange(val.target.value)}>
+                    {/* <option value="prisma_cloud_alerts">Prisma Cloud - Alerts</option>
+                    <option value="prisma_cloud_policies">Prisma Cloud - Policies</option> */}
+                    <option value="artists">Artists</option>
+                    <option value="songs">Songs</option>
+                </select>
+            </div>
+
+            <div className="checkbox-group">
                 <input
                     name="stripedCheckbox"
                     type="checkbox"
@@ -63,6 +87,8 @@ const App = ({}) => {
                 <label>Striped</label>
             </div>
 
+            <hr style={{"width": '100%'}}/>
+
             <button id="update-row" onClick={onSelectRow}>
                 Select Row
             </button>
@@ -70,7 +96,11 @@ const App = ({}) => {
                 Update Selected Row Height
             </button>
 
-            <button onClick={onCancel}>Cancel</button>
+            {/* <button onClick={onCancel}>Cancel</button> */}
+            <div className="checkbox-group">
+                <button onClick={()=>_onTest('get')}>GetPluginData</button>
+                <button onClick={() =>_onTest('set')}>SetPluginData</button>
+            </div>
         </div>
     );
 };

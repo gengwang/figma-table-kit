@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {prisma_cloud_policies, prisma_cloud_alerts} from '../app/assets/datasets.js';
+// import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
 import {baseFrameWithAutoLayout, clone, transpose} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
@@ -14,8 +14,10 @@ figma.showUI(__html__, {height: 320});
 figma.ui.onmessage = (msg) => {
     switch(msg.type) {
         case 'create-table':
-            drawTable();
+            drawTable(msg.dataset);
             break;
+        case 'update-table':
+            drawTable2(msg.dataset);
         case 'update-striped':
             updateStriped(msg.striped);
             break;
@@ -24,6 +26,9 @@ figma.ui.onmessage = (msg) => {
             break;
         case 'update-row-height':
             updateRowHeight();
+            break;
+        case 'test':
+            testPluginData(msg.action);
             break;
         case 'cancel':
             testStyle();
@@ -56,6 +61,97 @@ figma.ui.onmessage = (msg) => {
 
     // figma.closePlugin();
 };
+
+// Returns a frame node under the parent node; reuses one if it exists, otherwise
+// creates a new one 
+function frameNodeOn({
+    parent,
+    colIndex,
+    rowIndex = null,
+    frameType = 'COLUMN',
+}: {
+    parent: FrameNode;
+    colIndex: number;
+    rowIndex: number;
+    frameType: 'COLUMN' | 'CELL';
+}): FrameNode {
+    if (frameType === 'COLUMN') {
+        const col = parent.children[colIndex];
+        const colName = 'col-' + colIndex;
+        if (col) {
+            col.name = colName;
+            return col as FrameNode;
+        } else {
+            const colEl = baseFrameWithAutoLayout({name: colName, nodeType: 'FRAME'}) as FrameNode;
+            parent.appendChild(colEl);
+            return colEl;
+        }
+    } else if(frameType === 'CELL') {
+        const cell = parent.children[rowIndex];
+        // Something like 'cell-row-3-col-0'
+        const cellName = 'cell-row-' + rowIndex + '-col-' + colIndex;
+        if(cell) {
+            cell.name = cellName;
+            return cell as FrameNode;
+        } else {
+            const cellEl = baseFrameWithAutoLayout({name: cellName, nodeType: 'FRAME', direction: 'VERTICAL'}) as FrameNode;
+            parent.appendChild(cellEl);
+            return cellEl;
+        }
+    }
+    return null;
+}
+async function testPluginData(action:string) {
+    await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
+    const sel = figma.currentPage.selection;
+    switch(action) {
+         case 'get':
+            console.log("get data:");
+            if(sel.length > 0) {
+                const selection = sel[0] as FrameNode;
+                console.log("cell #4:", selection.children[4]);
+                
+                // const tableInfo = selection.getPluginData('table-info');
+                // console.log("get table-info:", tableInfo);
+            }
+            break;
+        case 'set':
+            console.log('set data');
+            if(sel.length > 0) {
+                const selection = sel[0];
+                // First remove extraneous columns and cells if any
+                // Do we need to remove any columns?
+
+                // const tableInfo = {'row-heights': [48, 28, 28, 36, 61]};
+                // selection.setPluginData('table-info', JSON.stringify(tableInfo));
+
+                // TEST to see if we can change content inside...
+                const tableEl = selection as FrameNode;
+
+
+                // const existingColCount = tableEl.children.length;
+                // const newColCount = 
+
+                tableEl.children.forEach(col=>{
+                    const colEl = col as FrameNode;
+                    colEl.children.forEach(cell => {
+                        console.log("cell:", cell.name);
+                        const cellEl = cell as FrameNode;
+                        // first remove all children:
+                        cellEl.children.forEach(c=>c.remove());
+                        // Reset height for each cell since it's most likely what you'd want
+                        // then add the new content
+                        const textEl = figma.createText();
+                        textEl.characters = 'hello world';
+                        cellEl.appendChild(textEl);
+                    })
+                })
+            }
+            break;
+        default:
+            break;
+    }
+}
 function testStyle() {
     // const style = figma.getStyleById('Body/S (12px)/Regular');
     const sel = figma.currentPage.selection[0] as TextNode;
@@ -76,14 +172,12 @@ async function drawTable_simple() {
     t.characters = text;
     t.layoutAlign = 'STRETCH';
     t.layoutGrow = 1;
-    const cell = baseFrameWithAutoLayout({name: "cell", layoutMode: 'HORIZONTAL', width: 120, height: 36});
+    const cell = baseFrameWithAutoLayout({name: "cell", direction: 'HORIZONTAL', width: 120, height: 36});
     cell.appendChild(t);
 }
 function updateStriped(striped:boolean) {
-    console.log("we'll update striped to ", striped);
-    // return;
-
     // First select the table body, pls
+    if(figma.currentPage.selection.length === 0) return;
     // TMP
     const tableEl = figma.currentPage.selection[0] as FrameNode;
     const color = striped? {r: 234/255, g: 235/255, b: 235/255} :{r: 1, g: 1, b: 1};
@@ -183,23 +277,96 @@ function selectRow() {
     const _row = rowForSelectedCell();
     if(_row) figma.currentPage.selection = _row;
 }
-async function drawTable() {
+function isTable(selection:readonly SceneNode[]): boolean {
+    return selection.length == 1 && selection[0].name.includes('table-body');
+}
+async function drawTable2(data) {
+    console.log("calling drawTable2");
+    
+    await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
+    // row based data source
+    const datagrid = _.chain(data.rows)
+        .take(10)
+        .value();
+    
+    const headers = _.chain(datagrid)
+        .first()
+        .keys()
+        .value();
+    // Transpose data set from rows to columns
+    // column based data source
+    const dataframe = transpose(datagrid);
+
+
+
+    // console.log("rows:", dataframe);
+
+    // see if the selection is a table by checking out the name of the frame
+    const sel = figma.currentPage.selection;
+    if (sel.length === 0) return;
+    console.log("sel:::::", sel);
+    // TMP. Is it a table
+    if(isTable(sel)) {
+        // const tableEl = sel[0] as FrameNode;
+        const colsEl = (sel[0] as FrameNode).children as FrameNode[];
+        // if we iterate over the children, we should get something like 'col-0', etc
+        console.log("we've got a table:", colsEl);
+
+        // First remove extraneous columns and cells if any        
+        const existingColCount = colsEl.length;
+        const newColCount = dataframe.length;
+        const existingRowCount =  (colsEl[0].children as FrameNode[]).length;
+        const newRowCount = datagrid.length;
+        // console.log("rows???", existingRowCount);
+        
+        console.log(`old rows: ${existingRowCount} vs new cols: ${newRowCount}`);
+        console.log(`old cols: ${existingColCount} vs new cols: ${newColCount}`);
+        // Exit
+        if(newColCount < existingColCount || newRowCount < existingRowCount) {
+            // const colsEl = tableEl.children as FrameNode[];
+            console.log('doing exit and update!::', colsEl);
+            
+            colsEl.forEach((colEl, i) => {
+                const rowsEl = colEl.children as FrameNode[];
+                rowsEl.forEach((rowEl, j) => {
+                    // remove extra rows
+                    if(j >= newRowCount) {
+                        rowEl.remove();
+                    }
+                })
+                // remove the extra columns
+                if(i >= newColCount) {
+                    colEl.remove();
+                }
+            })
+        }
+    }
+    
+    // if yes, then add
+    // enter
+    // add all new cell frames including content
+    // update
+    // will do update on all the content inside each cell frame
+    // remove
+    // remove the extraneous cell frames
+    
+}
+
+async function drawTable(data) {
     // FIXME: Load Lato font
     await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
     // await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
     // await figma.loadFontAsync({family: 'LatoLatin', style: 'Regular'});
-    console.log('loadFontAsync 1')
     // await figma.loadFontAsync({family: 'Font Awesome 5 Pro', style: 'Regular'});
-    
-    // TMP
-    // await figma.importStyleByKeyAsync("Prisma Component Library");
-    // let style = figma.getStyleById("Body/M (14px)/Regular");
-    // console.log("style::", style);
 
-    const datagrid = _.chain(prisma_cloud_policies.rows)
+    // const data = prisma_cloud_policies;
+
+    // const data = songs;
+    // const data = artists;
+
+    const datagrid = _.chain(data.rows)
             .take(10)
             .value();
-    // const datagrid = _.take(prisma_cloud_alerts.rows, 2);
     
     // Transpose data set from rows to columns
     const dataframe = {
@@ -211,9 +378,7 @@ async function drawTable() {
     };
 
     const bodyContainer = baseFrameWithAutoLayout({ name: "table-body", margin: 0 }) as FrameNode;
-    console.log("bodyContainer id:", bodyContainer.id);
     
-
     const columnContent = dataframe.columns;
 
     columnContent.forEach((col, i) => {
@@ -233,17 +398,15 @@ function drawColumn(
 :FrameNode {
         
     const colContainer = baseFrameWithAutoLayout({ name: frameName, 
-        layoutMode: "VERTICAL", margin: 0, width: columnWidth }) as FrameNode;
+        direction: "VERTICAL", margin: 0, width: columnWidth }) as FrameNode;
    
     
     // TODO: Calculate column width based on the maximum length of text for that column
    // or User input. For a better looking table, the width of columns should be adaptive to their content
         columnTexts.forEach((txt, i) => {
-        // const cellContainer = figma.createFrame();
-        // cellContainer.name = "cell-row-" + i + "-" + frameName;
         const cellContainer = baseFrameWithAutoLayout({
             name: "cell-row-" + i + "-" + frameName, 
-            layoutMode: 'HORIZONTAL', 
+            direction: 'HORIZONTAL', 
             width: columnWidth, 
             height: 14*2}) as FrameNode;
         
@@ -261,9 +424,10 @@ function drawColumn(
         }
         const t = figma.createText();
         t.characters = txt.toString();
+        
         // TMP
         if(t.characters.length > 0) {
-            t.setRangeTextStyleId(0, t.characters.length - 1, bodySRegularStyleId);
+            t.setRangeTextStyleId(0, t.characters.length, bodySRegularStyleId);
         }
        
         // Set up resizing
