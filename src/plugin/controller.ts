@@ -3,9 +3,8 @@ import * as _ from 'lodash';
 import {baseFrameWithAutoLayout, clone, transpose} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
-var meta_tables: {id: string, cols: number
-
-}[] = [];
+var meta_tables: {id: string, cols: number}[] = [];
+const table_style = {rowHeight: 36, columnWidth: 160};
 
 const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 
@@ -69,7 +68,7 @@ function frameNodeOn({
     colIndex,
     rowIndex,
     frameType = 'COLUMN',
-    height = 24,
+    height = table_style.rowHeight,
     width = 400,
 }: {
     parent: FrameNode;
@@ -183,7 +182,7 @@ async function drawTable_simple() {
     t.layoutAlign = 'STRETCH';
     t.layoutGrow = 1;
     const cell = baseFrameWithAutoLayout({name: "cell", direction: 'HORIZONTAL', 
-                    width: 120, height: 36});
+                    width: 120, height: table_style.rowHeight});
     cell.appendChild(t);
 }
 function updateStriped(striped:boolean) {
@@ -332,6 +331,8 @@ async function drawTable2(data) {
                 // TMP: Update
                  // Set up resizing to be 'Fill Container'
                 cellContainer.layoutAlign = 'STRETCH';
+                cellContainer.layoutGrow = 1;
+
                 // rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
                 if(j%2 == 0){
                     cellContainer.fills = [{type: 'SOLID', color: {r: 234/255, g: 235/255, b: 235/255}}];
@@ -394,7 +395,7 @@ async function drawTable(data) {
     const datagrid = _.chain(data.rows)
             .take(10)
             .value();
-    
+    const rowCount = datagrid.length;
     // Transpose data set from rows to columns
     const dataframe = {
         headers: _.chain(datagrid)
@@ -410,11 +411,11 @@ async function drawTable(data) {
     const columnContent = dataframe.columns;
 
     columnContent.forEach((col, i) => {
-        const colContainer = drawColumn({ frameName: "col-" + i, columnTexts: col, columnWidth: 160 });
+        const colContainer = drawColumn({ frameName: "col-" + i, columnTexts: col, columnWidth: table_style.columnWidth });
         bodyContainer.appendChild(colContainer);
     });
 
-    bodyContainer.resize(160*columnContent.length, 960);
+    bodyContainer.resize(table_style.columnWidth * columnContent.length, table_style.rowHeight * rowCount);
 
     // Update meta data so that we can update the table later when asked
     meta_tables.push({'id': bodyContainer.id, 'cols': columnContent.length});
@@ -442,7 +443,7 @@ function drawColumn(
             name: "cell-row-" + i + "-" + frameName, 
             direction: 'HORIZONTAL', 
             width: columnWidth, 
-            height: 14*2}) as FrameNode;
+            height: table_style.rowHeight}) as FrameNode;
         
         // Set up resizing to be 'Fill Container'
         cellContainer.layoutAlign = 'STRETCH';
