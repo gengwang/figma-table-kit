@@ -89,7 +89,7 @@ function frameNodeOn({
             return colEl;
         } else {
             const colEl = baseFrameWithAutoLayout({name: colName, 
-                nodeType: 'FRAME', direction: 'VERTICAL', width: width}) as FrameNode;
+                nodeType: 'FRAME', direction: 'VERTICAL', width: width, padding: 0}) as FrameNode;
             parent.appendChild(colEl);
             return colEl;
         }
@@ -182,7 +182,8 @@ async function drawTable_simple() {
     t.characters = text;
     t.layoutAlign = 'STRETCH';
     t.layoutGrow = 1;
-    const cell = baseFrameWithAutoLayout({name: "cell", direction: 'HORIZONTAL', width: 120, height: 36});
+    const cell = baseFrameWithAutoLayout({name: "cell", direction: 'HORIZONTAL', 
+                    width: 120, height: 36});
     cell.appendChild(t);
 }
 function updateStriped(striped:boolean) {
@@ -302,40 +303,28 @@ async function drawTable2(data) {
         .take(10)
         .value();
     
-    const headers = _.chain(datagrid)
-        .first()
-        .keys()
-        .value();
-    // Transpose data set from rows to columns
+    // const headers = _.chain(datagrid)
+    //     .first()
+    //     .keys()
+    //     .value();
+
     // column based data source
     const dataframe = transpose(datagrid);
 
-
-
-    console.log("cols:", dataframe);
-
-    // see if the selection is a table by checking out the name of the frame
+    // See if the selection is a table by checking out the name of the frame
     
-    console.log("sel:::::", sel);
     // TMP. Is it a table
     if(isTable(sel)) {
         const tableEl = sel[0] as FrameNode;
         const colsEl = tableEl.children as FrameNode[];
-        // if we iterate over the children, we should get something like 'col-0', etc
-        console.log("we've got a table:", colsEl);
-
-        
-        // Then remove extraneous columns and cells if any        
         const existingColCount = colsEl.length;
         const newColCount = dataframe.length;
         const existingRowCount =  (colsEl[0].children as FrameNode[]).length;
         const newRowCount = datagrid.length;
-        // First Enter
 
         dataframe.forEach((cells, i) => {
             // Enter
             const colEl = frameNodeOn({parent: tableEl, colIndex: i});
-            console.log("i:::", i, '; colEl:', colEl, '; col:', cells);
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
                 // Enter
@@ -361,14 +350,8 @@ async function drawTable2(data) {
             
         });
 
-        // console.log("rows???", existingRowCount);
-        
-        console.log(`old rows: ${existingRowCount} vs new cols: ${newRowCount}`);
-        console.log(`old cols: ${existingColCount} vs new cols: ${newColCount}`);
         // Exit
         if(newColCount < existingColCount || newRowCount < existingRowCount) {
-            // const colsEl = tableEl.children as FrameNode[];
-            console.log('doing exit and update!::', colsEl);
             
             colsEl.forEach((colEl, i) => {
                 const rowsEl = colEl.children as FrameNode[];
@@ -421,7 +404,8 @@ async function drawTable(data) {
         columns: transpose(datagrid)
     };
 
-    const bodyContainer = baseFrameWithAutoLayout({ name: "table-body", margin: 0 }) as FrameNode;
+    const bodyContainer = baseFrameWithAutoLayout({ name: "table-body", 
+        itemSpacing: 0 }) as FrameNode;
     
     const columnContent = dataframe.columns;
 
@@ -448,7 +432,7 @@ function drawColumn(
 :FrameNode {
         
     const colContainer = baseFrameWithAutoLayout({ name: frameName, 
-        direction: "VERTICAL", margin: 0, width: columnWidth }) as FrameNode;
+        direction: "VERTICAL", itemSpacing: 0, width: columnWidth }) as FrameNode;
    
     
     // TODO: Calculate column width based on the maximum length of text for that column

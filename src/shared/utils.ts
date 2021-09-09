@@ -4,7 +4,7 @@ function baseFrameWithAutoLayout(
     direction = 'HORIZONTAL', 
     nodeType = 'FRAME', 
     width = 240, height = 160, 
-    padding = 8, margin = 8,
+    padding = 8, itemSpacing = 0,
 }: 
 { 
     name?: string; 
@@ -13,7 +13,7 @@ function baseFrameWithAutoLayout(
     width?: number;
     height?: number;
     padding?: number;
-    margin?: number; 
+    itemSpacing?: number; 
     } = {}): BaseFrameMixin {
     let frame: BaseFrameMixin;
     switch (nodeType) {
@@ -29,7 +29,7 @@ function baseFrameWithAutoLayout(
     frame.counterAxisSizingMode = 'AUTO';
     frame.layoutAlign = 'STRETCH';
     frame.paddingTop = frame.paddingRight = frame.paddingBottom = frame.paddingLeft = padding;
-    frame.itemSpacing = margin;
+    frame.itemSpacing = itemSpacing;
     frame.name = name;
     frame.resize(width, height);
 
