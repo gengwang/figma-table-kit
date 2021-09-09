@@ -434,6 +434,12 @@ async function drawTable(data) {
 
     // Update meta data so that we can update the table later when asked
     meta_tables.push({'id': bodyContainer.id, 'cols': columnContent.length});
+
+    // update Figma view
+    bodyContainer.x = figma.viewport.center.x;
+    bodyContainer.y = figma.viewport.center.y;
+    figma.viewport.scrollAndZoomIntoView([bodyContainer]);
+    figma.currentPage.selection = [bodyContainer];
 }
 function drawColumn(
 { frameName, columnTexts, columnWidth = 400, height = 400, padding = 0, margin = 0, cellPadding = 8 }: 
