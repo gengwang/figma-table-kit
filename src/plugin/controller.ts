@@ -67,22 +67,29 @@ figma.ui.onmessage = (msg) => {
 function frameNodeOn({
     parent,
     colIndex,
-    rowIndex = null,
+    rowIndex,
     frameType = 'COLUMN',
+    height = 24,
+    width = 400,
 }: {
     parent: FrameNode;
     colIndex: number;
-    rowIndex: number;
-    frameType: 'COLUMN' | 'CELL';
+    rowIndex?: number;
+    frameType?: 'COLUMN' | 'CELL';
+    height?: number;
+    width?: number;
 }): FrameNode {
     if (frameType === 'COLUMN') {
         const col = parent.children[colIndex];
         const colName = 'col-' + colIndex;
         if (col) {
             col.name = colName;
-            return col as FrameNode;
+            const colEl = col as FrameNode;
+            colEl.children.forEach(c => c.remove());
+            return colEl;
         } else {
-            const colEl = baseFrameWithAutoLayout({name: colName, nodeType: 'FRAME'}) as FrameNode;
+            const colEl = baseFrameWithAutoLayout({name: colName, 
+                nodeType: 'FRAME', direction: 'VERTICAL', width: width}) as FrameNode;
             parent.appendChild(colEl);
             return colEl;
         }
@@ -92,9 +99,12 @@ function frameNodeOn({
         const cellName = 'cell-row-' + rowIndex + '-col-' + colIndex;
         if(cell) {
             cell.name = cellName;
-            return cell as FrameNode;
+            const cellEl = cell as FrameNode;
+            cellEl.children.forEach(c => c.remove());
+            return cellEl;
         } else {
-            const cellEl = baseFrameWithAutoLayout({name: cellName, nodeType: 'FRAME', direction: 'VERTICAL'}) as FrameNode;
+            const cellEl = baseFrameWithAutoLayout({name: cellName, nodeType: 'FRAME', 
+            direction: 'HORIZONTAL', height: height, width: width}) as FrameNode;
             parent.appendChild(cellEl);
             return cellEl;
         }
@@ -281,6 +291,9 @@ function isTable(selection:readonly SceneNode[]): boolean {
     return selection.length == 1 && selection[0].name.includes('table-body');
 }
 async function drawTable2(data) {
+    const sel = figma.currentPage.selection;
+    if (sel.length === 0) return;
+
     console.log("calling drawTable2");
     
     await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
@@ -299,24 +312,55 @@ async function drawTable2(data) {
 
 
 
-    // console.log("rows:", dataframe);
+    console.log("cols:", dataframe);
 
     // see if the selection is a table by checking out the name of the frame
-    const sel = figma.currentPage.selection;
-    if (sel.length === 0) return;
+    
     console.log("sel:::::", sel);
     // TMP. Is it a table
     if(isTable(sel)) {
-        // const tableEl = sel[0] as FrameNode;
-        const colsEl = (sel[0] as FrameNode).children as FrameNode[];
+        const tableEl = sel[0] as FrameNode;
+        const colsEl = tableEl.children as FrameNode[];
         // if we iterate over the children, we should get something like 'col-0', etc
         console.log("we've got a table:", colsEl);
 
-        // First remove extraneous columns and cells if any        
+        
+        // Then remove extraneous columns and cells if any        
         const existingColCount = colsEl.length;
         const newColCount = dataframe.length;
         const existingRowCount =  (colsEl[0].children as FrameNode[]).length;
         const newRowCount = datagrid.length;
+        // First Enter
+
+        dataframe.forEach((cells, i) => {
+            // Enter
+            const colEl = frameNodeOn({parent: tableEl, colIndex: i});
+            console.log("i:::", i, '; colEl:', colEl, '; col:', cells);
+            const cellsData = cells as [];
+            cellsData.forEach((cell, j) => {
+                // Enter
+                const cellContainer = frameNodeOn({parent: colEl, colIndex: i, rowIndex: j, frameType: 'CELL'});
+                // TMP: Update
+                 // Set up resizing to be 'Fill Container'
+                cellContainer.layoutAlign = 'STRETCH';
+                // rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
+                if(j%2 == 0){
+                    cellContainer.fills = [{type: 'SOLID', color: {r: 234/255, g: 235/255, b: 235/255}}];
+                }
+                const t = figma.createText();
+                t.characters = (cell as string).toString();
+                if(t.characters.length > 0) {
+                    t.setRangeTextStyleId(0, t.characters.length, bodySRegularStyleId);
+                }
+               
+                // Set up resizing
+                t.layoutAlign = 'STRETCH';
+                t.layoutGrow = 1;
+                cellContainer.appendChild(t);
+            })
+            
+        });
+
         // console.log("rows???", existingRowCount);
         
         console.log(`old rows: ${existingRowCount} vs new cols: ${newRowCount}`);
