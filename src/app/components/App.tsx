@@ -11,7 +11,14 @@ const App = ({}) => {
     //     if (element) element.value = '5';
     //     textbox.current = element;
     // }, []);
-    var striped = true;
+    const [striped, onStripedChange] = React.useReducer(
+        (striped) => {
+            parent.postMessage({pluginMessage: {type: 'update-striped', striped: !striped}}, '*');
+            return !striped;
+        },
+        true
+    );
+    
     const data = {
         prisma_cloud_alerts: prisma_cloud_alerts,
         prisma_cloud_policies: prisma_cloud_policies,
@@ -37,10 +44,10 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
     }
 
-    const onStripedChange = (event) => {
-        striped = event.target.checked;
-        parent.postMessage({pluginMessage: {type: 'update-striped', striped: striped}}, '*');
-    }
+    // const onStripedChange = (event) => {
+    //     setStriped((striped) => !striped);
+    //     parent.postMessage({pluginMessage: {type: 'update-striped', striped: event.target.checked}}, '*');
+    // }
     const onCancel = () => {
         parent.postMessage({pluginMessage: {type: 'cancel'}}, '*');
     };
@@ -81,7 +88,7 @@ const App = ({}) => {
                 <input
                     name="stripedCheckbox"
                     type="checkbox"
-                    // checked={striped}
+                    checked={striped}
                     onChange={onStripedChange}
                     />
                 <label>Striped</label>
