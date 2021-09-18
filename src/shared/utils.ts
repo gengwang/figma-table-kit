@@ -1,3 +1,49 @@
+function baseFrame(nodeType: 'FRAME' | 'COMPONENT'):  BaseFrameMixin {
+    switch (nodeType) {
+        case 'COMPONENT':
+            return figma.createComponent();
+        default:
+            return figma.createFrame();
+    }
+}
+// Configure a Frame or a Component to support auto layout
+function configFoCWithAutoLayout(
+    { 
+    foc,
+    name = '_frame', 
+    direction = 'HORIZONTAL', 
+    // nodeType = 'FRAME', 
+    width = 240, height = 160, 
+    padding = 8, itemSpacing = 0,
+}: 
+{ 
+    foc?: BaseFrameMixin, // either a 'FRAME' or a 'COMPONENT'
+    name?: string; 
+    direction?: BaseFrameMixin['layoutMode'];
+    // nodeType?: 'FRAME' | 'COMPONENT';
+    width?: number;
+    height?: number;
+    padding?: number;
+    itemSpacing?: number; 
+    } = {}) {
+        
+    foc.layoutMode = direction;
+    foc.primaryAxisSizingMode = 'AUTO';
+    foc.counterAxisSizingMode = 'AUTO';
+    foc.layoutAlign = 'STRETCH';
+    foc.paddingTop = foc.paddingRight = foc.paddingBottom = foc.paddingLeft = padding;
+    foc.itemSpacing = itemSpacing;
+    foc.name = name;
+    foc.resize(width, height);
+
+    const dummyRect = figma.createRectangle();
+    dummyRect.resize(width - padding*2, height - padding*2);
+
+    // Gotcha: the foc needs to have some content in order to "activate" the auto layout.
+    foc.appendChild(dummyRect);
+    dummyRect.remove();
+
+}
 function baseFrameWithAutoLayout(
 { 
     name = '_frame', 
@@ -15,30 +61,16 @@ function baseFrameWithAutoLayout(
     padding?: number;
     itemSpacing?: number; 
     } = {}): BaseFrameMixin {
-    let frame: BaseFrameMixin;
-    switch (nodeType) {
-        case 'COMPONENT':
-            frame = figma.createComponent();
-            break;
-        default:
-            frame = figma.createFrame();
-            break;
-    }
-    frame.layoutMode = direction;
-    frame.primaryAxisSizingMode = 'AUTO';
-    frame.counterAxisSizingMode = 'AUTO';
-    frame.layoutAlign = 'STRETCH';
-    frame.paddingTop = frame.paddingRight = frame.paddingBottom = frame.paddingLeft = padding;
-    frame.itemSpacing = itemSpacing;
-    frame.name = name;
-    frame.resize(width, height);
-
-    const dummyRect = figma.createRectangle();
-    dummyRect.resize(width - padding*2, height - padding*2);
-
-    // Gotcha: the frame needs to have some content in order to "activate" the auto layout.
-    frame.appendChild(dummyRect);
-    dummyRect.remove();
+    let frame: BaseFrameMixin = baseFrame(nodeType);
+    configFoCWithAutoLayout({
+        foc: frame,
+        name: name,
+        direction: direction,
+        width: width,
+        height: height,
+        padding: padding,
+        itemSpacing: itemSpacing
+    })
     return frame;
 }
 
@@ -76,6 +108,7 @@ function transpose(a) {
 
 export {
     baseFrameWithAutoLayout,
+    configFoCWithAutoLayout,
     clone,
     transpose,
 }

@@ -44,17 +44,6 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
     }
 
-    // const onStripedChange = (event) => {
-    //     setStriped((striped) => !striped);
-    //     parent.postMessage({pluginMessage: {type: 'update-striped', striped: event.target.checked}}, '*');
-    // }
-    const onCancel = () => {
-        parent.postMessage({pluginMessage: {type: 'cancel'}}, '*');
-    };
-    const _onTest = (msg) => {
-        parent.postMessage({pluginMessage: {type: 'test', action: msg}}, '*');
-    }
-
     React.useEffect(() => {
         // This is how we read messages sent from the plugin controller
         window.onmessage = (event) => {
@@ -102,12 +91,6 @@ const App = ({}) => {
             <button id="update-row" onClick={onUpdateRowHeight}>
                 Update Selected Row Height
             </button>
-
-            {/* <button onClick={onCancel}>Cancel</button> */}
-            <div className="checkbox-group">
-                <button onClick={()=>_onTest('get')}>GetPluginData</button>
-                <button onClick={() =>_onTest('set')}>SetPluginData</button>
-            </div>
         </div>
     );
 };
