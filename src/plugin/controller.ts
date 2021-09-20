@@ -13,6 +13,11 @@ const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b3
 const tableBodyCellAltColorEvenComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
 const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
+const ROW_HEIGHT = {
+    cozy: 44,
+    default: 32,
+    compact: 24,
+};
 
 
 figma.showUI(__html__, {height: 320});
@@ -176,6 +181,9 @@ function rowForSelectedCell(): SceneNode[] {
             // console.log("----rowINdex:", rowIndex);
             
             // TODO: first make sure we are looking at the right table: is the same id as the one we select?
+            // TODO: be a little smarter and select the cell if we haven't yet:
+            //       select the parent if what we've selected is an instance node; select the parent's parent
+            //       if what we've selected is a text node
             let cellEl = sel[0];
             const tableEl =  cellEl.parent.parent;
 
@@ -213,6 +221,7 @@ async function drawTableWithComponents(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
     const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
     const tableBodyCellAltColorEvenComp = await figma.importComponentByKeyAsync(tableBodyCellAltColorEvenComponentKey);
+    const rowHeight = ROW_HEIGHT.default;
     // TODO: This doesn't work
     // await figma.loadFontAsync({family: "Lao Sans Pro", style: "Regular"});
 
@@ -260,26 +269,20 @@ async function drawTableWithComponents(data) {
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
                 // Enter
-                const cellContainer = frameNodeOn({parent: colEl, colIndex: i, rowIndex: j, frameType: 'CELL'});
-                 // Set up resizing to be 'Fill Container'
+                const cellContainer = frameNodeOn({parent: colEl, 
+                        colIndex: i, rowIndex: j, frameType: 'CELL', height: rowHeight});
+                 // Set up resizing to be w: 'Fill Container'/h: 'Fixed Height' 
                 cellContainer.layoutAlign = 'STRETCH';
-                cellContainer.layoutGrow = 1;
+                cellContainer.layoutGrow = 0;
 
-                // rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-                // if(j%2 == 0){
-                //     cellContainer.fills = [{type: 'SOLID', color: {r: 234/255, g: 235/255, b: 235/255}}];
-                // }
-                // const t = figma.createText();
-                // t.characters = (cell as string).toString();
-                // if(t.characters.length > 0) {
-                //     t.setRangeTextStyleId(0, t.characters.length, bodySRegularStyleId);
-                // }
+                // Set up for alternate row coloring
                 const t = j%2 == 0 ? tableBodyCellWithText(tableBodyCellAltColorEvenComp, cell as string) : 
                                 tableBodyCellWithText(tableBodyCellDefaultComp, cell as string);
                
-                // Set up resizing
-                t.layoutAlign = 'STRETCH';
+                // Set up resizing to be h: 'Fixed Height'/w: 'Fill Container'
+                t.layoutAlign = 'MIN';
                 t.layoutGrow = 1;
+                t.resize(t.width, rowHeight);
                 cellContainer.appendChild(t);
             })
             
