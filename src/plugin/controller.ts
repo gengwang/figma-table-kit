@@ -10,7 +10,7 @@ const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33
 // You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
 const tableHeaderCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
 const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
-const tableBodyCellAltColorEvenComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
+const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
 const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
@@ -220,7 +220,7 @@ async function drawTableWithComponents(data) {
     // await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
     const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    const tableBodyCellAltColorEvenComp = await figma.importComponentByKeyAsync(tableBodyCellAltColorEvenComponentKey);
+    const tableBodyCellStripedEvenRowComp = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
     const rowHeight = ROW_HEIGHT.default;
     // TODO: This doesn't work
     // await figma.loadFontAsync({family: "Lao Sans Pro", style: "Regular"});
@@ -268,7 +268,7 @@ async function drawTableWithComponents(data) {
             const colEl = frameNodeOn({parent: tableEl, colIndex: i});
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
-                // Enter
+                // Enter/Upate
                 const cellContainer = frameNodeOn({parent: colEl, 
                         colIndex: i, rowIndex: j, frameType: 'CELL', height: rowHeight});
                  // Set up resizing to be w: 'Fill Container'/h: 'Fixed Height' 
@@ -276,8 +276,8 @@ async function drawTableWithComponents(data) {
                 cellContainer.layoutGrow = 0;
 
                 // Set up for alternate row coloring
-                const t = j%2 == 0 ? tableBodyCellWithText(tableBodyCellAltColorEvenComp, cell as string) : 
-                                tableBodyCellWithText(tableBodyCellDefaultComp, cell as string);
+                const t = j%2 == 0 ? tableBodyCellWithText(colEl, j, tableBodyCellStripedEvenRowComp, cell as string) : 
+                                tableBodyCellWithText(colEl, j, tableBodyCellDefaultComp, cell as string);
                
                 // Set up resizing to be h: 'Fixed Height'/w: 'Fill Container'
                 t.layoutAlign = 'MIN';
@@ -310,14 +310,16 @@ async function drawTableWithComponents(data) {
     figma.viewport.scrollAndZoomIntoView(sel);
     figma.currentPage.selection = sel;
 }
-// The client function needs to loadFontAsync at the top of the function
-function tableBodyCellWithText(comp: ComponentNode, text:string = "ipsum loram!"): InstanceNode {
-    // await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    // const comp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    // const comp = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
-    const tableHeader = comp.createInstance();
+// NOTE: The client function needs to loadFontAsync at the top of the function
+function tableBodyCellWithText(parent: FrameNode, rowIndex: number, comp: ComponentNode, text:string = "ipsum loram!"): InstanceNode {
+    let tableHeader;
+    if(parent.children.length > rowIndex && parent.children[rowIndex].type === 'INSTANCE') {
+        tableHeader = parent.children[rowIndex];
+    } else {
+        tableHeader = comp.createInstance();
+    }
     const textEl = tableHeader.findChild(n => n.type === "TEXT") as TextNode;
-    textEl.characters = text;
+    textEl.characters = text.toString();
     return tableHeader;
 }
 async function test() {
