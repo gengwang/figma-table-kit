@@ -9,9 +9,8 @@ const table_style = {rowHeight: 36, columnWidth: 160};
 const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 // You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
 const tableHeaderCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
-const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
-const tableBodyCellAltColorEvenComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
-const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
+const tableHeaderCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
+const tableBodyCellComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 
 
@@ -20,10 +19,10 @@ figma.showUI(__html__, {height: 320});
 figma.ui.onmessage = (msg) => {
     switch(msg.type) {
         case 'create-table':
-            drawTableWithComponents(msg.dataset);
+            drawTable(msg.dataset);
             break;
         case 'update-table':
-            drawTableWithComponents(msg.dataset);
+            drawTable(msg.dataset);
         case 'update-striped':
             updateStriped(msg.striped);
             break;
@@ -112,7 +111,7 @@ function frameNodeOn({
             return cellEl;
         } else {
             const cellEl = baseFrameWithAutoLayout({name: cellName, nodeType: 'FRAME', 
-            direction: 'HORIZONTAL', height: height, width: width, padding: 0}) as FrameNode;
+            direction: 'HORIZONTAL', height: height, width: width}) as FrameNode;
             parent.appendChild(cellEl);
             return cellEl;
         }
@@ -168,34 +167,32 @@ function rowForSelectedCell(): SceneNode[] {
         return null;
     } else {
         // If it looks like a cell in a row, attempt to update all the cells in that row
-        // TODO. TMP. Match a pattern like 'cell-row-6-col-0'
-        const reg = /\d+/;
-        const rowMatches = sel[0].name.match(reg);
-        if(rowMatches.length > 0) {
-            const rowIndex = rowMatches[0];
-            // console.log("----rowINdex:", rowIndex);
-            
-            // TODO: first make sure we are looking at the right table: is the same id as the one we select?
-            let cellEl = sel[0];
-            const tableEl =  cellEl.parent.parent;
+        if (sel[0].type === 'FRAME') {
+            // TODO. TMP. Match a pattern like 'cell-row-6-col-0'
+            const reg = /\d+/;
+            const rowMatches = sel[0].name.match(reg);
+            if(rowMatches.length > 0) {
+                const rowIndex = rowMatches[0];
+                // TODO: first make sure we are looking at the right table: is the same id as the one we select?
+                let cellEl = sel[0] as FrameNode;
+                const tableEl =  cellEl.parent.parent;
 
-            tableEl.children.forEach((colNode, j) => {
-                const colEl = colNode as DefaultFrameMixin;
-                // cell-row-0-col-0
-                const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);                   
-                sel.push(celEl);
-            })
+                tableEl.children.forEach((colNode, j) => {
+                    const colEl = colNode as FrameNode;
+                    // cell-row-0-col-0
+                    const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);                   
+                    sel.push(celEl);
+                })
 
-            // figma.currentPage.selection = sel;
-            return sel;
+                // figma.currentPage.selection = sel;
+                return sel;
+            }
         }
         return null;
     }
 }
 // Select all the cells in the row where the user needs to select a cell on this row first.
 function selectRow() {
-    console.log("calling select row...");
-    
     const _row = rowForSelectedCell();
     if(_row) figma.currentPage.selection = _row;
 }
@@ -206,13 +203,8 @@ function isTable(selection:readonly SceneNode[]): boolean {
 
 // Draw table using the d3 update pattern(e.g., enter/update/exit).
 // TODO: Move 'pa-table-body' to a const
-// The component we use need to be loaded first, plus all the assets
-// such as fonts and styles(?)
-async function drawTableWithComponents(data) {
-    // await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
-    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    const tableBodyCellAltColorEvenComp = await figma.importComponentByKeyAsync(tableBodyCellAltColorEvenComponentKey);
+async function drawTable(data) {
+    await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
     // TODO: This doesn't work
     // await figma.loadFontAsync({family: "Lao Sans Pro", style: "Regular"});
 
@@ -261,21 +253,20 @@ async function drawTableWithComponents(data) {
             cellsData.forEach((cell, j) => {
                 // Enter
                 const cellContainer = frameNodeOn({parent: colEl, colIndex: i, rowIndex: j, frameType: 'CELL'});
+                // TMP: Update
                  // Set up resizing to be 'Fill Container'
                 cellContainer.layoutAlign = 'STRETCH';
                 cellContainer.layoutGrow = 1;
 
                 // rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-                // if(j%2 == 0){
-                //     cellContainer.fills = [{type: 'SOLID', color: {r: 234/255, g: 235/255, b: 235/255}}];
-                // }
-                // const t = figma.createText();
-                // t.characters = (cell as string).toString();
-                // if(t.characters.length > 0) {
-                //     t.setRangeTextStyleId(0, t.characters.length, bodySRegularStyleId);
-                // }
-                const t = j%2 == 0 ? tableBodyCellWithText(tableBodyCellAltColorEvenComp, cell as string) : 
-                                tableBodyCellWithText(tableBodyCellDefaultComp, cell as string);
+                if(j%2 == 0){
+                    cellContainer.fills = [{type: 'SOLID', color: {r: 234/255, g: 235/255, b: 235/255}}];
+                }
+                const t = figma.createText();
+                t.characters = (cell as string).toString();
+                if(t.characters.length > 0) {
+                    t.setRangeTextStyleId(0, t.characters.length, bodySRegularStyleId);
+                }
                
                 // Set up resizing
                 t.layoutAlign = 'STRETCH';
@@ -307,21 +298,11 @@ async function drawTableWithComponents(data) {
     figma.viewport.scrollAndZoomIntoView(sel);
     figma.currentPage.selection = sel;
 }
-// The client function needs to loadFontAsync at the top of the function
-function tableBodyCellWithText(comp: ComponentNode, text:string = "ipsum loram!"): InstanceNode {
-    // await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    // const comp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    // const comp = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
-    const tableHeader = comp.createInstance();
-    const textEl = tableHeader.findChild(n => n.type === "TEXT") as TextNode;
-    textEl.characters = text;
-    return tableHeader;
-}
+
 async function test() {
     console.log("let's load external component...");
-    // tableBodyCellWithText("one two three");
-    const sel = figma.currentPage.selection;
-    console.log("sel:", sel[0]);
+    // const sel = figma.currentPage.selection;
+    // console.log("sel:", sel[0]);
     // const comp0 = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
     // const comp1 = comp0.findChild(n => n.name === 'Icon Left=False, Icon Right=False, Label=True, State=Hover') as ComponentNode;
     // console.log("comp1===>", comp1);
@@ -329,18 +310,17 @@ async function test() {
     // tableHeader0.swapComponent(comp1);
 
     // return;
-    // await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    // const comp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    // // const comp = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
-    // const tableHeader = comp.createInstance();
-    // console.log("header:::::", tableHeader.mainComponent.name);
+    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
+    const comp = await figma.importComponentByKeyAsync(tableHeaderCellDefaultComponentKey);
+    // const comp = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
+    const tableHeader = comp.createInstance();
+    console.log("header:::::", tableHeader.mainComponent.name);
     
-    // // set label to on
-    // // tableHeader.
-    // // set state to default
-    // const text = tableHeader.findChild(n => n.type === "TEXT") as TextNode;
-    // console.log("text::", text);
-    // text.characters = "ipsum loram!";
-    // drawTableWithComponents
-    //drawTableWithComponents
+    // set label to on
+    // tableHeader.
+    // set state to default
+    const text = tableHeader.findChild(n => n.type === "TEXT") as TextNode;
+    console.log("text::", text);
+    text.characters = "ipsum loram!";
+    
 }

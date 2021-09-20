@@ -43,6 +43,10 @@ const App = ({}) => {
     const onUpdateRowHeight = () => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
     }
+    
+    const onTest = () => {
+        parent.postMessage({pluginMessage: {type: 'test'}}, '*');
+    }
 
     React.useEffect(() => {
         // This is how we read messages sent from the plugin controller
@@ -90,6 +94,9 @@ const App = ({}) => {
             </button>
             <button id="update-row" onClick={onUpdateRowHeight}>
                 Update Selected Row Height
+            </button>
+            <button id="test" onClick={onTest}>
+                Test: Load external component
             </button>
         </div>
     );
