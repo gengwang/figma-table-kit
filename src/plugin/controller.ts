@@ -22,6 +22,30 @@ const ROW_HEIGHT = {
 
 figma.showUI(__html__, {height: 320});
 
+// We store which node we are interacting with
+// TODO: store the whole array of current page selection
+figma.on("selectionchange", () => {
+        if(figma.currentPage.getPluginData('selectedEl') !== "" 
+            && figma.currentPage.selection.length === 0) 
+            // if the user just de-selected something, we may want to update the row 
+            {
+                const targetObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
+                const target = figma.currentPage.findOne(n => n.id === targetObj.id);
+                updateRowHeight(target);
+        }
+        // Store the selection so we can use in the next change event
+        if(figma.currentPage.selection.length > 0) {
+            const el = figma.currentPage.selection[0];
+            const obj = {
+                "name": el.name,
+                "type": el.type,
+                "id": el.id,
+            };
+            figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
+        }
+    }
+)
+
 figma.ui.onmessage = (msg) => {
     switch(msg.type) {
         case 'create-table':
@@ -36,7 +60,8 @@ figma.ui.onmessage = (msg) => {
             selectRow();
             break;
         case 'update-row-height':
-            updateRowHeight();
+            const target = figma.currentPage.selection.concat()[0];
+            updateRowHeight(target);
             break;
         case 'test':
             test();
@@ -116,8 +141,9 @@ function frameNodeOn({
             cellEl.children.forEach(c => c.remove());
             return cellEl;
         } else {
+            // direction is VERTICAL so that the content of the instance node can wrap when resized
             const cellEl = baseFrameWithAutoLayout({name: cellName, nodeType: 'FRAME', 
-            direction: 'HORIZONTAL', height: height, width: width, padding: 0}) as FrameNode;
+            direction: 'VERTICAL', height: height, width: width, padding: 0}) as FrameNode;
             parent.appendChild(cellEl);
             return cellEl;
         }
@@ -162,60 +188,66 @@ async function updateStriped(striped:boolean) {
         })
     }
 }
-function updateRowHeight() {
-    const sel = figma.currentPage.selection.concat();
+// target can be a frame cell or the instance node it contains
+function updateRowHeight(target: SceneNode) {
+    if(!target || (target.type !== 'INSTANCE' && target.type !== 'FRAME' )) return;
 
-    // TODO: First make sure we select a cell
-    // TMP
-    let cellEl = sel[0] as FrameNode;
-    // what's the height of the current selected cell?
-    // console.log("cellEl:", cellEl);
-    let cellHeight = cellEl.height;
-    let row = rowForSelectedCell();
-    row.forEach(cel => {
-        cel.resize(cel.width, cellHeight);
-    })
-}
+    if((target.type === 'INSTANCE' && target.name === 'Cell - Text') || 
+    (target.type === 'FRAME' && target.name.includes("cell-row-"))) { // if it's a component instance
+        let cell, cellHeight;
+        cellHeight = target.height;
 
-function rowForSelectedCell(): SceneNode[] {
-    const sel = figma.currentPage.selection.concat();
-    if(sel.length !== 1) {
-        console.log("pls select a cell on the row first");
-        return null;
-    } else {
-        // If it looks like a cell in a row, attempt to update all the cells in that row
-        // TODO. TMP. Match a pattern like 'cell-row-6-col-0'
-        const reg = /\d+/;
-        const rowMatches = sel[0].name.match(reg);
-        if(rowMatches.length > 0) {
-            const rowIndex = rowMatches[0];
-            // console.log("----rowINdex:", rowIndex);
-            
-            // TODO: first make sure we are looking at the right table: is the same id as the one we select?
-            // TODO: be a little smarter and select the cell if we haven't yet:
-            //       select the parent if what we've selected is an instance node; select the parent's parent
-            //       if what we've selected is a text node
-            let cellEl = sel[0];
-            const tableEl =  cellEl.parent.parent;
-
-            tableEl.children.forEach((colNode, j) => {
-                const colEl = colNode as DefaultFrameMixin;
-                // cell-row-0-col-0
-                const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);                   
-                sel.push(celEl);
-            })
-
-            // figma.currentPage.selection = sel;
-            return sel;
+        if(target.type === 'INSTANCE') {
+            cell = target.parent;
+        } else if(target.type === 'FRAME') {
+            cell = target;
         }
-        return null;
+    
+        let row = rowForCell(cell);
+        row.forEach(cel => {
+            const inst = cell.children[0] as InstanceNode;
+            inst.resize(cel.width, cellHeight);
+            // Rig the auto-layout again after explicitly setting the instance node's height
+            inst.layoutAlign = 'STRETCH';
+            inst.layoutGrow = 1;
+            cel.resize(cel.width, cellHeight);
+        })
     }
+    
 }
+
+function rowForCell(cell: SceneNode): SceneNode[] {
+    const reg = /\d+/;
+    const rowMatches = cell.name.match(reg);
+    if(rowMatches.length > 0) {
+        let result = [];
+        const rowIndex = rowMatches[0];
+        const tableEl =  cell.parent.parent;
+
+        tableEl.children.forEach((colNode, j) => {
+            const colEl = colNode as DefaultFrameMixin;
+            // cell-row-0-col-0
+            const celEl = colEl.findChild(n => n.type === 'FRAME' && n.name === 'cell-row-'+ rowIndex + '-col-' + j);                   
+            result.push(celEl);
+        })
+        return result;
+    }
+    return null;
+}
+
 // Select all the cells in the row where the user needs to select a cell on this row first.
 function selectRow() {
     console.log("calling select row...");
+    const sel = figma.currentPage.selection.concat()[0];
+    let cell;
     
-    const _row = rowForSelectedCell();
+    if(sel.type === 'INSTANCE') {
+        cell = sel.parent;
+    } else if(sel.type === 'FRAME') {
+        cell = sel;
+    }
+
+    let _row = rowForCell(cell);
     if(_row) figma.currentPage.selection = _row;
 }
 // Quick and dirty way to see if the selection is a table
@@ -277,6 +309,7 @@ async function drawTableWithComponents(data) {
         dataframe.forEach((cells, i) => {
             // Enter
             const colEl = frameNodeOn({parent: tableEl, colIndex: i});
+            // colEl.primaryAxisSizingMode = 'FIXED';
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
                 // Enter/Upate
@@ -291,8 +324,10 @@ async function drawTableWithComponents(data) {
                 const t = j%2 == 0 ? tableBodyCellWithText(colEl, j, tableBodyCellStripedEvenRowComp, cell as string) : 
                                 tableBodyCellWithText(colEl, j, tableBodyCellDefaultComp, cell as string);
                
-                // Set up resizing to be h: 'Fixed Height'/w: 'Fill Container'
-                t.layoutAlign = 'MIN';
+                // Set up resizing to be h: 'Fill Container'/w: 'Fill Container'
+                // This will cause this instance node to fill the parent cell frame when
+                // the parent cell frame resizes
+                t.layoutAlign = 'STRETCH';//'MIN';
                 t.layoutGrow = 1;
                 t.resize(t.width, rowHeight);
                 cellContainer.appendChild(t);

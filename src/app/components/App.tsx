@@ -36,13 +36,13 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'update-table', dataset: data[dsName]}}, '*');
     }
 
-    const onSelectRow = () => {
+   /*  const onSelectRow = () => {
         parent.postMessage({pluginMessage: {type: 'select-row'}}, '*');
     }
 
     const onUpdateRowHeight = () => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
-    }
+    } */
     
     const onTest = () => {
         parent.postMessage({pluginMessage: {type: 'test'}}, '*');
@@ -89,12 +89,12 @@ const App = ({}) => {
 
             <hr style={{"width": '100%'}}/>
 
-            <button id="update-row" onClick={onSelectRow}>
+            {/* <button id="update-row" onClick={onSelectRow}>
                 Select Row
-            </button>
-            <button id="update-row" onClick={onUpdateRowHeight}>
+            </button> */}
+           {/*  <button id="update-row" onClick={onUpdateRowHeight}>
                 Update Selected Row Height
-            </button>
+            </button> */}
             <button id="test" onClick={onTest}>
                 Test: Log sel
             </button>
