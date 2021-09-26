@@ -11,6 +11,12 @@ const table_style = {rowHeight: 36, columnWidth: 160};
 // const tableHeaderCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
 const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
+const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e';
+const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38';
+const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3';
+const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083e7c80614289cb323a';
+const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472';
+const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400';
 // const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 // const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
@@ -30,8 +36,14 @@ figma.on("selectionchange", () => {
             // if the user just de-selected something, we may want to update the row 
             {
                 const targetObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
-                const target = figma.currentPage.findOne(n => n.id === targetObj.id);
-                updateRowHeight(target);
+                if(targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
+                    const target = figma.currentPage.findOne(n => n.id === targetObj.id);
+                    updateRowHeight(target);
+                } else if (targetObj.type === 'TEXT') {
+                    // if the previous node was a text node and the rest of the column is not????
+                    const target = figma.currentPage.findOne(n => n.id === targetObj.id) as TextNode;
+                    updateColumnIcons(target);
+                }
         }
         // Store the selection so we can use in the next change event
         if(figma.currentPage.selection.length > 0) {
@@ -153,7 +165,7 @@ function frameNodeOn({
 
 async function updateStriped(striped:boolean) {
     const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    const tableBodyCellStripedEvenRowComp = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
+    // const tableBodyCellStripedEvenRowComp = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
     
     // First select the table body, pls
     if(figma.currentPage.selection.length === 0) return;
@@ -180,8 +192,6 @@ async function updateStriped(striped:boolean) {
                         if(tableBodyCellDefaultComp) {
                             cellComp.swapComponent(tableBodyCellDefaultComp);
                         }
-                        console.log("cellComp>>>", cellComp);
-                        console.log("tableBodyCellStripedEvenRowComp>>>", tableBodyCellStripedEvenRowComp);
                     }
                 }
             })
@@ -213,7 +223,34 @@ function updateRowHeight(target: SceneNode) {
             cel.resize(cel.width, cellHeight);
         })
     }
+}
+
+async function updateColumnIcons(target: SceneNode) {
+    const tableBodyCellDefaultIconLeftComponent = await figma.importComponentByKeyAsync(tableBodyCellDefaultIconLeftComponentKey);
+    const tableBodyCellStripedEvenRowIconLeftComponent = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowIconLeftComponentKey);
     
+    console.log("we think we might need to change the icon!", target);
+    // For now, we only assume it's a text node
+    if(target.type !== 'TEXT') return;
+    const tar = target as TextNode;
+    const colEl = tar.parent.parent.parent;
+    console.log("colEl:::", colEl.name);
+    colEl.children.forEach((cellEl, rowIndex) => {
+        console.log("cellEl::", cellEl.name, "; index:", rowIndex);
+        const inst = (cellEl as FrameNode).children[0] as InstanceNode;
+        if(inst.mainComponent.key !== tableBodyCellDefaultIconLeftComponentKey &&
+            inst.mainComponent.key !== tableBodyCellStripedEvenRowIconLeftComponentKey ) {
+                inst.swapComponent(rowIndex % 2 === 0? tableBodyCellDefaultIconLeftComponent : 
+                    tableBodyCellStripedEvenRowIconLeftComponent);    
+        } else {
+           
+        }
+        console.log("inst::", inst.name);
+        
+    })
+    
+    // change all the column cells to the same type?
+    // update the icons
 }
 
 function rowForCell(cell: SceneNode): SceneNode[] {
@@ -320,9 +357,9 @@ async function drawTableWithComponents(data) {
                 cellContainer.layoutAlign = 'STRETCH';
                 cellContainer.layoutGrow = 0;
 
-                // Set up for alternate row coloring
-                const t = j%2 == 0 ? tableBodyCellWithText(colEl, j, tableBodyCellStripedEvenRowComp, cell as string) : 
-                                tableBodyCellWithText(colEl, j, tableBodyCellDefaultComp, cell as string);
+                // Set up for alternate row coloring. Note index starts from 0
+                const t = j%2 == 0 ? tableBodyCellWithText(colEl, j, tableBodyCellDefaultComp, cell as string) : 
+                                tableBodyCellWithText(colEl, j, tableBodyCellStripedEvenRowComp, cell as string);
                
                 // Set up resizing to be h: 'Fill Container'/w: 'Fill Container'
                 // This will cause this instance node to fill the parent cell frame when
