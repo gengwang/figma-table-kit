@@ -96,7 +96,7 @@ const App = ({}) => {
                 Update Selected Row Height
             </button>
             <button id="test" onClick={onTest}>
-                Test: Load external component
+                Test: Log sel
             </button>
         </div>
     );

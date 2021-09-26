@@ -1,18 +1,18 @@
 import * as _ from 'lodash';
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
-import {baseFrameWithAutoLayout, configFoCWithAutoLayout, clone, transpose} from '../shared/utils';
+import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
-var meta_tables: {id: string, cols: number}[] = [];
+// var meta_tables: {id: string, cols: number}[] = [];
 const table_style = {rowHeight: 36, columnWidth: 160};
 
-const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
+// const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 // You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
-const tableHeaderCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
+// const tableHeaderCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
 const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
-const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
-const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
+// const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
+// const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
     cozy: 44,
     default: 32,
@@ -125,16 +125,19 @@ function frameNodeOn({
     return null;
 }
 
-function updateStriped(striped:boolean) {
+async function updateStriped(striped:boolean) {
+    const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
+    const tableBodyCellStripedEvenRowComp = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
+    
     // First select the table body, pls
     if(figma.currentPage.selection.length === 0) return;
     // TMP
     const tableEl = figma.currentPage.selection[0] as FrameNode;
-    const color = striped? {r: 234/255, g: 235/255, b: 235/255} :{r: 1, g: 1, b: 1};
+    const color = striped? {r: 244/255, g: 245/255, b: 245/255} :{r: 1, g: 1, b: 1};
     if(tableEl.name === 'pa-table-body') {
-        console.log("table!!!");
         const reg = /(?<=cell-row-)\d*/;
         tableEl.children.forEach(colEl => {
+            
             const col = colEl as FrameNode;
 
             col.children.forEach(cellEl => {
@@ -143,8 +146,16 @@ function updateStriped(striped:boolean) {
                 if(cellMatches.length > 0) {
                     const rowNum = cellMatches[0] as unknown;
                     const rowNum1 = rowNum as number;
-                    if (rowNum1 % 2 === 0 ) {
-                        cell.fills = [{type: 'SOLID', color: color}]; 
+                    if (rowNum1 % 2 === 0 ) { // this is an even row cell
+                        // Repaint the backdrop color
+                        cell.fills = [{type: 'SOLID', color: color}];
+                        // Swap the child
+                        let cellComp = cell.children[0] as InstanceNode;
+                        if(tableBodyCellDefaultComp) {
+                            cellComp.swapComponent(tableBodyCellDefaultComp);
+                        }
+                        console.log("cellComp>>>", cellComp);
+                        console.log("tableBodyCellStripedEvenRowComp>>>", tableBodyCellStripedEvenRowComp);
                     }
                 }
             })
@@ -272,6 +283,7 @@ async function drawTableWithComponents(data) {
                 const cellContainer = frameNodeOn({parent: colEl, 
                         colIndex: i, rowIndex: j, frameType: 'CELL', height: rowHeight});
                  // Set up resizing to be w: 'Fill Container'/h: 'Fixed Height' 
+                 // TODO: w: 'Fill COntainer' / h: 'Hug content'
                 cellContainer.layoutAlign = 'STRETCH';
                 cellContainer.layoutGrow = 0;
 
@@ -311,16 +323,22 @@ async function drawTableWithComponents(data) {
     figma.currentPage.selection = sel;
 }
 // NOTE: The client function needs to loadFontAsync at the top of the function
-function tableBodyCellWithText(parent: FrameNode, rowIndex: number, comp: ComponentNode, text:string = "ipsum loram!"): InstanceNode {
-    let tableHeader;
-    if(parent.children.length > rowIndex && parent.children[rowIndex].type === 'INSTANCE') {
-        tableHeader = parent.children[rowIndex];
+function tableBodyCellWithText(
+    parent: FrameNode,
+    rowIndex: number,
+    comp: ComponentNode,
+    text: string = 'ipsum loram!'
+): InstanceNode {
+    let tableCell;
+    if (parent.children.length > rowIndex && 
+        parent.children[rowIndex].type === 'INSTANCE') {
+        tableCell = parent.children[rowIndex];
     } else {
-        tableHeader = comp.createInstance();
+        tableCell = comp.createInstance();
     }
-    const textEl = tableHeader.findChild(n => n.type === "TEXT") as TextNode;
+    const textEl = tableCell.findChild((n) => n.type === 'TEXT') as TextNode;
     textEl.characters = text.toString();
-    return tableHeader;
+    return tableCell;
 }
 async function test() {
     console.log("let's load external component...");
