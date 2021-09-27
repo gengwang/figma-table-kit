@@ -20,7 +20,9 @@ const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3e
 const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083e7c80614289cb323a';
 // const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472';
 // const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400';
-// const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
+const tableBodyCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
+const tableBodyCellSelectedComponentKey = '2cffc40473d91e306a8abd83de636cc6bf2a665c';
+// 
 // const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
     cozy: 44,
@@ -43,7 +45,8 @@ figma.on("selectionchange", () => {
             const targetObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
             if(targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
                 const target = figma.currentPage.findOne(n => n.id === targetObj.id);
-                updateRowHeight(target);
+                updateRow(target);
+                updateCellComponentTypeForColumnWithCell(target);
             } else if (targetObj.type === 'TEXT') {
                 // if the previous node was a text node and the rest of the column is not????
                 const target = figma.currentPage.findOne(n => n.id === targetObj.id) as TextNode;
@@ -81,7 +84,7 @@ figma.ui.onmessage = (msg) => {
             break;
         case 'update-row-height':
             const target = figma.currentPage.selection.concat()[0];
-            updateRowHeight(target);
+            updateRow(target);
             break;
         case 'test':
             test();
@@ -218,7 +221,12 @@ async function updateStriped(striped:boolean) {
     }
 }
 // target can be a frame cell or the instance node it contains
-function updateRowHeight(target: SceneNode) {
+async function updateRow(target: SceneNode) {
+    const tableBodyCellHoverComponent = await figma.importComponentByKeyAsync(tableBodyCellHoverComponentKey);
+    const tableBodyCellSelectedComponent = await figma.importComponentByKeyAsync(tableBodyCellSelectedComponentKey);
+    const tableBodyCellDefaultComponent = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
+    const tableBodyCellStripedEvenRowComponent = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
+    
     if(!target || (target.type !== 'INSTANCE' && target.type !== 'FRAME' )) return;
 
     if((target.type === 'INSTANCE' && target.name === 'Cell - Text') || 
@@ -233,15 +241,40 @@ function updateRowHeight(target: SceneNode) {
         }
     
         let row = rowForCell(cell);
+
         row.forEach(cel => {
-            const inst = cell.children[0] as InstanceNode;
+            // const inst = cell.children[0] as InstanceNode;
+            const inst = (cel as FrameNode).children[0] as InstanceNode;
+
+            // Update target cell height
             inst.resize(cel.width, cellHeight);
             // Rig the auto-layout again after explicitly setting the instance node's height
             inst.layoutAlign = 'STRETCH';
             inst.layoutGrow = 1;
+
+            // Update the height for all the other cells in the same row
             cel.resize(cel.width, cellHeight);
+
+
+            const thisInst = (cell as FrameNode).children[0] as InstanceNode;
+            const insto = (cel as FrameNode).children[0] as InstanceNode;
+
+            // Update the mouse states to be the same as the target
+            if(thisInst.mainComponent.key === tableBodyCellHoverComponentKey) {
+                insto.swapComponent(tableBodyCellHoverComponent);
+            } else if(thisInst.mainComponent.key === tableBodyCellSelectedComponentKey) {
+                insto.swapComponent(tableBodyCellSelectedComponent);
+            } else if(thisInst.mainComponent.key === tableBodyCellDefaultComponentKey) {
+                insto.swapComponent(tableBodyCellDefaultComponent);
+            } else if(thisInst.mainComponent.key === tableBodyCellStripedEvenRowComponentKey) {
+                insto.swapComponent(tableBodyCellStripedEvenRowComponent);
+            }
+            
         })
     }
+}
+async function updateCellComponentTypeForColumnWithCell(_: SceneNode) {
+
 }
 
 async function updateColumnIcons(target: SceneNode) {
@@ -260,7 +293,9 @@ async function updateColumnIcons(target: SceneNode) {
         if(inst.mainComponent.key !== tableBodyCellDefaultIconLeftComponentKey &&
             inst.mainComponent.key !== tableBodyCellStripedEvenRowIconLeftComponentKey ) {
                 inst.swapComponent(rowIndex % 2 === 0? tableBodyCellDefaultIconLeftComponent : 
-                    tableBodyCellStripedEvenRowIconLeftComponent);    
+                    tableBodyCellStripedEvenRowIconLeftComponent);
+            // Update all the instances
+            // If the new instance includes icons, also update icons
         } else {
            
         }
