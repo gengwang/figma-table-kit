@@ -5,6 +5,9 @@ import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose} from '../sh
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
 const table_style = {rowHeight: 36, columnWidth: 160};
+const settings = {
+    "manual-update": false,
+}
 
 // const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 // You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
@@ -12,11 +15,11 @@ const table_style = {rowHeight: 36, columnWidth: 160};
 const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
 const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e';
-const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38';
-const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3';
+// const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38';
+// const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3';
 const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083e7c80614289cb323a';
-const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472';
-const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400';
+// const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472';
+// const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400';
 // const tableBodyCellHoverComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
 // const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
@@ -25,41 +28,46 @@ const ROW_HEIGHT = {
     compact: 24,
 };
 
-
 figma.showUI(__html__, {height: 320});
 
 // We store which node we are interacting with
 // TODO: store the whole array of current page selection
 figma.on("selectionchange", () => {
-        if(figma.currentPage.getPluginData('selectedEl') !== "" 
-            && figma.currentPage.selection.length === 0) 
-            // if the user just de-selected something, we may want to update the row 
-            {
-                const targetObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
-                if(targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
-                    const target = figma.currentPage.findOne(n => n.id === targetObj.id);
-                    updateRowHeight(target);
-                } else if (targetObj.type === 'TEXT') {
-                    // if the previous node was a text node and the rest of the column is not????
-                    const target = figma.currentPage.findOne(n => n.id === targetObj.id) as TextNode;
-                    updateColumnIcons(target);
-                }
-        }
-        // Store the selection so we can use in the next change event
-        if(figma.currentPage.selection.length > 0) {
-            const el = figma.currentPage.selection[0];
-            const obj = {
-                "name": el.name,
-                "type": el.type,
-                "id": el.id,
-            };
-            figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
-        }
+    // We'll do nothing if the user wants manual upate
+    if(settings['manual-update']) return;
+
+    if(figma.currentPage.getPluginData('selectedEl') !== "" 
+        && figma.currentPage.selection.length === 0) 
+        // if the user just de-selected something, we may want to update the row 
+        {
+            const targetObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
+            if(targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
+                const target = figma.currentPage.findOne(n => n.id === targetObj.id);
+                updateRowHeight(target);
+            } else if (targetObj.type === 'TEXT') {
+                // if the previous node was a text node and the rest of the column is not????
+                const target = figma.currentPage.findOne(n => n.id === targetObj.id) as TextNode;
+                updateColumnIcons(target);
+            }
     }
+    // Store the selection so we can use in the next change event
+    if(figma.currentPage.selection.length > 0) {
+        const el = figma.currentPage.selection[0];
+        const obj = {
+            "name": el.name,
+            "type": el.type,
+            "id": el.id,
+        };
+        figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
+    }
+}
 )
 
 figma.ui.onmessage = (msg) => {
     switch(msg.type) {
+        case 'update-settings':
+            updateSettings(msg)
+            break;
         case 'create-table':
             drawTableWithComponents(msg.dataset);
             break;
@@ -109,6 +117,17 @@ figma.ui.onmessage = (msg) => {
     // figma.closePlugin();
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Settings
+function updateSettings(msg: any) {
+    if(msg.setting === 'manual-update') {
+        settings['manual-update'] = msg.value;
+    }
+    
+    console.log("update settings::", msg, "now manual setting is:", settings['manual-update']);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Returns a frame node under the parent node; reuses one if it exists, otherwise
 // creates a new one. 
 // This is applicable for a table frame constructed by this plugin:

@@ -18,7 +18,15 @@ const App = ({}) => {
         },
         true
     );
-    
+
+    const [manualUpdate, setManualUpdate] =  React.useReducer(
+        (manual) => {
+            parent.postMessage({pluginMessage: {type: 'update-settings', setting: 'manual-update', value: !manual}}, '*');
+            return !manual;
+        },
+        false
+    );
+
     const data = {
         prisma_cloud_alerts: prisma_cloud_alerts,
         prisma_cloud_policies: prisma_cloud_policies,
@@ -86,6 +94,18 @@ const App = ({}) => {
                     />
                 <label>Striped</label>
             </div>
+
+            <hr style={{"width": '100%'}}/>
+
+            <div className="checkbox-group">
+                <input
+                    name="manualCheckbox"
+                    type="checkbox"
+                    checked={manualUpdate}
+                    onChange={setManualUpdate}
+                    />
+                <label>Manually Update</label>
+            </div>  
 
             <hr style={{"width": '100%'}}/>
 
