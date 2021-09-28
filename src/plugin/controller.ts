@@ -11,18 +11,44 @@ const settings = {
 
 // const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 // You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
-// const tableHeaderCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
-const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d';
-const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1';
-const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e';
-// const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38';
-// const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3';
-const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083e7c80614289cb323a';
-// const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472';
-// const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400';
-const tableBodyCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e';
-const tableBodyCellSelectedComponentKey = '2cffc40473d91e306a8abd83de636cc6bf2a665c';
-// 
+const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d'; ////////
+const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1'; ////////
+const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e'; ////////
+// const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38'; ////////
+// const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3'; ////////
+const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083e7c80614289cb323a'; ////////
+// const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472'; ////////
+// const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400'; ////////
+// const tableBodyCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e'; ////////
+// const tableBodyCellSelectedComponentKey = '2cffc40473d91e306a8abd83de636cc6bf2a665c'; ////////
+
+const TABLE_CELL_VARIANT = {
+    "CELL_DEFAULT" : "CellDefault",
+    "CELL_STRIPED_EVEN_ROW" : "CellStripedEvenRow",
+    "CELL_ICON_LEFT" : "CellIconLeft",
+    "CELL_ICON_RIGHT" : "CellIconRight",
+    "CELL_ICON_BOTH" : "CellIconBoth",
+    "CELL_STRIPED_EVEN_ROW_ICON_LEFT" : "CellStripedEvenRowIconLeft",
+    "CELL_STRIPED_EVEN_ROW_ICON_RIGHT" : "CellStripedEvenRowIconRight",
+    "CELL_STRIPED_EVEN_ROW_ICON_BOTH" : "CellStripedEvenRowIconBoth",
+    "CELL_HOVER" : "CellHover",
+    "CELL_SELECTED" : "CellSelected",
+};
+
+
+const PRISMA_TABLE_CELL_COMPONENTS: {variant: string, key: string, comp: any}[] = [
+    { variant: TABLE_CELL_VARIANT.CELL_DEFAULT, key: "52f8db8c3eb06811177462ca81794c1e1b80b36d", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW, key: "aeae4ca0fb4b52e8501f7288bd71859b5ff87df1", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_ICON_LEFT, key: "7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_ICON_RIGHT, key: "414c2a284ecd78ef15d9fa3b5abd33635f29cf38", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_ICON_BOTH, key: "4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW_ICON_LEFT, key: "1b38e2108373907af387083e7c80614289cb323a", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW_ICON_RIGHT, key: "943c5b15b37a43f61753ff62e8e36fddcb4ce472", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW_ICON_BOTH, key: "07ad0a31821a24c118ecdd7b258637be5fb5b400", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_HOVER, key: "3782e1e0a293fb1272f309e9dea168bf5253912e", comp: null },
+    { variant: TABLE_CELL_VARIANT.CELL_SELECTED, key: "2cffc40473d91e306a8abd83de636cc6bf2a665c", comp: null },
+];
+
 // const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
     cozy: 44,
@@ -30,8 +56,36 @@ const ROW_HEIGHT = {
     compact: 24,
 };
 
-figma.showUI(__html__, {height: 320});
 
+// figma.importComponentByKeyAsync('aeae4ca0fb4b52e8501f7288bd71859b5ff87df1')
+// .then(comp => console.log("comp loaded:::", comp))
+// .catch(error => console.error("error:", error))
+
+// First making sure all Table Cell components are loaded, then show the UI
+PRISMA_TABLE_CELL_COMPONENTS.forEach(d => {
+    d.comp = figma.importComponentByKeyAsync(d.key);
+});
+
+Promise.all(PRISMA_TABLE_CELL_COMPONENTS.map((d) => d.comp))
+    .then((comps) => {
+        comps.forEach((comp, i) => {
+            PRISMA_TABLE_CELL_COMPONENTS[i]['comp'] = comp;
+        });
+    })
+    .then(() => {
+        figma.showUI(__html__, {height: 320});
+    })
+    .catch((error) => {
+        console.error('error in loading Prisma Table cell components', error);
+    });
+
+// figma.showUI(__html__, {height: 320});
+
+function tableCellComp(variant:string):ComponentNode {
+    // if(!TABLE_CELL_VARIANT.hasOwnProperty(variant)) return null;
+    const obj = PRISMA_TABLE_CELL_COMPONENTS.find(d => d.variant === variant);
+    return obj? obj.comp : null;
+}
 // We store which node we are interacting with
 // TODO: store the whole array of current page selection
 figma.on("selectionchange", () => {
@@ -46,7 +100,7 @@ figma.on("selectionchange", () => {
             if(targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
                 const target = figma.currentPage.findOne(n => n.id === targetObj.id);
                 updateRow(target);
-                updateCellComponentTypeForColumnWithCell(target);
+                // updateColumnComps(target);
             } else if (targetObj.type === 'TEXT') {
                 // if the previous node was a text node and the rest of the column is not????
                 const target = figma.currentPage.findOne(n => n.id === targetObj.id) as TextNode;
@@ -185,15 +239,13 @@ function frameNodeOn({
     return null;
 }
 
-async function updateStriped(striped:boolean) {
-    const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    // const tableBodyCellStripedEvenRowComp = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
+function updateStriped(striped:boolean) {
     
     // First select the table body, pls
     if(figma.currentPage.selection.length === 0) return;
-    // TMP
+   
     const tableEl = figma.currentPage.selection[0] as FrameNode;
-    const color = striped? {r: 244/255, g: 245/255, b: 245/255} :{r: 1, g: 1, b: 1};
+    const evenRowColor = striped? {r: 244/255, g: 245/255, b: 245/255} :{r: 1, g: 1, b: 1};
     if(tableEl.name === 'pa-table-body') {
         const reg = /(?<=cell-row-)\d*/;
         tableEl.children.forEach(colEl => {
@@ -206,15 +258,17 @@ async function updateStriped(striped:boolean) {
                 if(cellMatches.length > 0) {
                     const rowNum = cellMatches[0] as unknown;
                     const rowNum1 = rowNum as number;
-                    if (rowNum1 % 2 === 0 ) { // this is an even row cell
+                    // Swap the child
+                    let cellComp = cell.children[0] as InstanceNode;
+                    if (rowNum1 % 2 !== 0 ) { // this is an even row cell. Index is 0 based
                         // Repaint the backdrop color
-                        cell.fills = [{type: 'SOLID', color: color}];
-                        // Swap the child
-                        let cellComp = cell.children[0] as InstanceNode;
-                        if(tableBodyCellDefaultComp) {
-                            cellComp.swapComponent(tableBodyCellDefaultComp);
-                        }
+                        cell.fills = [{type: 'SOLID', color: evenRowColor}];
+                        cellComp.swapComponent(tableCellComp(TABLE_CELL_VARIANT.CELL_DEFAULT));
                     }
+                    // draw the line for a cell
+                    const cellLine = cellComp.findChild(e => e.name === 'bottom border');
+                    cellLine.visible = !striped;
+                    console.log("the line>>>>", cellLine);
                 }
             })
         })
@@ -222,10 +276,6 @@ async function updateStriped(striped:boolean) {
 }
 // target can be a frame cell or the instance node it contains
 async function updateRow(target: SceneNode) {
-    const tableBodyCellHoverComponent = await figma.importComponentByKeyAsync(tableBodyCellHoverComponentKey);
-    const tableBodyCellSelectedComponent = await figma.importComponentByKeyAsync(tableBodyCellSelectedComponentKey);
-    const tableBodyCellDefaultComponent = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    const tableBodyCellStripedEvenRowComponent = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
     
     if(!target || (target.type !== 'INSTANCE' && target.type !== 'FRAME' )) return;
 
@@ -260,35 +310,43 @@ async function updateRow(target: SceneNode) {
             const insto = (cel as FrameNode).children[0] as InstanceNode;
 
             // Update the mouse states to be the same as the target
-            if(thisInst.mainComponent.key === tableBodyCellHoverComponentKey) {
-                insto.swapComponent(tableBodyCellHoverComponent);
-            } else if(thisInst.mainComponent.key === tableBodyCellSelectedComponentKey) {
-                insto.swapComponent(tableBodyCellSelectedComponent);
-            } else if(thisInst.mainComponent.key === tableBodyCellDefaultComponentKey) {
-                insto.swapComponent(tableBodyCellDefaultComponent);
-            } else if(thisInst.mainComponent.key === tableBodyCellStripedEvenRowComponentKey) {
-                insto.swapComponent(tableBodyCellStripedEvenRowComponent);
-            }
+            alignComps(thisInst, insto);
             
         })
     }
 }
-async function updateCellComponentTypeForColumnWithCell(_: SceneNode) {
+function alignComps(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
+    // find the comp instance
+    let sourceInst: InstanceNode;
 
+    if(source.type === 'INSTANCE') {
+        sourceInst = source;
+    } else if(source.type === 'FRAME') {
+        sourceInst = source.children[0] as InstanceNode;
+    } else if(source.type === 'TEXT') {
+        sourceInst = source.parent as InstanceNode;
+    }
+
+    // find the main comp
+    const comp:ComponentNode = PRISMA_TABLE_CELL_COMPONENTS
+                                .find( d => d.key === sourceInst.mainComponent.key).comp;
+    // swap
+    target.swapComponent(comp);
 }
+// async function updateColumnComps(targetCell: SceneNode) {
 
-async function updateColumnIcons(target: SceneNode) {
+// }
+
+async function updateColumnIcons(targetCell: SceneNode) {
     const tableBodyCellDefaultIconLeftComponent = await figma.importComponentByKeyAsync(tableBodyCellDefaultIconLeftComponentKey);
     const tableBodyCellStripedEvenRowIconLeftComponent = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowIconLeftComponentKey);
     
-    console.log("we think we might need to change the icon!", target);
+    console.log("we think we might need to change the icon!", targetCell);
     // For now, we only assume it's a text node
-    if(target.type !== 'TEXT') return;
-    const tar = target as TextNode;
+    if(targetCell.type !== 'TEXT') return;
+    const tar = targetCell as TextNode;
     const colEl = tar.parent.parent.parent;
-    console.log("colEl:::", colEl.name);
     colEl.children.forEach((cellEl, rowIndex) => {
-        console.log("cellEl::", cellEl.name, "; index:", rowIndex);
         const inst = (cellEl as FrameNode).children[0] as InstanceNode;
         if(inst.mainComponent.key !== tableBodyCellDefaultIconLeftComponentKey &&
             inst.mainComponent.key !== tableBodyCellStripedEvenRowIconLeftComponentKey ) {
@@ -328,7 +386,6 @@ function rowForCell(cell: SceneNode): SceneNode[] {
 
 // Select all the cells in the row where the user needs to select a cell on this row first.
 function selectRow() {
-    console.log("calling select row...");
     const sel = figma.currentPage.selection.concat()[0];
     let cell;
     
@@ -351,13 +408,10 @@ function isTable(selection:readonly SceneNode[]): boolean {
 // The component we use need to be loaded first, plus all the assets
 // such as fonts and styles(?)
 async function drawTableWithComponents(data) {
-    // await figma.loadFontAsync({family: 'Roboto', style: 'Regular'});
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    const tableBodyCellDefaultComp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    const tableBodyCellStripedEvenRowComp = await figma.importComponentByKeyAsync(tableBodyCellStripedEvenRowComponentKey);
+    const tableBodyCellDefaultComp =  tableCellComp(TABLE_CELL_VARIANT.CELL_DEFAULT);
+    const tableBodyCellStripedEvenRowComp = tableCellComp(TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW);
     const rowHeight = ROW_HEIGHT.default;
-    // TODO: This doesn't work
-    // await figma.loadFontAsync({family: "Lao Sans Pro", style: "Regular"});
 
     let sel = figma.currentPage.selection;
     if (sel.length === 0) {
@@ -466,11 +520,18 @@ function tableBodyCellWithText(
     textEl.characters = text.toString();
     return tableCell;
 }
+function logSelection() {
+    const sel = figma.currentPage.selection;
+    console.log("sel:", sel[0]);
+}
 async function test() {
     console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
-    const sel = figma.currentPage.selection;
-    console.log("sel:", sel[0]);
+    logSelection();
+    // const _tt = tableCellComp(TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW);
+    // console.log("_tt:", _tt);
+    
+
     // const comp0 = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
     // const comp1 = comp0.findChild(n => n.name === 'Icon Left=False, Icon Right=False, Label=True, State=Hover') as ComponentNode;
     // console.log("comp1===>", comp1);
