@@ -11,8 +11,8 @@ const settings = {
 
 // const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
 // You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
-const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d'; ////////
-const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1'; ////////
+// const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d'; ////////
+// const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1'; ////////
 const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e'; ////////
 // const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38'; ////////
 // const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3'; ////////
@@ -22,31 +22,131 @@ const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083
 // const tableBodyCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e'; ////////
 // const tableBodyCellSelectedComponentKey = '2cffc40473d91e306a8abd83de636cc6bf2a665c'; ////////
 
-const TABLE_CELL_VARIANT = {
-    "CELL_DEFAULT" : "CellDefault",
-    "CELL_STRIPED_EVEN_ROW" : "CellStripedEvenRow",
-    "CELL_ICON_LEFT" : "CellIconLeft",
-    "CELL_ICON_RIGHT" : "CellIconRight",
-    "CELL_ICON_BOTH" : "CellIconBoth",
-    "CELL_STRIPED_EVEN_ROW_ICON_LEFT" : "CellStripedEvenRowIconLeft",
-    "CELL_STRIPED_EVEN_ROW_ICON_RIGHT" : "CellStripedEvenRowIconRight",
-    "CELL_STRIPED_EVEN_ROW_ICON_BOTH" : "CellStripedEvenRowIconBoth",
-    "CELL_HOVER" : "CellHover",
-    "CELL_SELECTED" : "CellSelected",
-};
+enum MouseState {
+    Default, Hover, Selected
+}
+enum IconState {
+    None, Left, Right, LeftAndRight,
+}
+enum StripedCell {
+    None, Even
+}
+enum TableCellVariant {
+     CellDefault,
+     CellStripedEvenRow,
+     CellIconLeft,
+     CellIconRight,
+     CellIconLeftAndRight,
+     CellStripedEvenRowIconLeft,
+     CellStripedEvenRowIconRight,
+     CellStripedEvenRowIconLeftAndRight,
+     CellHover,
+     CellHoverIconLeft,
+     CellHoverIconRight,
+     CellHoverIconBoth,
+     CellSelected,
+     CellSelectedIconLeft,
+     CellSelectedIconRight,
+     CellSelectedIconBoth,
+}
 
-
-const PRISMA_TABLE_CELL_COMPONENTS: {variant: string, key: string, comp: any}[] = [
-    { variant: TABLE_CELL_VARIANT.CELL_DEFAULT, key: "52f8db8c3eb06811177462ca81794c1e1b80b36d", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW, key: "aeae4ca0fb4b52e8501f7288bd71859b5ff87df1", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_ICON_LEFT, key: "7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_ICON_RIGHT, key: "414c2a284ecd78ef15d9fa3b5abd33635f29cf38", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_ICON_BOTH, key: "4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW_ICON_LEFT, key: "1b38e2108373907af387083e7c80614289cb323a", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW_ICON_RIGHT, key: "943c5b15b37a43f61753ff62e8e36fddcb4ce472", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW_ICON_BOTH, key: "07ad0a31821a24c118ecdd7b258637be5fb5b400", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_HOVER, key: "3782e1e0a293fb1272f309e9dea168bf5253912e", comp: null },
-    { variant: TABLE_CELL_VARIANT.CELL_SELECTED, key: "2cffc40473d91e306a8abd83de636cc6bf2a665c", comp: null },
+const PRISMA_TABLE_CELL_COMPONENTS: {variant: TableCellVariant; key: string; comp: any; mouseState: MouseState}[] = [
+    {
+        variant: TableCellVariant.CellDefault,
+        key: '52f8db8c3eb06811177462ca81794c1e1b80b36d',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellStripedEvenRow,
+        key: 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellIconLeft,
+        key: '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellIconRight,
+        key: '414c2a284ecd78ef15d9fa3b5abd33635f29cf38',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellIconLeftAndRight,
+        key: '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellStripedEvenRowIconLeft,
+        key: '1b38e2108373907af387083e7c80614289cb323a',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellStripedEvenRowIconRight,
+        key: '943c5b15b37a43f61753ff62e8e36fddcb4ce472',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellStripedEvenRowIconLeftAndRight,
+        key: '07ad0a31821a24c118ecdd7b258637be5fb5b400',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellHover,
+        key: '3782e1e0a293fb1272f309e9dea168bf5253912e',
+        comp: null,
+        mouseState: MouseState.Hover,
+    },
+    {
+        variant: TableCellVariant.CellHoverIconLeft,
+        key: '271f306487b02aadbd8e91fa00bc07441ad66bc6',
+        comp: null,
+        mouseState: MouseState.Hover,
+    },
+    {
+        variant: TableCellVariant.CellHoverIconRight,
+        key: 'ad98c22abd70dc4cc7c416f4d60236eae8af64d8',
+        comp: null,
+        mouseState: MouseState.Hover,
+    },
+    {
+        variant: TableCellVariant.CellHoverIconBoth,
+        key: 'bad9f37873cdfe29d1a3e3109481316ced867fef',
+        comp: null,
+        mouseState: MouseState.Default,
+    },
+    {
+        variant: TableCellVariant.CellSelected,
+        key: '2cffc40473d91e306a8abd83de636cc6bf2a665c',
+        comp: null,
+        mouseState: MouseState.Selected,
+    },
+    {
+        variant: TableCellVariant.CellSelectedIconLeft,
+        key: '5f0ce4db2559489c1f6d64de01e087fc71990c50',
+        comp: null,
+        mouseState: MouseState.Selected,
+    },
+    {
+        variant: TableCellVariant.CellSelectedIconRight,
+        key: '4d1a18c202a9add97412f4773de1bdab6bd252e6',
+        comp: null,
+        mouseState: MouseState.Selected,
+    },
+    {
+        variant: TableCellVariant.CellSelectedIconBoth,
+        key: '7596452dfedf909c25cfad654b2c40a6fef34311',
+        comp: null,
+        mouseState: MouseState.Selected,
+    },
 ];
 
 // const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
@@ -81,8 +181,8 @@ Promise.all(PRISMA_TABLE_CELL_COMPONENTS.map((d) => d.comp))
 
 // figma.showUI(__html__, {height: 320});
 
-function tableCellComp(variant:string):ComponentNode {
-    // if(!TABLE_CELL_VARIANT.hasOwnProperty(variant)) return null;
+function tableCellComp( variant:TableCellVariant ):ComponentNode {
+    // if(!TableCellVariant.hasOwnProperty(variant)) return null;
     const obj = PRISMA_TABLE_CELL_COMPONENTS.find(d => d.variant === variant);
     return obj? obj.comp : null;
 }
@@ -100,10 +200,11 @@ figma.on("selectionchange", () => {
             if(targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
                 const target = figma.currentPage.findOne(n => n.id === targetObj.id);
                 updateRow(target);
-                // updateColumnComps(target);
+                updateColumnComps(target);
             } else if (targetObj.type === 'TEXT') {
                 // if the previous node was a text node and the rest of the column is not????
                 const target = figma.currentPage.findOne(n => n.id === targetObj.id) as TextNode;
+                // TMP. TODO
                 updateColumnIcons(target);
             }
     }
@@ -148,28 +249,6 @@ figma.ui.onmessage = (msg) => {
         default:
             break;
     }
-    // if (msg.type === 'create-table') {
-       
-        // const nodes = [];
-
-        // for (let i = 0; i < msg.count; i++) {
-        //     const rect = figma.createRectangle();
-        //     rect.x = i * 150;
-        //     rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-        //     figma.currentPage.appendChild(rect);
-        //     nodes.push(rect);
-        // }
-
-        // figma.currentPage.selection = nodes;
-        // figma.viewport.scrollAndZoomIntoView(nodes);
-
-        // // This is how figma responds back to the ui
-        // figma.ui.postMessage({
-        //     type: 'create-rectangles',
-        //     message: `Created ${msg.count} Rectangles`,
-        // });
-        
-    // }
 
     // figma.closePlugin();
 };
@@ -263,12 +342,11 @@ function updateStriped(striped:boolean) {
                     if (rowNum1 % 2 !== 0 ) { // this is an even row cell. Index is 0 based
                         // Repaint the backdrop color
                         cell.fills = [{type: 'SOLID', color: evenRowColor}];
-                        cellComp.swapComponent(tableCellComp(TABLE_CELL_VARIANT.CELL_DEFAULT));
+                        cellComp.swapComponent(tableCellComp(TableCellVariant.CellDefault));
                     }
                     // draw the line for a cell
                     const cellLine = cellComp.findChild(e => e.name === 'bottom border');
                     cellLine.visible = !striped;
-                    console.log("the line>>>>", cellLine);
                 }
             })
         })
@@ -310,12 +388,37 @@ async function updateRow(target: SceneNode) {
             const insto = (cel as FrameNode).children[0] as InstanceNode;
 
             // Update the mouse states to be the same as the target
-            alignComps(thisInst, insto);
+            // copyComp(thisInst, insto);
+            updateCompMouseState(thisInst, insto);
             
         })
     }
 }
-function alignComps(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
+// if the source inst comp is HOVER/SELECTED, then find the non-hover/selected version
+// if the source inst comp is alt, then find both the default and even versions
+
+// Update the target's mouse state according to the source's
+function updateCompMouseState(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
+    let sourceInst: InstanceNode;
+
+    if(source.type === 'INSTANCE') {
+        sourceInst = source;
+    } else if(source.type === 'FRAME') {
+        sourceInst = source.children[0] as InstanceNode;
+    } else if(source.type === 'TEXT') {
+        sourceInst = source.parent as InstanceNode;
+    }
+    // what's the mouse state
+    const mouseState = PRISMA_TABLE_CELL_COMPONENTS.find( d => d.key === sourceInst.mainComponent.key ).mouseState;
+    console.log("Mouse state turns out to be:", mouseState);
+    // mainComponent.name === "Icon Left=True, Icon Right=False, Label=True, State=Default - Alt"
+    // const mouseState:string = 
+}
+function updateCompIconVariant(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
+
+}
+// Make the target instance the same comp as the source
+function copyComp(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
     // find the comp instance
     let sourceInst: InstanceNode;
 
@@ -333,9 +436,30 @@ function alignComps(source: FrameNode | InstanceNode | TextNode, target: Instanc
     // swap
     target.swapComponent(comp);
 }
-// async function updateColumnComps(targetCell: SceneNode) {
+async function updateColumnComps(source: SceneNode) {
+    // TODO
+    return;
+    if(!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME' )) return;
 
-// }
+    if((source.type === 'INSTANCE' && source.name === 'Cell - Text') || 
+    (source.type === 'FRAME' && source.name.includes("cell-row-"))) { 
+        // find all the instance for the column
+        let sourceCell: InstanceNode;
+        if(source.type === 'INSTANCE') {
+            sourceCell = source;
+        } else if(source.type === 'FRAME') {
+            sourceCell = source.children[0] as InstanceNode;
+        }
+        
+        const colEl = sourceCell.parent.parent as FrameNode;
+        colEl.children.forEach( el => {
+            // align instance
+            let target = (el as FrameNode).children[0] as InstanceNode;
+            copyComp(sourceCell, target);
+        });
+    }
+
+}
 
 async function updateColumnIcons(targetCell: SceneNode) {
     const tableBodyCellDefaultIconLeftComponent = await figma.importComponentByKeyAsync(tableBodyCellDefaultIconLeftComponentKey);
@@ -409,8 +533,10 @@ function isTable(selection:readonly SceneNode[]): boolean {
 // such as fonts and styles(?)
 async function drawTableWithComponents(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    const tableBodyCellDefaultComp =  tableCellComp(TABLE_CELL_VARIANT.CELL_DEFAULT);
-    const tableBodyCellStripedEvenRowComp = tableCellComp(TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW);
+    
+    const tableBodyCellDefaultComp =  tableCellComp(TableCellVariant.CellDefault);
+    const tableBodyCellStripedEvenRowComp = tableCellComp(TableCellVariant.CellStripedEvenRow);
+    
     const rowHeight = ROW_HEIGHT.default;
 
     let sel = figma.currentPage.selection;
@@ -524,33 +650,8 @@ function logSelection() {
     const sel = figma.currentPage.selection;
     console.log("sel:", sel[0]);
 }
-async function test() {
+function test() {
     console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
     logSelection();
-    // const _tt = tableCellComp(TABLE_CELL_VARIANT.CELL_STRIPED_EVEN_ROW);
-    // console.log("_tt:", _tt);
-    
-
-    // const comp0 = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
-    // const comp1 = comp0.findChild(n => n.name === 'Icon Left=False, Icon Right=False, Label=True, State=Hover') as ComponentNode;
-    // console.log("comp1===>", comp1);
-    // const tableHeader0 = comp0.createInstance();
-    // tableHeader0.swapComponent(comp1);
-
-    // return;
-    // await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    // const comp = await figma.importComponentByKeyAsync(tableBodyCellDefaultComponentKey);
-    // // const comp = await figma.importComponentByKeyAsync(tableHeaderCellHoverComponentKey);
-    // const tableHeader = comp.createInstance();
-    // console.log("header:::::", tableHeader.mainComponent.name);
-    
-    // // set label to on
-    // // tableHeader.
-    // // set state to default
-    // const text = tableHeader.findChild(n => n.type === "TEXT") as TextNode;
-    // console.log("text::", text);
-    // text.characters = "ipsum loram!";
-    // drawTableWithComponents
-    //drawTableWithComponents
 }
