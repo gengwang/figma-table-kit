@@ -9,131 +9,83 @@ const settings = {
     'manual-update': false,
 };
 
-// const bodySRegularStyleId = 'S:9368379dc9395a663811d1eb894e2c5c21793701,33995:33';
-// You can get the key of a main component by first creating an instance and then instanceNode.mainComponent.key
-// const tableBodyCellDefaultComponentKey = '52f8db8c3eb06811177462ca81794c1e1b80b36d'; ////////
-// const tableBodyCellStripedEvenRowComponentKey = 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1'; ////////
-const tableBodyCellDefaultIconLeftComponentKey = '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e'; ////////
-// const tableBodyCellDefaultIconRightComponentKey = '414c2a284ecd78ef15d9fa3b5abd33635f29cf38'; ////////
-// const tableBodyCellDefaultIconBothComponentKey = '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3'; ////////
-const tableBodyCellStripedEvenRowIconLeftComponentKey = '1b38e2108373907af387083e7c80614289cb323a'; ////////
-// const tableBodyCellStripedEvenRowIconRightComponentKey = '943c5b15b37a43f61753ff62e8e36fddcb4ce472'; ////////
-// const tableBodyCellStripedEvenRowIconBothComponentKey = '07ad0a31821a24c118ecdd7b258637be5fb5b400'; ////////
-// const tableBodyCellHoverComponentKey = '3782e1e0a293fb1272f309e9dea168bf5253912e'; ////////
-// const tableBodyCellSelectedComponentKey = '2cffc40473d91e306a8abd83de636cc6bf2a665c'; ////////
-
-enum TableCellVariant {
-    CellDefault,
-    CellStripedEvenRow,
-    CellIconLeft,
-    CellIconRight,
-    CellIconLeftAndRight,
-    CellStripedEvenRowIconLeft,
-    CellStripedEvenRowIconRight,
-    CellStripedEvenRowIconLeftAndRight,
-    CellHover,
-    CellHoverIconLeft,
-    CellHoverIconRight,
-    CellHoverIconBoth,
-    CellSelected,
-    CellSelectedIconLeft,
-    CellSelectedIconRight,
-    CellSelectedIconBoth,
-}
-
-const PRISMA_TABLE_CELL_COMPONENTS: {variant: TableCellVariant; key: string; comp: any; variantObj: object}[] = [
+const PRISMA_TABLE_CELL_COMPONENTS: {key: string; comp: any; variantObj: object}[] = [
     {
-        variant: TableCellVariant.CellDefault,
         key: '52f8db8c3eb06811177462ca81794c1e1b80b36d',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellStripedEvenRow,
         key: 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellIconLeft,
         key: '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellIconRight,
         key: '414c2a284ecd78ef15d9fa3b5abd33635f29cf38',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellIconLeftAndRight,
         key: '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellIconLeftAndRight,
         key: '1b38e2108373907af387083e7c80614289cb323a',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellStripedEvenRowIconRight,
         key: '943c5b15b37a43f61753ff62e8e36fddcb4ce472',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellStripedEvenRowIconLeftAndRight,
         key: '07ad0a31821a24c118ecdd7b258637be5fb5b400',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellHover,
         key: '3782e1e0a293fb1272f309e9dea168bf5253912e',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellHoverIconLeft,
         key: '271f306487b02aadbd8e91fa00bc07441ad66bc6',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellHoverIconRight,
         key: 'ad98c22abd70dc4cc7c416f4d60236eae8af64d8',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellHoverIconBoth,
         key: 'bad9f37873cdfe29d1a3e3109481316ced867fef',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellSelected,
         key: '2cffc40473d91e306a8abd83de636cc6bf2a665c',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellSelectedIconLeft,
         key: '5f0ce4db2559489c1f6d64de01e087fc71990c50',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellSelectedIconRight,
         key: '4d1a18c202a9add97412f4773de1bdab6bd252e6',
         comp: null,
         variantObj: null,
     },
     {
-        variant: TableCellVariant.CellSelectedIconBoth,
         key: '7596452dfedf909c25cfad654b2c40a6fef34311',
         comp: null,
         variantObj: null,
@@ -165,7 +117,6 @@ Promise.all(PRISMA_TABLE_CELL_COMPONENTS.map((d) => d.comp))
     })
     .then(() => {
         figma.showUI(__html__, {height: 320});
-        console.log('PRISMA_TABLE_CELL_COMPONENTS::', PRISMA_TABLE_CELL_COMPONENTS);
     })
     .catch((error) => {
         console.error('error in loading Prisma Table cell components', error);
@@ -173,11 +124,6 @@ Promise.all(PRISMA_TABLE_CELL_COMPONENTS.map((d) => d.comp))
 
 // figma.showUI(__html__, {height: 320});
 
-function tableCellComp(variant: TableCellVariant): ComponentNode {
-    // if(!TableCellVariant.hasOwnProperty(variant)) return null;
-    const obj = PRISMA_TABLE_CELL_COMPONENTS.find((d) => d.variant === variant);
-    return obj ? obj.comp : null;
-}
 // We store which node we are interacting with
 // TODO: store the whole array of current page selection
 figma.on('selectionchange', () => {
@@ -195,7 +141,7 @@ figma.on('selectionchange', () => {
             // if the previous node was a text node and the rest of the column is not????
             const target = figma.currentPage.findOne((n) => n.id === targetObj.id) as TextNode;
             // TMP. TODO
-            updateColumnIcons(target);
+            // updateColumnIcons(target);
         }
     }
     // Store the selection so we can use in the next change event
@@ -341,7 +287,11 @@ function updateStriped(striped: boolean) {
                         // this is an even row cell. Index is 0 based
                         // Repaint the backdrop color
                         cell.fills = [{type: 'SOLID', color: evenRowColor}];
-                        cellComp.swapComponent(tableCellComp(TableCellVariant.CellDefault));
+                        // cellComp.swapComponent(tableCellComp(TableCellVariant.CellDefault));
+                        // TMP
+                        cellComp.swapComponent(
+                            PRISMA_TABLE_CELL_COMPONENTS.find((d) => d['State'] === 'Default')['comp']
+                        );
                     }
                     // draw the line for a cell
                     const cellLine = cellComp.findChild((e) => e.name === 'bottom border');
@@ -388,7 +338,6 @@ async function updateRow(target: SceneNode) {
             const insto = (cel as FrameNode).children[0] as InstanceNode;
 
             // Update the mouse states to be the same as the target
-            // copyComp(thisInst, insto);
             updateCompMouseState(thisInst, insto);
         });
     }
@@ -396,45 +345,42 @@ async function updateRow(target: SceneNode) {
 // if the source inst comp is HOVER/SELECTED, then find the non-hover/selected version
 // if the source inst comp is alt, then find both the default and even versions
 
-// Update the target's mouse state according to the source's
-function updateCompMouseState(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
-    let sourceInst: InstanceNode;
-
-    if (source.type === 'INSTANCE') {
-        sourceInst = source;
-    } else if (source.type === 'FRAME') {
-        sourceInst = source.children[0] as InstanceNode;
-    } else if (source.type === 'TEXT') {
-        sourceInst = source.parent as InstanceNode;
-    }
-    // what's the mouse state
-    // const mouseState = PRISMA_TABLE_CELL_COMPONENTS.find( d => d.key === sourceInst.mainComponent.key ).mouseState;
-    // console.log("Mouse state turns out to be:", mouseState);
-    // mainComponent.name === "Icon Left=True, Icon Right=False, Label=True, State=Default - Alt"
-    // const mouseState:string =
+// Update the target's mouse state according to the source's: this is mostly used when we want to update the whole row
+function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
+    // Find the source and the destination comp info
+    const srcCompInfo: object = parseCompName(source.mainComponent.name);
+    const destCompInfo: object = parseCompName(destination.mainComponent.name);
+    // What's the desired comp we want?
+    const expCompo: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => {
+        return (
+            d.variantObj['Icon Left'] === destCompInfo['Icon Left'] &&
+            d.variantObj['Icon Right'] === destCompInfo['Icon Right'] &&
+            d.variantObj['Label'] === destCompInfo['Label'] &&
+            d.variantObj['State'] === srcCompInfo['State']
+        );
+    })['comp'];
+    destination.swapComponent(expCompo);
 }
-function updateCompIconVariant(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {}
-// Make the target instance the same comp as the source
-function copyComp(source: FrameNode | InstanceNode | TextNode, target: InstanceNode) {
-    // find the comp instance
-    let sourceInst: InstanceNode;
 
-    if (source.type === 'INSTANCE') {
-        sourceInst = source;
-    } else if (source.type === 'FRAME') {
-        sourceInst = source.children[0] as InstanceNode;
-    } else if (source.type === 'TEXT') {
-        sourceInst = source.parent as InstanceNode;
-    }
-
-    // find the main comp
-    const comp: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => d.key === sourceInst.mainComponent.key).comp;
-    // swap
-    target.swapComponent(comp);
+// Update the target's icon state (e.g., icon left/right/label) according to the source's while keeping the target's mouse state:
+// This is mostly applicable when we want to update the whole column
+function updateCompIconLabelVariant(source: InstanceNode, destination: InstanceNode) {
+    // Find the source and the destination comp info
+    const srcCompoInfo: object = parseCompName(source.mainComponent.name);
+    const destCompInfo: object = parseCompName(destination.mainComponent.name);
+    // What's the desired comp we want?
+    const expCompo: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => {
+        return (
+            d.variantObj['Icon Left'] === srcCompoInfo['Icon Left'] &&
+            d.variantObj['Icon Right'] === srcCompoInfo['Icon Right'] &&
+            d.variantObj['Label'] === srcCompoInfo['Label'] &&
+            d.variantObj['State'] === destCompInfo['State']
+        );
+    })['comp'];
+    destination.swapComponent(expCompo);
 }
+
 async function updateColumnComps(source: SceneNode) {
-    // TODO
-    return;
     if (!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME')) return;
 
     if (
@@ -442,56 +388,55 @@ async function updateColumnComps(source: SceneNode) {
         (source.type === 'FRAME' && source.name.includes('cell-row-'))
     ) {
         // find all the instance for the column
-        let sourceCell: InstanceNode;
+        let sourceInst: InstanceNode;
         if (source.type === 'INSTANCE') {
-            sourceCell = source as InstanceNode;
+            sourceInst = source as InstanceNode;
         } else if (source.type === 'FRAME') {
-            sourceCell = (source as FrameNode).children[0] as InstanceNode;
+            sourceInst = (source as FrameNode).children[0] as InstanceNode;
         }
+        const colEl = sourceInst.parent.parent as FrameNode;
 
-        const colEl = sourceCell.parent.parent as FrameNode;
         colEl.children.forEach((el) => {
-            // align instance
-            let target = (el as FrameNode).children[0] as InstanceNode;
-            copyComp(sourceCell, target);
+            let targetInst = (el as FrameNode).children[0] as InstanceNode;
+            updateCompIconLabelVariant(sourceInst, targetInst);
         });
     }
 }
 
-async function updateColumnIcons(targetCell: SceneNode) {
-    const tableBodyCellDefaultIconLeftComponent = await figma.importComponentByKeyAsync(
-        tableBodyCellDefaultIconLeftComponentKey
-    );
-    const tableBodyCellStripedEvenRowIconLeftComponent = await figma.importComponentByKeyAsync(
-        tableBodyCellStripedEvenRowIconLeftComponentKey
-    );
+// async function updateColumnIcons(targetCell: SceneNode) {
+//     const tableBodyCellDefaultIconLeftComponent = await figma.importComponentByKeyAsync(
+//         tableBodyCellDefaultIconLeftComponentKey
+//     );
+//     const tableBodyCellStripedEvenRowIconLeftComponent = await figma.importComponentByKeyAsync(
+//         tableBodyCellStripedEvenRowIconLeftComponentKey
+//     );
 
-    console.log('we think we might need to change the icon!', targetCell);
-    // For now, we only assume it's a text node
-    if (targetCell.type !== 'TEXT') return;
-    const tar = targetCell as TextNode;
-    const colEl = tar.parent.parent.parent;
-    colEl.children.forEach((cellEl, rowIndex) => {
-        const inst = (cellEl as FrameNode).children[0] as InstanceNode;
-        if (
-            inst.mainComponent.key !== tableBodyCellDefaultIconLeftComponentKey &&
-            inst.mainComponent.key !== tableBodyCellStripedEvenRowIconLeftComponentKey
-        ) {
-            inst.swapComponent(
-                rowIndex % 2 === 0
-                    ? tableBodyCellDefaultIconLeftComponent
-                    : tableBodyCellStripedEvenRowIconLeftComponent
-            );
-            // Update all the instances
-            // If the new instance includes icons, also update icons
-        } else {
-        }
-        console.log('inst::', inst.name);
-    });
+//     console.log('we think we might need to change the icon!', targetCell);
+//     // For now, we only assume it's a text node
+//     if (targetCell.type !== 'TEXT') return;
+//     const tar = targetCell as TextNode;
+//     const colEl = tar.parent.parent.parent;
+//     colEl.children.forEach((cellEl, rowIndex) => {
+//         const inst = (cellEl as FrameNode).children[0] as InstanceNode;
+//         if (
+//             inst.mainComponent.key !== tableBodyCellDefaultIconLeftComponentKey &&
+//             inst.mainComponent.key !== tableBodyCellStripedEvenRowIconLeftComponentKey
+//         ) {
+//             inst.swapComponent(
+//                 rowIndex % 2 === 0
+//                     ? tableBodyCellDefaultIconLeftComponent
+//                     : tableBodyCellStripedEvenRowIconLeftComponent
+//             );
+//             // Update all the instances
+//             // If the new instance includes icons, also update icons
+//         } else {
+//         }
+//         console.log('inst::', inst.name);
+//     });
 
-    // change all the column cells to the same type?
-    // update the icons
-}
+//     // change all the column cells to the same type?
+//     // update the icons
+// }
 
 function rowForCell(cell: SceneNode): SceneNode[] {
     const reg = /\d+/;
@@ -538,9 +483,13 @@ function isTable(selection: readonly SceneNode[]): boolean {
 async function drawTableWithComponents(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
-    const tableBodyCellDefaultComp = tableCellComp(TableCellVariant.CellDefault);
-    const tableBodyCellStripedEvenRowComp = tableCellComp(TableCellVariant.CellStripedEvenRow);
-
+    // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
+    const tableBodyCellDefaultComp = PRISMA_TABLE_CELL_COMPONENTS.find((d) => d.variantObj['State'] === 'Default')[
+        'comp'
+    ];
+    const tableBodyCellStripedEvenRowComp = PRISMA_TABLE_CELL_COMPONENTS.find(
+        (d) => d.variantObj['State'] === 'Default - Alt'
+    )['comp'];
     const rowHeight = ROW_HEIGHT.default;
 
     let sel = figma.currentPage.selection;
