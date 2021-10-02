@@ -92,16 +92,11 @@ const PRISMA_TABLE_CELL_COMPONENTS: {key: string; comp: any; variantObj: object}
     },
 ];
 
-// const tableActionCellComponentKey = '0c261446286f17942208d7c617d9ad7feacd0335';
 const ROW_HEIGHT = {
     cozy: 44,
     default: 32,
     compact: 24,
 };
-
-// figma.importComponentByKeyAsync('aeae4ca0fb4b52e8501f7288bd71859b5ff87df1')
-// .then(comp => console.log("comp loaded:::", comp))
-// .catch(error => console.error("error:", error))
 
 // First making sure all Table Cell components are loaded, then show the UI
 PRISMA_TABLE_CELL_COMPONENTS.forEach((d) => {
@@ -268,7 +263,9 @@ function updateStriped(striped: boolean) {
     // First select the table body, pls
     if (figma.currentPage.selection.length === 0) return;
 
+    // TODO. For now you have to select a table frame. TODO: to select any child
     const tableEl = figma.currentPage.selection[0] as FrameNode;
+    // TODO: Maybe we should get the color from the imported component named Default - Alt
     const evenRowColor = striped ? {r: 244 / 255, g: 245 / 255, b: 245 / 255} : {r: 1, g: 1, b: 1};
     if (tableEl.name === 'pa-table-body') {
         const reg = /(?<=cell-row-)\d*/;
@@ -282,19 +279,26 @@ function updateStriped(striped: boolean) {
                     const rowNum = cellMatches[0] as unknown;
                     const rowNum1 = rowNum as number;
                     // Swap the child
-                    let cellComp = cell.children[0] as InstanceNode;
+                    let destInst = cell.children[0] as InstanceNode;
                     if (rowNum1 % 2 !== 0) {
-                        // this is an even row cell. Index is 0 based
+                        // If this is an even row cell. Index is 0 based
                         // Repaint the backdrop color
                         cell.fills = [{type: 'SOLID', color: evenRowColor}];
-                        // cellComp.swapComponent(tableCellComp(TableCellVariant.CellDefault));
-                        // TMP
-                        cellComp.swapComponent(
-                            PRISMA_TABLE_CELL_COMPONENTS.find((d) => d['State'] === 'Default')['comp']
-                        );
+                        const stateVar: object = parseCompName(destInst.mainComponent.name);
+
+                        let evenRowComp: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => {
+                            return d.variantObj['State'] === striped
+                                ? 'Default - Alt'
+                                : 'Default' &&
+                                      d.variantObj['Icon Left'] === stateVar['Icon Left'] &&
+                                      d.variantObj['Icon Right'] === stateVar['Icon Right'] &&
+                                      d.variantObj['Label'] === stateVar['Label'];
+                        })['comp'];
+
+                        destInst.swapComponent(evenRowComp);
                     }
                     // draw the line for a cell
-                    const cellLine = cellComp.findChild((e) => e.name === 'bottom border');
+                    const cellLine = destInst.findChild((e) => e.name === 'bottom border');
                     cellLine.visible = !striped;
                 }
             });
@@ -402,41 +406,6 @@ async function updateColumnComps(source: SceneNode) {
         });
     }
 }
-
-// async function updateColumnIcons(targetCell: SceneNode) {
-//     const tableBodyCellDefaultIconLeftComponent = await figma.importComponentByKeyAsync(
-//         tableBodyCellDefaultIconLeftComponentKey
-//     );
-//     const tableBodyCellStripedEvenRowIconLeftComponent = await figma.importComponentByKeyAsync(
-//         tableBodyCellStripedEvenRowIconLeftComponentKey
-//     );
-
-//     console.log('we think we might need to change the icon!', targetCell);
-//     // For now, we only assume it's a text node
-//     if (targetCell.type !== 'TEXT') return;
-//     const tar = targetCell as TextNode;
-//     const colEl = tar.parent.parent.parent;
-//     colEl.children.forEach((cellEl, rowIndex) => {
-//         const inst = (cellEl as FrameNode).children[0] as InstanceNode;
-//         if (
-//             inst.mainComponent.key !== tableBodyCellDefaultIconLeftComponentKey &&
-//             inst.mainComponent.key !== tableBodyCellStripedEvenRowIconLeftComponentKey
-//         ) {
-//             inst.swapComponent(
-//                 rowIndex % 2 === 0
-//                     ? tableBodyCellDefaultIconLeftComponent
-//                     : tableBodyCellStripedEvenRowIconLeftComponent
-//             );
-//             // Update all the instances
-//             // If the new instance includes icons, also update icons
-//         } else {
-//         }
-//         console.log('inst::', inst.name);
-//     });
-
-//     // change all the column cells to the same type?
-//     // update the icons
-// }
 
 function rowForCell(cell: SceneNode): SceneNode[] {
     const reg = /\d+/;
