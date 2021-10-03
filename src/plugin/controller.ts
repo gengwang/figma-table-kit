@@ -133,14 +133,17 @@ figma.on('selectionchange', () => {
             updateRow(target);
             updateColumnComps(target);
         } else if (targetObj.type === 'TEXT') {
+            console.log('target is a text and it is ', targetObj, '; name: ', targetObj.name);
+
             // if the previous node was a text node and the rest of the column is not????
             const target = figma.currentPage.findOne((n) => n.id === targetObj.id) as TextNode;
             // TMP. TODO
-            // updateColumnIcons(target);
+            updateColumnIcons(target);
         }
     }
     // Store the selection so we can use in the next change event
     if (figma.currentPage.selection.length > 0) {
+        ``;
         const el = figma.currentPage.selection[0];
         const obj = {
             name: el.name,
@@ -405,6 +408,23 @@ async function updateColumnComps(source: SceneNode) {
             updateCompIconLabelVariant(sourceInst, targetInst);
         });
     }
+}
+
+async function updateColumnIcons(source: TextNode) {
+    await figma.loadFontAsync({family: 'Font Awesome 5 Pro', style: 'Solid'});
+    const sourceInst = source.parent as InstanceNode;
+    const colEl = sourceInst.parent.parent as FrameNode;
+    const sourceIcon: TextNode = sourceInst.findChild((d) => d.name === source.name) as TextNode;
+    if (!sourceIcon) return;
+    colEl.children.forEach((el) => {
+        let targetInst = (el as FrameNode).children[0] as InstanceNode;
+        updateCompIconLabelVariant(sourceInst, targetInst);
+        // Prisma Library is using icon font for left/right icons
+        const targetIcon: TextNode = targetInst.findChild((d) => d.name === source.name) as TextNode;
+        if (targetIcon) {
+            targetIcon.characters = sourceIcon.characters;
+        }
+    });
 }
 
 function rowForCell(cell: SceneNode): SceneNode[] {
