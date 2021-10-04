@@ -208,18 +208,19 @@ figma.on('selectionchange', () => {
 
     if (figma.currentPage.getPluginData('selectedEl') !== '' && figma.currentPage.selection.length === 0) {
         // if the user just de-selected something, we may want to update the row
-        const targetObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
-        if (targetObj.type === 'FRAME' || targetObj.type === 'INSTANCE') {
-            const target = figma.currentPage.findOne((n) => n.id === targetObj.id);
-            updateRow(target);
-            updateColumnComps(target);
-        } else if (targetObj.type === 'TEXT') {
-            console.log('target is a text and it is ', targetObj, '; name: ', targetObj.name);
+        const sourceObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
+        if (sourceObj.type === 'FRAME' || sourceObj.type === 'INSTANCE') {
+            const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
+            updateRow(source);
+            updateColumnComps(source);
+            updateColmnHeader(source);
+        } else if (sourceObj.type === 'TEXT') {
+            console.log('source is a text and it is ', sourceObj, '; name: ', sourceObj.name);
 
             // if the previous node was a text node and the rest of the column is not????
-            const target = figma.currentPage.findOne((n) => n.id === targetObj.id) as TextNode;
+            const source = figma.currentPage.findOne((n) => n.id === sourceObj.id) as TextNode;
             // TMP. TODO
-            updateColumnIcons(target);
+            updateColumnIcons(source);
         }
     }
     // Store the selection so we can use in the next change event
@@ -485,6 +486,30 @@ async function updateColumnIcons(source: TextNode) {
     });
 }
 
+function updateColmnHeader(source: SceneNode) {
+    const reg = /(?<=col-)\d*/;
+    const matches = source.name.match(reg);
+    // if the user has just selected a column
+    if (matches !== null) {
+        const parentName = source.parent.name;
+        const colIndex = matches[0];
+        const w = (source as FrameNode).width;
+
+        if (parentName !== 'pa-table-body' && parentName !== 'pa-table-header') return;
+
+        // resize the corresponding header
+        if (parentName === 'pa-table-body') {
+            const headerContainer = source.parent.parent.findChild((d) => d.name === 'pa-table-header') as FrameNode;
+            const columnHeaderContainer = headerContainer.findChild((d) => d.name === 'col-' + colIndex);
+            columnHeaderContainer.resize(w, table_style.headerHeight);
+        } else if (parentName === 'pa-table-header') {
+            const boydColumnContainer = source.parent.parent.findChild((d) => d.name === 'pa-table-body') as FrameNode;
+            const columnContainer = boydColumnContainer.findChild((d) => d.name === 'col-' + colIndex);
+            columnContainer.resize(w, columnContainer.height);
+        }
+    }
+}
+
 function rowForCell(cell: SceneNode): SceneNode[] {
     const reg = /\d+/;
     const rowMatches = cell.name.match(reg);
@@ -575,8 +600,24 @@ async function drawTableHeader(data) {
         }
         headerInst.resize(table_style.columnWidth, table_style.headerHeight);
         headerInst.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
-        headerInst.layoutAlign = 'STRETCH'; // Fill Height
-        headerContainer.appendChild(headerInst);
+        headerInst.layoutAlign = 'STRETCH';
+
+        // column header
+        const columnHeaderContainer = baseFrameWithAutoLayout({
+            name: 'col-' + i,
+            height: table_style.headerHeight,
+            // width: table_style.columnWidth * headerTitles.length,
+            width: table_style.columnWidth,
+            padding: 0,
+            itemSpacing: 0,
+            direction: 'VERTICAL',
+        }) as FrameNode;
+
+        columnHeaderContainer.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
+        columnHeaderContainer.layoutAlign = 'STRETCH';
+
+        columnHeaderContainer.appendChild(headerInst);
+        headerContainer.appendChild(columnHeaderContainer);
     });
 
     return headerContainer;
