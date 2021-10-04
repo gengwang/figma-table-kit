@@ -1,0 +1,35 @@
+{
+    "title": "Spotify Today\"s Top Hits",
+    "rows": [
+        {
+            "Rank": 1,
+            "Title": "Girls Want Girls (with Lil Baby)",
+            "Artists": "Drake, Lil Baby",
+            "Album": "Certified Lover Boy"
+        },
+        {
+            "Rank": 2,
+            "Title": "Hurricane",
+            "Artists": "Kanye West",
+            "Album": "Donda"
+        },
+        {
+            "Rank": 3,
+            "Title": "STAY (with Justin Bieber)",
+            "Artists": "The Kid LAROI, Justin Bieber",
+            "Album": "STAY (with Justin Bieber)"
+        },
+        {
+            "Rank": 4,
+            "Title": "INDUSTRY BABY (feat. Jack Harlow)",
+            "Artists": "Lil Nas X, Jack Harlow",
+            "Album": "INDUSTRY BABY (feat. Jack Harlow)"
+        },
+        {
+            "Rank": 5,
+            "Title": "Bad Habits",
+            "Artists": "Ed Sheeran",
+            "Album": "Bad Habits"
+        }
+    ]
+}

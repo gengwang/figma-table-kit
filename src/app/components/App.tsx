@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '../styles/ui.css';
-import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../assets/datasets.js';
+import {prisma_cloud_policies, prisma_cloud_alerts} from '../assets/datasets.js';
 
 declare function require(path: string): any;
 
@@ -14,8 +14,6 @@ const App = ({}) => {
     const DATA = {
         prisma_cloud_alerts: prisma_cloud_alerts,
         prisma_cloud_policies: prisma_cloud_policies,
-        artists: artists,
-        songs: songs,
     };
 
     const [striped, onStripedChange] = React.useReducer((striped) => {
@@ -28,7 +26,7 @@ const App = ({}) => {
         return !manual;
     }, false);
 
-    const [dataset, setDataset] = React.useState(DATA.artists);
+    const [dataset, setDataset] = React.useState(DATA.prisma_cloud_alerts);
 
     const onCreate = () => {
         // const count = parseInt(textbox.current.value, 10);
@@ -41,16 +39,32 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'update-table', dataset: dataset}}, '*');
     };
 
-    /*  const onSelectRow = () => {
-        parent.postMessage({pluginMessage: {type: 'select-row'}}, '*');
-    }
-
-    const onUpdateRowHeight = () => {
-        parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
-    } */
-    const onTestDrawTableHeader = () => {
-        parent.postMessage({pluginMessage: {type: 'draw-table-header', dataset: dataset}}, '*');
+    const onFileSelect = () => {
+        const fileElem = document.getElementById('fileElem');
+        if (fileElem) {
+            console.log('file select>>>', fileElem);
+            fileElem.click();
+        }
     };
+
+    const onFileChange = (e) => {
+        // e.target is the file input which has ["files"] array
+        console.log('e:::::', e.target.files);
+        if (!e.target.files || e.target.files.length == 0) return;
+        const fileToRead = e.target.files[0];
+        var fileReader = new FileReader();
+        fileReader.onload = function (e) {
+            var content = e.target.result;
+            // console.log(content);
+            var json_data = JSON.parse(content as string); // Array of Objects.
+            // console.log('json_data:', json_data);
+            // setDataset(json_data);
+            // parent.postMessage({ pluginMessage: { type: 'send-data', json_data } }, '*')
+            parent.postMessage({pluginMessage: {type: 'create-table', dataset: json_data}}, '*');
+        };
+        fileReader.readAsText(fileToRead);
+    };
+
     const onTest = () => {
         parent.postMessage({pluginMessage: {type: 'test'}}, '*');
     };
@@ -77,14 +91,23 @@ const App = ({}) => {
                 <label>Data sets</label>
 
                 <select onChange={(val) => onDataSetChange(val.target.value)}>
-                    {/* <option value="prisma_cloud_alerts">Prisma Cloud - Alerts</option>
-                    <option value="prisma_cloud_policies">Prisma Cloud - Policies</option> */}
-                    <option value="artists">Artists</option>
-                    <option value="songs">Songs</option>
+                    {/* <option value="artists">Artists</option>
+                    <option value="songs">Songs</option> */}
                     <option value="prisma_cloud_alerts">Prisma Cloud - Alerts</option>
                     <option value="prisma_cloud_policies">Prisma Cloud - Policies</option>
                 </select>
             </div>
+
+            <input
+                type="file"
+                id="fileElem"
+                accept="application/JSON"
+                style={{display: 'none'}}
+                onChange={onFileChange}
+            ></input>
+            <button id="fileSelect" onClick={onFileSelect}>
+                My Own Dataset
+            </button>
 
             <div className="checkbox-group">
                 <input name="stripedCheckbox" type="checkbox" checked={striped} onChange={onStripedChange} />
@@ -106,11 +129,9 @@ const App = ({}) => {
             {/*  <button id="update-row" onClick={onUpdateRowHeight}>
                 Update Selected Row Height
             </button> */}
-            <button id="test1" onClick={onTestDrawTableHeader}>
-                Test: Draw Table Header
-            </button>
+
             <button id="test" onClick={onTest}>
-                Test: Log sel
+                Debug: Log selection
             </button>
         </div>
     );
