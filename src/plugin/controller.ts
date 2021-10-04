@@ -150,11 +150,12 @@ figma.ui.onmessage = (msg) => {
             updateSettings(msg);
             break;
         case 'create-table':
-            drawTableBodyWithComponents(msg.dataset);
+            drawTable(msg.dataset);
+            // drawTableBody(msg.dataset);
             break;
         case 'update-table':
             if (figma.currentPage.selection.length > 0) {
-                drawTableBodyWithComponents(msg.dataset);
+                drawTableBody(msg.dataset);
             }
         case 'update-striped':
             updateStriped(msg.striped);
@@ -523,6 +524,25 @@ function isTable(selection: readonly SceneNode[]): boolean {
     return selection.length == 1 && selection[0].name.includes('pa-table-body');
 }
 
+function drawTable(data) {
+    Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
+        // console.log("frames now are available:::", frames);
+        const tableEl = figma.createFrame();
+        tableEl.name = 'pa-table';
+        tableEl.layoutMode = 'VERTICAL';
+        tableEl.layoutGrow = 0;
+
+        // tableEl.layoutAlign = 'MAX';
+
+        header.layoutGrow = 0;
+        tableEl.appendChild(header);
+        body.layoutGrow = 0;
+        tableEl.appendChild(body);
+
+        // TMP: set the width to 1440 for now.
+        tableEl.resize(1440 - 32 * 2, header.height + body.height);
+    });
+}
 async function drawTableHeader(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Bold'});
 
@@ -535,7 +555,7 @@ async function drawTableHeader(data) {
     const headerTitles: string[] = Object.keys(data['rows'][0] as object);
 
     // let sel = figma.currentPage.selection;
-    const bodyContainer = baseFrameWithAutoLayout({
+    const headerContainer = baseFrameWithAutoLayout({
         name: 'pa-table-header',
         height: table_style.headerHeight,
         // width: table_style.columnWidth * headerTitles.length,
@@ -545,7 +565,7 @@ async function drawTableHeader(data) {
         direction: 'HORIZONTAL',
     }) as FrameNode;
 
-    bodyContainer.layoutGrow = 1;
+    headerContainer.layoutGrow = 1;
 
     headerTitles.forEach((title, i) => {
         const headerInst: InstanceNode = tableHeaderCellDefaultComp.createInstance();
@@ -556,18 +576,18 @@ async function drawTableHeader(data) {
         headerInst.resize(table_style.columnWidth, table_style.headerHeight);
         headerInst.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
         headerInst.layoutAlign = 'STRETCH'; // Fill Height
-        bodyContainer.appendChild(headerInst);
+        headerContainer.appendChild(headerInst);
     });
 
-    // bodyContainer.layoutAlign = 'MIN';
-    // bodyContainer.layoutGrow = 1;
+    return headerContainer;
 }
 
 // Draw table using the d3 update pattern(e.g., enter/update/exit).
+// Using imported external components.
 // TODO: Move 'pa-table-body' to a const
 // The component we use need to be loaded first, plus all the assets
 // such as fonts and styles(?)
-async function drawTableBodyWithComponents(data) {
+async function drawTableBody(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
@@ -676,6 +696,7 @@ async function drawTableBodyWithComponents(data) {
 
     figma.viewport.scrollAndZoomIntoView(sel);
     figma.currentPage.selection = sel;
+    return sel[0];
 }
 // NOTE: The client function needs to loadFontAsync at the top of the function
 function tableBodyCellWithText(
