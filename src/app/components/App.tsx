@@ -81,6 +81,8 @@ const App = ({}) => {
                     <option value="prisma_cloud_policies">Prisma Cloud - Policies</option> */}
                     <option value="artists">Artists</option>
                     <option value="songs">Songs</option>
+                    <option value="prisma_cloud_alerts">Prisma Cloud - Alerts</option>
+                    <option value="prisma_cloud_policies">Prisma Cloud - Policies</option>
                 </select>
             </div>
 

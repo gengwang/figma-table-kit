@@ -151,7 +151,6 @@ figma.ui.onmessage = (msg) => {
             break;
         case 'create-table':
             drawTable(msg.dataset);
-            // drawTableBody(msg.dataset);
             break;
         case 'update-table':
             if (figma.currentPage.selection.length > 0) {
@@ -318,11 +317,17 @@ function updateStriped(striped: boolean) {
 
     // TODO. For now you have to select a table frame. TODO: to select any child
     const tableEl = figma.currentPage.selection[0] as FrameNode;
+    if (tableEl.name !== 'pa-table') {
+        return;
+    }
+
+    const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
+
     // TODO: Maybe we should get the color from the imported component named Default - Alt
     const evenRowColor = striped ? {r: 244 / 255, g: 245 / 255, b: 245 / 255} : {r: 1, g: 1, b: 1};
-    if (tableEl.name === 'pa-table-body') {
+    if (tableBodyEl.name === 'pa-table-body') {
         const reg = /(?<=cell-row-)\d*/;
-        tableEl.children.forEach((colEl) => {
+        tableBodyEl.children.forEach((colEl) => {
             const col = colEl as FrameNode;
 
             col.children.forEach((cellEl) => {
@@ -487,6 +492,8 @@ async function updateColumnIcons(source: TextNode) {
 }
 
 function updateColmnHeader(source: SceneNode) {
+    if (!source) return;
+
     const reg = /(?<=col-)\d*/;
     const matches = source.name.match(reg);
     // if the user has just selected a column
@@ -660,7 +667,7 @@ async function drawTableBody(data) {
     }
 
     // row based data source
-    const datagrid = _.chain(data.rows).take(10).value();
+    const datagrid = _.chain(data.rows).take(25).value();
 
     // column based data source
     const dataframe = transpose(datagrid);
