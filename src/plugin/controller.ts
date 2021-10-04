@@ -4,110 +4,190 @@ import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose, parseCompNa
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
-const table_style = {rowHeight: 36, columnWidth: 160};
+const table_style = {
+    rowHeight: 32,
+    headerHeight: 32,
+    columnWidth: 200,
+    compact: {
+        rowHeight: 24,
+    },
+    cozy: {
+        rowHeight: 44,
+    },
+};
 const settings = {
     'manual-update': false,
 };
 
-const PRISMA_TABLE_CELL_COMPONENTS: {key: string; comp: any; variantObj: object}[] = [
+enum PRISMA_TABLE_COMPONENTS_INST_NAME {
+    'Header - Text',
+    'Header - Checkbox',
+    'Cell - Text',
+    'Cell - Actions',
+    'Cell - Checkbox',
+    'Cell - Severity',
+    'Cell - Toggle',
+}
+
+const PRISMA_TABLE_COMPONENTS: {
+    key: string;
+    instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME;
+    comp: any;
+    variantObj: object;
+}[] = [
+    {
+        key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'],
+        variantObj: null,
+    },
     {
         key: '52f8db8c3eb06811177462ca81794c1e1b80b36d',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '414c2a284ecd78ef15d9fa3b5abd33635f29cf38',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '1b38e2108373907af387083e7c80614289cb323a',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '943c5b15b37a43f61753ff62e8e36fddcb4ce472',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '07ad0a31821a24c118ecdd7b258637be5fb5b400',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '3782e1e0a293fb1272f309e9dea168bf5253912e',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '271f306487b02aadbd8e91fa00bc07441ad66bc6',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: 'ad98c22abd70dc4cc7c416f4d60236eae8af64d8',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: 'bad9f37873cdfe29d1a3e3109481316ced867fef',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '2cffc40473d91e306a8abd83de636cc6bf2a665c',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '5f0ce4db2559489c1f6d64de01e087fc71990c50',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '4d1a18c202a9add97412f4773de1bdab6bd252e6',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
     {
         key: '7596452dfedf909c25cfad654b2c40a6fef34311',
         comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
         variantObj: null,
     },
 ];
 
-const ROW_HEIGHT = {
-    cozy: 44,
-    default: 32,
-    compact: 24,
-};
-
 // First making sure all Table Cell components are loaded, then show the UI
-PRISMA_TABLE_CELL_COMPONENTS.forEach((d) => {
+PRISMA_TABLE_COMPONENTS.forEach((d) => {
     d.comp = figma.importComponentByKeyAsync(d.key);
 });
 
-Promise.all(PRISMA_TABLE_CELL_COMPONENTS.map((d) => d.comp))
+figma.ui.onmessage = (msg) => {
+    switch (msg.type) {
+        case 'update-settings':
+            updateSettings(msg);
+            break;
+        case 'create-table':
+            drawTableBodyWithComponents(msg.dataset);
+            break;
+        case 'update-table':
+            if (figma.currentPage.selection.length > 0) {
+                drawTableBodyWithComponents(msg.dataset);
+            }
+        case 'update-striped':
+            updateStriped(msg.striped);
+            break;
+        case 'select-row':
+            selectRow();
+            break;
+        case 'update-row-height':
+            const target = figma.currentPage.selection.concat()[0];
+            updateRow(target);
+            break;
+
+        case 'draw-table-header':
+            drawTableHeader(msg.dataset);
+            break;
+
+        case 'test':
+            test();
+            break;
+        case 'cancel':
+            break;
+        default:
+            break;
+    }
+
+    // figma.closePlugin();
+};
+
+Promise.all(PRISMA_TABLE_COMPONENTS.map((d) => d.comp))
     .then((comps) => {
         comps.forEach((comp, i) => {
-            PRISMA_TABLE_CELL_COMPONENTS[i]['comp'] = comp;
-            PRISMA_TABLE_CELL_COMPONENTS[i]['variantObj'] = parseCompName(comp.name);
+            PRISMA_TABLE_COMPONENTS[i]['comp'] = comp;
+            PRISMA_TABLE_COMPONENTS[i]['variantObj'] = parseCompName(comp.name);
         });
     })
     .then(() => {
@@ -154,38 +234,6 @@ figma.on('selectionchange', () => {
     }
 });
 
-figma.ui.onmessage = (msg) => {
-    switch (msg.type) {
-        case 'update-settings':
-            updateSettings(msg);
-            break;
-        case 'create-table':
-            drawTableWithComponents(msg.dataset);
-            break;
-        case 'update-table':
-            drawTableWithComponents(msg.dataset);
-        case 'update-striped':
-            updateStriped(msg.striped);
-            break;
-        case 'select-row':
-            selectRow();
-            break;
-        case 'update-row-height':
-            const target = figma.currentPage.selection.concat()[0];
-            updateRow(target);
-            break;
-        case 'test':
-            test();
-            break;
-        case 'cancel':
-            break;
-        default:
-            break;
-    }
-
-    // figma.closePlugin();
-};
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Settings
 function updateSettings(msg: any) {
@@ -208,7 +256,7 @@ function frameNodeOn({
     rowIndex,
     frameType = 'COLUMN',
     height = table_style.rowHeight,
-    width = 400,
+    width = table_style.columnWidth,
 }: {
     parent: FrameNode;
     colIndex: number;
@@ -289,7 +337,9 @@ function updateStriped(striped: boolean) {
                         cell.fills = [{type: 'SOLID', color: evenRowColor}];
                         const stateVar: object = parseCompName(destInst.mainComponent.name);
 
-                        let evenRowComp: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => {
+                        let evenRowComp: ComponentNode = PRISMA_TABLE_COMPONENTS.filter((d) => {
+                            return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+                        }).find((d) => {
                             return d.variantObj['State'] === striped
                                 ? 'Default - Alt'
                                 : 'Default' &&
@@ -358,7 +408,9 @@ function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
     const srcCompInfo: object = parseCompName(source.mainComponent.name);
     const destCompInfo: object = parseCompName(destination.mainComponent.name);
     // What's the desired comp we want?
-    const expCompo: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => {
+    const expCompo: ComponentNode = PRISMA_TABLE_COMPONENTS.filter(
+        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
+    ).find((d) => {
         return (
             d.variantObj['Icon Left'] === destCompInfo['Icon Left'] &&
             d.variantObj['Icon Right'] === destCompInfo['Icon Right'] &&
@@ -376,7 +428,9 @@ function updateCompIconLabelVariant(source: InstanceNode, destination: InstanceN
     const srcCompoInfo: object = parseCompName(source.mainComponent.name);
     const destCompInfo: object = parseCompName(destination.mainComponent.name);
     // What's the desired comp we want?
-    const expCompo: ComponentNode = PRISMA_TABLE_CELL_COMPONENTS.find((d) => {
+    const expCompo: ComponentNode = PRISMA_TABLE_COMPONENTS.filter(
+        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
+    ).find((d) => {
         return (
             d.variantObj['Icon Left'] === srcCompoInfo['Icon Left'] &&
             d.variantObj['Icon Right'] === srcCompoInfo['Icon Right'] &&
@@ -411,6 +465,9 @@ async function updateColumnComps(source: SceneNode) {
 }
 
 async function updateColumnIcons(source: TextNode) {
+    // Don't update the text unless it's a left/right icon.
+    if (source.name !== 'exclamation-triangle' && source.name !== 'angle-right') return;
+
     await figma.loadFontAsync({family: 'Font Awesome 5 Pro', style: 'Solid'});
     const sourceInst = source.parent as InstanceNode;
     const colEl = sourceInst.parent.parent as FrameNode;
@@ -460,40 +517,83 @@ function selectRow() {
     let _row = rowForCell(cell);
     if (_row) figma.currentPage.selection = _row;
 }
+
 // Quick and dirty way to see if the selection is a table
 function isTable(selection: readonly SceneNode[]): boolean {
     return selection.length == 1 && selection[0].name.includes('pa-table-body');
+}
+
+async function drawTableHeader(data) {
+    await figma.loadFontAsync({family: 'Lato', style: 'Bold'});
+
+    // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
+    const tableHeaderCellDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
+        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text']
+    ).find((d) => d.variantObj['State'] === 'Default')['comp'];
+
+    // Get the header title:
+    const headerTitles: string[] = Object.keys(data['rows'][0] as object);
+
+    // let sel = figma.currentPage.selection;
+    const bodyContainer = baseFrameWithAutoLayout({
+        name: 'pa-table-header',
+        height: table_style.headerHeight,
+        // width: table_style.columnWidth * headerTitles.length,
+        // width: 600,
+        padding: 0,
+        itemSpacing: 0,
+        direction: 'HORIZONTAL',
+    }) as FrameNode;
+
+    bodyContainer.layoutGrow = 1;
+
+    headerTitles.forEach((title, i) => {
+        const headerInst: InstanceNode = tableHeaderCellDefaultComp.createInstance();
+        const label = headerInst.findOne((d) => d.name === 'Label') as TextNode;
+        if (label) {
+            label.characters = title;
+        }
+        headerInst.resize(table_style.columnWidth, table_style.headerHeight);
+        headerInst.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
+        headerInst.layoutAlign = 'STRETCH'; // Fill Height
+        bodyContainer.appendChild(headerInst);
+    });
+
+    // bodyContainer.layoutAlign = 'MIN';
+    // bodyContainer.layoutGrow = 1;
 }
 
 // Draw table using the d3 update pattern(e.g., enter/update/exit).
 // TODO: Move 'pa-table-body' to a const
 // The component we use need to be loaded first, plus all the assets
 // such as fonts and styles(?)
-async function drawTableWithComponents(data) {
+async function drawTableBodyWithComponents(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
-    const tableBodyCellDefaultComp = PRISMA_TABLE_CELL_COMPONENTS.find((d) => d.variantObj['State'] === 'Default')[
-        'comp'
-    ];
-    const tableBodyCellStripedEvenRowComp = PRISMA_TABLE_CELL_COMPONENTS.find(
-        (d) => d.variantObj['State'] === 'Default - Alt'
-    )['comp'];
-    const rowHeight = ROW_HEIGHT.default;
+    const tableBodyCellDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
+        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
+    ).find((d) => d.variantObj['State'] === 'Default')['comp'];
+    const tableBodyCellStripedEvenRowComp = PRISMA_TABLE_COMPONENTS.filter(
+        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
+    ).find((d) => d.variantObj['State'] === 'Default - Alt')['comp'];
+    const rowHeight = table_style.rowHeight;
 
     let sel = figma.currentPage.selection;
     if (sel.length === 0) {
         // if nothing is selected, go ahead and create a baseFrameWithAutoLayout and proceed
-        const bodyContainer = baseFrameWithAutoLayout({name: 'pa-table-body', itemSpacing: 0}) as FrameNode;
+        const bodyContainer = baseFrameWithAutoLayout({name: 'pa-table-body', itemSpacing: 0, padding: 0}) as FrameNode;
         sel = figma.currentPage.selection = [bodyContainer] as FrameNode[];
     } else if (sel[0].type === 'FRAME' && sel[0].children.length === 0) {
         // if selection is an empty frame, configure it using autolayout for table and proceed
         let foc = sel[0];
+
         configFoCWithAutoLayout({
             foc: foc,
             name: 'pa-table-body',
             width: foc.width,
             height: foc.height,
+            padding: 0,
         });
         sel = figma.currentPage.selection = [foc] as FrameNode[];
     }
@@ -514,9 +614,14 @@ async function drawTableWithComponents(data) {
         const existingRowCount = existingColCount === 0 ? 0 : (colsEl[0].children as FrameNode[]).length;
         const newRowCount = datagrid.length;
 
+        let [tableWidth, tableHeight] = [tableEl.width, newRowCount * rowHeight];
+
         dataframe.forEach((cells, i) => {
             // Enter
             const colEl = frameNodeOn({parent: tableEl, colIndex: i});
+            colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
+            // colEl.layoutAlign = 'MAX';
+
             // colEl.primaryAxisSizingMode = 'FIXED';
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
@@ -530,8 +635,8 @@ async function drawTableWithComponents(data) {
                 });
                 // Set up resizing to be w: 'Fill Container'/h: 'Fixed Height'
                 // TODO: w: 'Fill COntainer' / h: 'Hug content'
-                cellContainer.layoutAlign = 'STRETCH';
                 cellContainer.layoutGrow = 0;
+                cellContainer.layoutAlign = 'STRETCH';
 
                 // Set up for alternate row coloring. Note index starts from 0
                 const t =
@@ -565,6 +670,8 @@ async function drawTableWithComponents(data) {
                 }
             });
         }
+
+        tableEl.resize(tableWidth, tableHeight);
     }
 
     figma.viewport.scrollAndZoomIntoView(sel);

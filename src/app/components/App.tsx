@@ -11,50 +11,49 @@ const App = ({}) => {
     //     if (element) element.value = '5';
     //     textbox.current = element;
     // }, []);
-    const [striped, onStripedChange] = React.useReducer(
-        (striped) => {
-            parent.postMessage({pluginMessage: {type: 'update-striped', striped: !striped}}, '*');
-            return !striped;
-        },
-        true
-    );
-
-    const [manualUpdate, setManualUpdate] =  React.useReducer(
-        (manual) => {
-            parent.postMessage({pluginMessage: {type: 'update-settings', setting: 'manual-update', value: !manual}}, '*');
-            return !manual;
-        },
-        false
-    );
-
-    const data = {
+    const DATA = {
         prisma_cloud_alerts: prisma_cloud_alerts,
         prisma_cloud_policies: prisma_cloud_policies,
         artists: artists,
         songs: songs,
-    }
+    };
+
+    const [striped, onStripedChange] = React.useReducer((striped) => {
+        parent.postMessage({pluginMessage: {type: 'update-striped', striped: !striped}}, '*');
+        return !striped;
+    }, true);
+
+    const [manualUpdate, setManualUpdate] = React.useReducer((manual) => {
+        parent.postMessage({pluginMessage: {type: 'update-settings', setting: 'manual-update', value: !manual}}, '*');
+        return !manual;
+    }, false);
+
+    const [dataset, setDataset] = React.useState(DATA.artists);
 
     const onCreate = () => {
         // const count = parseInt(textbox.current.value, 10);
         // const dataset = "prisma-cloud-alerts"
-        parent.postMessage({pluginMessage: {type: 'create-table', dataset: data.artists}}, '*');
+        parent.postMessage({pluginMessage: {type: 'create-table', dataset: dataset}}, '*');
     };
-    
-    const onDataSetChange = (dsName) => {
-        parent.postMessage({pluginMessage: {type: 'update-table', dataset: data[dsName]}}, '*');
-    }
 
-   /*  const onSelectRow = () => {
+    const onDataSetChange = (dsName) => {
+        setDataset(DATA[dsName]);
+        parent.postMessage({pluginMessage: {type: 'update-table', dataset: dataset}}, '*');
+    };
+
+    /*  const onSelectRow = () => {
         parent.postMessage({pluginMessage: {type: 'select-row'}}, '*');
     }
 
     const onUpdateRowHeight = () => {
         parent.postMessage({pluginMessage: {type: 'update-row-height'}}, '*');
     } */
-    
+    const onTestDrawTableHeader = () => {
+        parent.postMessage({pluginMessage: {type: 'draw-table-header', dataset: dataset}}, '*');
+    };
     const onTest = () => {
         parent.postMessage({pluginMessage: {type: 'test'}}, '*');
-    }
+    };
 
     React.useEffect(() => {
         // This is how we read messages sent from the plugin controller
@@ -69,7 +68,7 @@ const App = ({}) => {
     return (
         <div className="list">
             {/* <img src={require('../assets/logo.svg')} /> */}
-            
+
             <button id="create" onClick={onCreate}>
                 Create Table
             </button>
@@ -86,35 +85,28 @@ const App = ({}) => {
             </div>
 
             <div className="checkbox-group">
-                <input
-                    name="stripedCheckbox"
-                    type="checkbox"
-                    checked={striped}
-                    onChange={onStripedChange}
-                    />
+                <input name="stripedCheckbox" type="checkbox" checked={striped} onChange={onStripedChange} />
                 <label>Striped</label>
             </div>
 
-            <hr style={{"width": '100%'}}/>
+            <hr style={{width: '100%'}} />
 
             <div className="checkbox-group">
-                <input
-                    name="manualCheckbox"
-                    type="checkbox"
-                    checked={manualUpdate}
-                    onChange={setManualUpdate}
-                    />
+                <input name="manualCheckbox" type="checkbox" checked={manualUpdate} onChange={setManualUpdate} />
                 <label>Manually Update</label>
-            </div>  
+            </div>
 
-            <hr style={{"width": '100%'}}/>
+            <hr style={{width: '100%'}} />
 
             {/* <button id="update-row" onClick={onSelectRow}>
                 Select Row
             </button> */}
-           {/*  <button id="update-row" onClick={onUpdateRowHeight}>
+            {/*  <button id="update-row" onClick={onUpdateRowHeight}>
                 Update Selected Row Height
             </button> */}
+            <button id="test1" onClick={onTestDrawTableHeader}>
+                Test: Draw Table Header
+            </button>
             <button id="test" onClick={onTest}>
                 Test: Log sel
             </button>

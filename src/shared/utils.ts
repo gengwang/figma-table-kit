@@ -54,9 +54,12 @@ function configFoCWithAutoLayout({
     itemSpacing?: number;
 } = {}) {
     foc.layoutMode = direction;
-    foc.primaryAxisSizingMode = 'AUTO';
+
+    foc.primaryAxisSizingMode = 'FIXED';
     foc.counterAxisSizingMode = 'AUTO';
+    foc.layoutGrow = 1;
     foc.layoutAlign = 'STRETCH';
+
     foc.paddingTop = foc.paddingRight = foc.paddingBottom = foc.paddingLeft = padding;
     foc.itemSpacing = itemSpacing;
     foc.name = name;
@@ -73,9 +76,9 @@ function baseFrameWithAutoLayout({
     name = '_frame',
     direction = 'HORIZONTAL',
     nodeType = 'FRAME',
-    width = 240,
-    height = 160,
-    padding = 8,
+    width = 1200,
+    height = 120,
+    padding = 0,
     itemSpacing = 0,
 }: {
     name?: string;
