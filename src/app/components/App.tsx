@@ -16,6 +16,10 @@ const App = ({}) => {
         prisma_cloud_policies: prisma_cloud_policies,
     };
 
+    const STYLE = {
+        rowHeight: 'default',
+    };
+
     const [striped, onStripedChange] = React.useReducer((striped) => {
         parent.postMessage({pluginMessage: {type: 'update-striped', striped: !striped}}, '*');
         return !striped;
@@ -27,6 +31,7 @@ const App = ({}) => {
     }, false);
 
     const [dataset, setDataset] = React.useState(DATA.prisma_cloud_alerts);
+    const [rowHeight, setRowHeight] = React.useState(STYLE.rowHeight);
 
     const onCreate = () => {
         // const count = parseInt(textbox.current.value, 10);
@@ -39,6 +44,11 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'update-table', dataset: dataset}}, '*');
     };
 
+    const onUpdateRowHeight = (h) => {
+        setRowHeight(h);
+        parent.postMessage({pluginMessage: {type: 'update-row-height', height: h}}, '*');
+    };
+
     const onFileSelect = () => {
         const fileElem = document.getElementById('fileElem');
         if (fileElem) {
@@ -49,7 +59,6 @@ const App = ({}) => {
 
     const onFileChange = (e) => {
         // e.target is the file input which has ["files"] array
-        console.log('e:::::', e.target.files);
         if (!e.target.files || e.target.files.length == 0) return;
         const fileToRead = e.target.files[0];
         var fileReader = new FileReader();
@@ -91,8 +100,6 @@ const App = ({}) => {
                 <label>Data sets</label>
 
                 <select onChange={(val) => onDataSetChange(val.target.value)}>
-                    {/* <option value="artists">Artists</option>
-                    <option value="songs">Songs</option> */}
                     <option value="prisma_cloud_alerts">Prisma Cloud - Alerts</option>
                     <option value="prisma_cloud_policies">Prisma Cloud - Policies</option>
                 </select>
@@ -108,6 +115,16 @@ const App = ({}) => {
             <button id="fileSelect" onClick={onFileSelect}>
                 My Own Dataset
             </button>
+
+            {/* Row density */}
+            <div className="checkbox-group">
+                <label>Row Height</label>
+                <select defaultValue={rowHeight} onChange={(val) => onUpdateRowHeight(val.target.value)}>
+                    <option value="compact">Compact</option>
+                    <option value="default">Default</option>
+                    <option value="cozy">Cozy</option>
+                </select>
+            </div>
 
             <div className="checkbox-group">
                 <input name="stripedCheckbox" type="checkbox" checked={striped} onChange={onStripedChange} />

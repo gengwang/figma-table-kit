@@ -4,7 +4,7 @@ import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose, parseCompNa
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
-const table_style = {
+let table_style = {
     rowHeight: 32,
     headerHeight: 32,
     columnWidth: 200,
@@ -163,8 +163,11 @@ figma.ui.onmessage = (msg) => {
             selectRow();
             break;
         case 'update-row-height':
+            const height = table_style[msg.height]['rowHeight'] as number;
+            console.log('update row height:', msg.height, '==', height);
             const target = figma.currentPage.selection.concat()[0];
-            updateRow(target);
+            // updateRow(target);
+            updateRowHeight(target, height);
             break;
 
         case 'draw-table-header':
@@ -191,12 +194,31 @@ Promise.all(PRISMA_TABLE_COMPONENTS.map((d) => d.comp))
         });
     })
     .then(() => {
+        assignStyles();
+    })
+    .then(() => {
         figma.showUI(__html__, {height: 320});
     })
     .catch((error) => {
         console.error('error in loading Prisma Table cell components', error);
     });
 
+function assignStyles() {
+    const _default = _.pick(
+        table_style,
+        Object.keys(table_style).filter((d) => {
+            return d !== 'compact' && d !== 'cozy' && d !== 'default';
+        })
+    );
+    table_style = {
+        ...table_style,
+        ...{
+            default: _default,
+        },
+        ...{compact: {..._default, ...table_style.compact}},
+        ...{cozy: {..._default, ...table_style.cozy}},
+    };
+}
 // figma.showUI(__html__, {height: 320});
 
 // We store which node we are interacting with
@@ -365,22 +387,42 @@ function updateStriped(striped: boolean) {
         });
     }
 }
+// Update row height for all the rows in this table
+function updateRowHeight(target: SceneNode, height: number) {
+    // For now, make sure we are looking at a table
+    if (!target || target.type !== 'FRAME' || target.name !== 'pa-table') return;
+    const tableBodyEl = target.findOne((d) => d.name === 'pa-table-body') as FrameNode;
+    const cells = tableBodyEl.findAll((d) => d.type === 'FRAME' && d.name.includes('cell-row-')) as FrameNode[];
+
+    cells.forEach((cel) => {
+        const inst = (cel as FrameNode).children[0] as InstanceNode;
+
+        // Update target cell height
+        inst.resize(cel.width, height);
+        // Rig the auto-layout again after explicitly setting the instance node's height
+        inst.layoutAlign = 'STRETCH';
+        inst.layoutGrow = 1;
+
+        // Update the height for all the other cells in the same row
+        cel.resize(cel.width, height);
+    });
+}
 // target can be a frame cell or the instance node it contains
-async function updateRow(target: SceneNode) {
-    if (!target || (target.type !== 'INSTANCE' && target.type !== 'FRAME')) return;
+async function updateRow(source: SceneNode) {
+    if (!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME')) return;
 
     if (
-        (target.type === 'INSTANCE' && target.name === 'Cell - Text') ||
-        (target.type === 'FRAME' && target.name.includes('cell-row-'))
+        (source.type === 'INSTANCE' && source.name === 'Cell - Text') ||
+        (source.type === 'FRAME' && source.name.includes('cell-row-'))
     ) {
         // if it's a component instance
         let cell, cellHeight;
-        cellHeight = target.height;
+        cellHeight = source.height;
 
-        if (target.type === 'INSTANCE') {
-            cell = target.parent;
-        } else if (target.type === 'FRAME') {
-            cell = target;
+        if (source.type === 'INSTANCE') {
+            cell = source.parent;
+        } else if (source.type === 'FRAME') {
+            cell = source;
         }
 
         let row = rowForCell(cell);
