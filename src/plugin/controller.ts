@@ -599,6 +599,8 @@ function isTable(selection: readonly SceneNode[]): boolean {
 }
 
 function drawTable(data) {
+    console.log('draw table with data:::', data);
+
     Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
         // console.log("frames now are available:::", frames);
         const tableEl = figma.createFrame();

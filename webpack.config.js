@@ -44,4 +44,9 @@ module.exports = (env, argv) => ({
     }),
     new HtmlWebpackInlineSourcePlugin(),
   ],
+
+  // for csvtojson
+  node: {
+    fs: "empty"
+  }
 })
