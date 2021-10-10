@@ -24,8 +24,8 @@ enum PRISMA_TABLE_COMPONENTS_INST_NAME {
     'Header - Text',
     'Header - Checkbox',
     'Cell - Text',
-    'Cell - Actions',
     'Cell - Checkbox',
+    'Cell - Actions',
     'Cell - Severity',
     'Cell - Toggle',
     'Pagination',
@@ -207,7 +207,7 @@ figma.ui.onmessage = (msg) => {
                 drawTableBody(msg.dataset);
             }
         case 'update-striped':
-            updateStriped(msg.striped);
+            updateStriped2(msg.striped);
             break;
         case 'select-row':
             selectRow();
@@ -394,27 +394,60 @@ function updateStriped(striped: boolean) {
     }
 
     const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
+    console.log('>striped table..', tableBodyEl);
 
     // TODO: Maybe we should get the color from the imported component named Default - Alt
     const evenRowColor = striped ? {r: 244 / 255, g: 245 / 255, b: 245 / 255} : {r: 1, g: 1, b: 1};
     if (tableBodyEl.name === 'pa-table-body') {
-        const reg = /(?<=cell-row-)\d*/;
         tableBodyEl.children.forEach((colEl) => {
             const col = colEl as FrameNode;
+            const colIndex = col.name.split('col-')[1] as unknown as number;
 
-            col.children.forEach((cellEl) => {
+            console.log('colIndex:', colIndex);
+
+            // return;
+            if (colIndex === 0) return;
+
+            col.children.forEach((cellEl, i) => {
+                // if (i !== 0) {
+                // if this is a cell text, not a header checkbox
                 const cell = cellEl as FrameNode;
-                const cellMatches = cell.name.match(reg);
+                const cellMatches = cell.name.match(/(?<=cell-row-)\d*/);
                 if (cellMatches.length > 0) {
                     const rowNum = cellMatches[0] as unknown;
                     const rowNum1 = rowNum as number;
+                    // TMP
+                    // if(rowNum1 === 0) return;
                     // Swap the child
                     let destInst = cell.children[0] as InstanceNode;
+                    // console.log("cell.children:", cell.children);
+                    // console.log("destInst", destInst);
+
+                    // return;
                     if (rowNum1 % 2 !== 0) {
                         // If this is an even row cell. Index is 0 based
                         // Repaint the backdrop color
                         cell.fills = [{type: 'SOLID', color: evenRowColor}];
+                        if (!destInst.mainComponent) return;
+
                         const stateVar: object = parseCompName(destInst.mainComponent.name);
+
+                        console.log('i:', i, '; stateVar: ', stateVar, '; mainComponent: ', destInst.mainComponent);
+
+                        let _evenRowComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
+                            return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+                        }).find((d) => {
+                            return d.variantObj['State'] === striped
+                                ? 'Default - Alt'
+                                : 'Default' &&
+                                      d.variantObj['Icon Left'] === stateVar['Icon Left'] &&
+                                      d.variantObj['Icon Right'] === stateVar['Icon Right'] &&
+                                      d.variantObj['Label'] === stateVar['Label'];
+                        });
+
+                        // console.log("_+_debug::", stateVar);
+                        console.log('_++_debug::::::', _evenRowComp);
+                        return;
 
                         let evenRowComp: ComponentNode = PRISMA_TABLE_COMPONENTS.filter((d) => {
                             return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
@@ -433,10 +466,79 @@ function updateStriped(striped: boolean) {
                     const cellLine = destInst.findChild((e) => e.name === 'bottom border');
                     cellLine.visible = !striped;
                 }
+                // } else {
+                // }
             });
         });
     }
 }
+
+function updateStriped2(striped: boolean) {
+    // First select the table body, pls
+    if (figma.currentPage.selection.length === 0) return;
+
+    // TODO. For now you have to select a table frame. TODO: to select any child
+    const tableEl = figma.currentPage.selection[0] as FrameNode;
+    if (tableEl.name !== 'pa-table') return;
+
+    const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
+
+    // TODO: Maybe we should get the color from the imported component named Default - Alt
+    const evenRowColor = striped ? {r: 244 / 255, g: 245 / 255, b: 245 / 255} : {r: 1, g: 1, b: 1};
+    if (tableBodyEl.name === 'pa-table-body') {
+        tableBodyEl.children.forEach((colEl) => {
+            const col = colEl as FrameNode;
+
+            col.children.forEach((cellEl) => {
+                const cell = cellEl as FrameNode;
+                const cellMatches = cell.name.match(/(?<=cell-row-)\d*/);
+                if (cellMatches.length > 0) {
+                    const rowNum = cellMatches[0] as unknown;
+                    const rowNum1 = rowNum as number;
+
+                    // Swap the child
+                    let srcInst = cell.children[0] as InstanceNode;
+
+                    if (rowNum1 % 2 !== 0) {
+                        // If this is an even row cell. Index is 0 based
+                        // Repaint the backdrop color
+                        cell.fills = [{type: 'SOLID', color: evenRowColor}];
+
+                        const variantObj: object = parseCompName(srcInst.mainComponent.name);
+
+                        let destComp: ComponentNode;
+                        if (srcInst.name === 'Cell - Text') {
+                            destComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
+                                return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+                            }).find((d) => {
+                                return d.variantObj['State'] === striped
+                                    ? 'Default - Alt'
+                                    : 'Default' &&
+                                          d.variantObj['Icon Left'] === variantObj['Icon Left'] &&
+                                          d.variantObj['Icon Right'] === variantObj['Icon Right'] &&
+                                          d.variantObj['Label'] === variantObj['Label'];
+                            })['comp'];
+                        } else if (srcInst.name === 'Cell - Checkbox') {
+                            destComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
+                                return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'];
+                            }).find((d) => {
+                                return d.variantObj['State'] === striped
+                                    ? 'Default - Alt'
+                                    : 'Default' && d.variantObj['Type'] === variantObj['Type'];
+                            })['comp'];
+                        }
+
+                        srcInst.swapComponent(destComp);
+                    }
+                    // draw the line for a cell
+                    const cellLine = srcInst.findChild((e) => e.name === 'bottom border');
+                    cellLine.visible = !striped;
+                }
+            });
+        });
+    }
+}
+
 // Update row height for all the rows in this table
 function updateRowHeight(target: SceneNode, height: number) {
     // For now, make sure we are looking at a table
