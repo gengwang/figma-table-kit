@@ -716,14 +716,15 @@ async function drawTableHeader(data) {
             direction: 'VERTICAL',
         }) as FrameNode;
 
-        columnHeaderContainer.layoutGrow = i < headerTitles.length ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
+        columnHeaderContainer.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
+
         columnHeaderContainer.layoutAlign = 'STRETCH';
 
         columnHeaderContainer.appendChild(headerInst);
         headerContainer.appendChild(columnHeaderContainer);
     });
 
-    // Add checkbox
+    // Add checkbox at the beginning
     const tableHeaderCheckboxDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
         .find((d) => {
             return (
@@ -842,7 +843,8 @@ async function drawTableBody(data) {
             // Enter
             // Text
             const colEl = frameNodeOn({parent: tableEl, colIndex: i + 1}); // leave 0 for the checkbox
-            colEl.layoutGrow = i < dataframe.length ? 0 : 1;
+            colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
+
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
                 // Enter/Upate
