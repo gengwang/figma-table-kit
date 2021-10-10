@@ -8,6 +8,7 @@ let table_style = {
     rowHeight: 32,
     headerHeight: 32,
     columnWidth: 200,
+    paginationHeight: 48,
     compact: {
         rowHeight: 24,
     },
@@ -27,6 +28,7 @@ enum PRISMA_TABLE_COMPONENTS_INST_NAME {
     'Cell - Checkbox',
     'Cell - Severity',
     'Cell - Toggle',
+    'Pagination',
 }
 
 const PRISMA_TABLE_COMPONENTS: {
@@ -177,6 +179,12 @@ const PRISMA_TABLE_COMPONENTS: {
         key: '7596452dfedf909c25cfad654b2c40a6fef34311',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
+        variantObj: null,
+    },
+    {
+        key: 'a0dce3a552cfbe21ab347fd85677990281b6e4eb',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Pagination'],
         variantObj: null,
     },
 ];
@@ -641,24 +649,29 @@ function isTable(selection: readonly SceneNode[]): boolean {
 }
 
 function drawTable(data) {
-    console.log('draw table with data:::', data);
+    // console.log('draw table with data:::', data);
 
     Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
-        // console.log("frames now are available:::", frames);
+        const tableElWidth = 1440 - 32 * 2;
         const tableEl = figma.createFrame();
         tableEl.name = 'pa-table';
         tableEl.layoutMode = 'VERTICAL';
-        tableEl.layoutGrow = 0;
-
-        // tableEl.layoutAlign = 'MAX';
+        tableEl.layoutGrow = 1;
 
         header.layoutGrow = 0;
         tableEl.appendChild(header);
         body.layoutGrow = 0;
         tableEl.appendChild(body);
 
+        const paginationEl: FrameNode = drawPagination(data);
+
+        tableEl.appendChild(paginationEl);
+        paginationEl.resize(tableElWidth, table_style.paginationHeight);
+        paginationEl.layoutGrow = 1;
+        paginationEl.layoutAlign = 'STRETCH';
+
         // TMP: set the width to 1440 for now.
-        tableEl.resize(1440 - 32 * 2, header.height + body.height);
+        tableEl.resize(tableElWidth, header.height + body.height + table_style.paginationHeight);
     });
 }
 async function drawTableHeader(data) {
@@ -736,7 +749,6 @@ async function drawTableHeader(data) {
         .get('comp')
         .value();
 
-    console.log('header>>> checkbox default??', tableHeaderCheckboxDefaultComp);
     const checkboxInst = tableHeaderCheckboxDefaultComp.createInstance();
     const checkboxInstContainer = baseFrameWithAutoLayout({
         name: 'col-' + 0,
@@ -935,6 +947,7 @@ async function drawTableBody(data) {
     figma.currentPage.selection = sel;
     return sel[0];
 }
+
 // NOTE: The client function needs to loadFontAsync at the top of the function
 function tableBodyCellWithText(
     parent: FrameNode,
@@ -952,10 +965,34 @@ function tableBodyCellWithText(
     textEl.characters = text.toString();
     return tableCell;
 }
+
+function drawPagination(data): FrameNode {
+    const container = baseFrameWithAutoLayout({name: 'pa-table-pagination', itemSpacing: 0, padding: 0}) as FrameNode;
+    const paginationInst = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination)
+        .get('comp')
+        .value()
+        .createInstance() as InstanceNode;
+    paginationInst.layoutGrow = 1;
+    container.appendChild(paginationInst);
+    container.resize(paginationInst.width, paginationInst.height);
+    container.layoutGrow = 1;
+    container.layoutAlign = 'MIN';
+
+    // Update the counter
+    const count = data['rows'] ? data['rows'].length : undefined;
+    const text = paginationInst.findChild((d) => d.type === 'TEXT') as TextNode;
+    text.characters = `Displaying ${count} results of [000]`;
+
+    return container;
+}
+
 function logSelection() {
     const sel = figma.currentPage.selection;
     console.clear();
-    console.log('sel:', sel[0]);
+    const _keyInfo = sel[0].type === 'INSTANCE' ? `key: ${(sel[0] as InstanceNode).mainComponent.key}` : ``;
+    console.log(`${_keyInfo}\nname: ${sel[0].name}`);
+    console.log('sel: ', sel[0]);
 }
 function test() {
     // console.log("let's load external component...");
