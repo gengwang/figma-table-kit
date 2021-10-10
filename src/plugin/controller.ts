@@ -36,9 +36,51 @@ const PRISMA_TABLE_COMPONENTS: {
     variantObj: object;
 }[] = [
     {
+        key: 'd66c4bf33a2083e909bd4d074ec178060f35927f',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '60d6f3490e882a82275e5671b75c07c6d2eb5c2e',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '1300cccd151f3975fc971e0ec9d2be85d04ac96b',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
         key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'],
+        variantObj: null,
+    },
+    {
+        key: 'f8df0a61c1015d39c58f188dd5baa5a88a9f3160',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '2590bf08f497888877c7c6afa7652fbc3bf619e7',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '5252d456900df27ff3a28d7aac54c78a674afa0f',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '3de5d7e2d79fb7035d5c93a028c7fc81212e9251',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
         variantObj: null,
     },
     {
@@ -623,9 +665,19 @@ async function drawTableHeader(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Bold'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
-    const tableHeaderCellDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
-        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text']
-    ).find((d) => d.variantObj['State'] === 'Default')['comp'];
+    // const tableHeaderCellTextDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
+    //     (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text']
+    // ).find((d) => d.variantObj['State'] === 'Default')['comp'];
+
+    const tableHeaderTextDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find((d) => {
+            return (
+                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'] &&
+                d.variantObj['State'] === 'Default'
+            );
+        })
+        .get('comp')
+        .value();
 
     // Get the header title:
     const headerTitles: string[] = Object.keys(data['rows'][0] as object);
@@ -644,7 +696,7 @@ async function drawTableHeader(data) {
     headerContainer.layoutGrow = 1;
 
     headerTitles.forEach((title, i) => {
-        const headerInst: InstanceNode = tableHeaderCellDefaultComp.createInstance();
+        const headerInst: InstanceNode = tableHeaderTextDefaultComp.createInstance();
         const label = headerInst.findOne((d) => d.name === 'Label') as TextNode;
         if (label) {
             label.characters = title;
@@ -655,7 +707,7 @@ async function drawTableHeader(data) {
 
         // column header
         const columnHeaderContainer = baseFrameWithAutoLayout({
-            name: 'col-' + i,
+            name: 'col-' + (i + 1), // leave 0 for the checkbox
             height: table_style.headerHeight,
             // width: table_style.columnWidth * headerTitles.length,
             width: table_style.columnWidth,
@@ -664,12 +716,39 @@ async function drawTableHeader(data) {
             direction: 'VERTICAL',
         }) as FrameNode;
 
-        columnHeaderContainer.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
+        columnHeaderContainer.layoutGrow = i < headerTitles.length ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
         columnHeaderContainer.layoutAlign = 'STRETCH';
 
         columnHeaderContainer.appendChild(headerInst);
         headerContainer.appendChild(columnHeaderContainer);
     });
+
+    // Add checkbox
+    const tableHeaderCheckboxDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find((d) => {
+            return (
+                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'] &&
+                d.variantObj['State'] === 'Default' &&
+                d.variantObj['Type'] === 'Unselected'
+            );
+        })
+        .get('comp')
+        .value();
+
+    console.log('header>>> checkbox default??', tableHeaderCheckboxDefaultComp);
+    const checkboxInst = tableHeaderCheckboxDefaultComp.createInstance();
+    const checkboxInstContainer = baseFrameWithAutoLayout({
+        name: 'col-' + 0,
+        height: table_style.headerHeight,
+        // width: table_style.columnWidth * headerTitles.length,
+        width: table_style.rowHeight, // TMP: checkbox in Prisma DS happens to be a box
+        padding: 0,
+        itemSpacing: 0,
+        direction: 'VERTICAL',
+    }) as FrameNode;
+    checkboxInstContainer.layoutGrow = 0; // so that the container to be "hug content"
+    checkboxInstContainer.appendChild(checkboxInst);
+    headerContainer.insertChild(0, checkboxInstContainer);
 
     return headerContainer;
 }
@@ -683,12 +762,43 @@ async function drawTableBody(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
-    const tableBodyCellDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
-        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
-    ).find((d) => d.variantObj['State'] === 'Default')['comp'];
-    const tableBodyCellStripedEvenRowComp = PRISMA_TABLE_COMPONENTS.filter(
-        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
-    ).find((d) => d.variantObj['State'] === 'Default - Alt')['comp'];
+
+    const tableCellTextDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find(
+            (d) =>
+                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+                d.variantObj['State'] === 'Default'
+        )
+        .get('comp')
+        .value();
+
+    const tableCellTextStripedEvenRowComp = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find(
+            (d) =>
+                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+                d.variantObj['State'] === 'Default - Alt'
+        )
+        .get('comp')
+        .value();
+
+    const tableCellCheckboxDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find(
+            (d) =>
+                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+                d.variantObj['State'] === 'Default'
+        )
+        .get('comp')
+        .value();
+
+    const tableCellCheckboxStripedEvenRowComp = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find(
+            (d) =>
+                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+                d.variantObj['State'] === 'Default - Alt'
+        )
+        .get('comp')
+        .value();
+
     const rowHeight = table_style.rowHeight;
 
     let sel = figma.currentPage.selection;
@@ -730,17 +840,15 @@ async function drawTableBody(data) {
 
         dataframe.forEach((cells, i) => {
             // Enter
-            const colEl = frameNodeOn({parent: tableEl, colIndex: i});
-            colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
-            // colEl.layoutAlign = 'MAX';
-
-            // colEl.primaryAxisSizingMode = 'FIXED';
+            // Text
+            const colEl = frameNodeOn({parent: tableEl, colIndex: i + 1}); // leave 0 for the checkbox
+            colEl.layoutGrow = i < dataframe.length ? 0 : 1;
             const cellsData = cells as [];
             cellsData.forEach((cell, j) => {
                 // Enter/Upate
                 const cellContainer = frameNodeOn({
                     parent: colEl,
-                    colIndex: i,
+                    colIndex: i + 1,
                     rowIndex: j,
                     frameType: 'CELL',
                     height: rowHeight,
@@ -753,8 +861,8 @@ async function drawTableBody(data) {
                 // Set up for alternate row coloring. Note index starts from 0
                 const t =
                     j % 2 == 0
-                        ? tableBodyCellWithText(colEl, j, tableBodyCellDefaultComp, cell as string)
-                        : tableBodyCellWithText(colEl, j, tableBodyCellStripedEvenRowComp, cell as string);
+                        ? tableBodyCellWithText(colEl, j, tableCellTextDefaultComp, cell as string)
+                        : tableBodyCellWithText(colEl, j, tableCellTextStripedEvenRowComp, cell as string);
 
                 // Set up resizing to be h: 'Fill Container'/w: 'Fill Container'
                 // This will cause this instance node to fill the parent cell frame when
@@ -765,6 +873,41 @@ async function drawTableBody(data) {
                 cellContainer.appendChild(t);
             });
         });
+
+        // Checkbox
+        // const colEl0 = frameNodeOn({parent: tableEl, colIndex: 0, width: table_style.rowHeight });
+        const colEl0 = baseFrameWithAutoLayout({
+            name: 'col-' + 0,
+            // height: table_style.rowHeight,
+            // width: table_style.columnWidth * headerTitles.length,
+            width: table_style.rowHeight, // TMP: checkbox in Prisma DS happens to be a box
+            padding: 0,
+            itemSpacing: 0,
+            direction: 'VERTICAL',
+        }) as FrameNode;
+
+        colEl0.layoutGrow = 0;
+        tableEl.insertChild(0, colEl0);
+
+        const cellsData = dataframe[0] as [];
+        cellsData.forEach((_, j) => {
+            const ck =
+                j % 2 === 0
+                    ? tableCellCheckboxDefaultComp.createInstance()
+                    : tableCellCheckboxStripedEvenRowComp.createInstance();
+
+            const cellContainer = frameNodeOn({
+                parent: colEl0,
+                colIndex: 0,
+                rowIndex: j,
+                frameType: 'CELL',
+                height: rowHeight,
+            });
+            cellContainer.layoutGrow = 0; // so that it hugs content
+            cellContainer.appendChild(ck);
+            cellContainer.resize(table_style.rowHeight, table_style.rowHeight);
+        });
+        colEl0.resize(table_style.rowHeight, colEl0.height);
 
         // Exit
         if (newColCount < existingColCount || newRowCount < existingRowCount) {
@@ -809,10 +952,11 @@ function tableBodyCellWithText(
 }
 function logSelection() {
     const sel = figma.currentPage.selection;
+    console.clear();
     console.log('sel:', sel[0]);
 }
 function test() {
-    console.log("let's load external component...");
+    // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
     logSelection();
 }

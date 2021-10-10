@@ -2,7 +2,7 @@ import * as React from 'react';
 import '../styles/ui.css';
 import {prisma_cloud_policies, prisma_cloud_alerts} from '../assets/datasets.js';
 import * as _ from 'lodash';
-import * as csv from 'csvtojson';
+// import * as csv from 'csvtojson';
 import * as d3 from 'd3-dsv';
 
 declare function require(path: string): any;
