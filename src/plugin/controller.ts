@@ -962,7 +962,12 @@ function tableBodyCellWithText(
         tableCell = comp.createInstance();
     }
     const textEl = tableCell.findChild((n) => n.type === 'TEXT') as TextNode;
-    textEl.characters = text.toString();
+    // TMP. Truncate the string brutally. TODO: truncate based on available space
+    // 24 is the magic number that a string of normal text can fit into 200px width
+    const [truncatedLength, originalText] = [24, text.toString()];
+    const _text: string =
+        originalText.substring(0, truncatedLength) + (originalText.length > truncatedLength ? '...' : '');
+    textEl.characters = _text;
     return tableCell;
 }
 
