@@ -56,6 +56,24 @@ const PRISMA_TABLE_COMPONENTS: {
         variantObj: null,
     },
     {
+        key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '3dbf7c863bd75b41ab3f7f716878a1c6d953b72c',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '71e41e2c9c97ecd2ec6e118b4fd56313f6632510',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
         key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'],
@@ -81,6 +99,30 @@ const PRISMA_TABLE_COMPONENTS: {
     },
     {
         key: '3de5d7e2d79fb7035d5c93a028c7fc81212e9251',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: 'a6fdad4ab07146a8a540647a875d4c33a983a6ba',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '71e41e2c9c97ecd2ec6e118b4fd56313f6632510',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+        variantObj: null,
+    },
+    {
+        key: '3dbf7c863bd75b41ab3f7f716878a1c6d953b72c',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
         variantObj: null,
@@ -207,7 +249,7 @@ figma.ui.onmessage = (msg) => {
                 drawTableBody(msg.dataset);
             }
         case 'update-striped':
-            updateStriped2(msg.striped);
+            updateStriped(msg.striped);
             break;
         case 'select-row':
             selectRow();
@@ -389,96 +431,6 @@ function updateStriped(striped: boolean) {
 
     // TODO. For now you have to select a table frame. TODO: to select any child
     const tableEl = figma.currentPage.selection[0] as FrameNode;
-    if (tableEl.name !== 'pa-table') {
-        return;
-    }
-
-    const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
-    console.log('>striped table..', tableBodyEl);
-
-    // TODO: Maybe we should get the color from the imported component named Default - Alt
-    const evenRowColor = striped ? {r: 244 / 255, g: 245 / 255, b: 245 / 255} : {r: 1, g: 1, b: 1};
-    if (tableBodyEl.name === 'pa-table-body') {
-        tableBodyEl.children.forEach((colEl) => {
-            const col = colEl as FrameNode;
-            const colIndex = col.name.split('col-')[1] as unknown as number;
-
-            console.log('colIndex:', colIndex);
-
-            // return;
-            if (colIndex === 0) return;
-
-            col.children.forEach((cellEl, i) => {
-                // if (i !== 0) {
-                // if this is a cell text, not a header checkbox
-                const cell = cellEl as FrameNode;
-                const cellMatches = cell.name.match(/(?<=cell-row-)\d*/);
-                if (cellMatches.length > 0) {
-                    const rowNum = cellMatches[0] as unknown;
-                    const rowNum1 = rowNum as number;
-                    // TMP
-                    // if(rowNum1 === 0) return;
-                    // Swap the child
-                    let destInst = cell.children[0] as InstanceNode;
-                    // console.log("cell.children:", cell.children);
-                    // console.log("destInst", destInst);
-
-                    // return;
-                    if (rowNum1 % 2 !== 0) {
-                        // If this is an even row cell. Index is 0 based
-                        // Repaint the backdrop color
-                        cell.fills = [{type: 'SOLID', color: evenRowColor}];
-                        if (!destInst.mainComponent) return;
-
-                        const stateVar: object = parseCompName(destInst.mainComponent.name);
-
-                        console.log('i:', i, '; stateVar: ', stateVar, '; mainComponent: ', destInst.mainComponent);
-
-                        let _evenRowComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
-                            return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
-                        }).find((d) => {
-                            return d.variantObj['State'] === striped
-                                ? 'Default - Alt'
-                                : 'Default' &&
-                                      d.variantObj['Icon Left'] === stateVar['Icon Left'] &&
-                                      d.variantObj['Icon Right'] === stateVar['Icon Right'] &&
-                                      d.variantObj['Label'] === stateVar['Label'];
-                        });
-
-                        // console.log("_+_debug::", stateVar);
-                        console.log('_++_debug::::::', _evenRowComp);
-                        return;
-
-                        let evenRowComp: ComponentNode = PRISMA_TABLE_COMPONENTS.filter((d) => {
-                            return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
-                        }).find((d) => {
-                            return d.variantObj['State'] === striped
-                                ? 'Default - Alt'
-                                : 'Default' &&
-                                      d.variantObj['Icon Left'] === stateVar['Icon Left'] &&
-                                      d.variantObj['Icon Right'] === stateVar['Icon Right'] &&
-                                      d.variantObj['Label'] === stateVar['Label'];
-                        })['comp'];
-
-                        destInst.swapComponent(evenRowComp);
-                    }
-                    // draw the line for a cell
-                    const cellLine = destInst.findChild((e) => e.name === 'bottom border');
-                    cellLine.visible = !striped;
-                }
-                // } else {
-                // }
-            });
-        });
-    }
-}
-
-function updateStriped2(striped: boolean) {
-    // First select the table body, pls
-    if (figma.currentPage.selection.length === 0) return;
-
-    // TODO. For now you have to select a table frame. TODO: to select any child
-    const tableEl = figma.currentPage.selection[0] as FrameNode;
     if (tableEl.name !== 'pa-table') return;
 
     const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
@@ -565,6 +517,7 @@ async function updateRow(source: SceneNode) {
 
     if (
         (source.type === 'INSTANCE' && source.name === 'Cell - Text') ||
+        (source.type === 'INSTANCE' && source.name === 'Cell - Checkbox') ||
         (source.type === 'FRAME' && source.name.includes('cell-row-'))
     ) {
         // if it's a component instance
@@ -604,22 +557,38 @@ async function updateRow(source: SceneNode) {
 // if the source inst comp is alt, then find both the default and even versions
 
 // Update the target's mouse state according to the source's: this is mostly used when we want to update the whole row
+// TODO: FIXME: Not working when striped is off
 function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
     // Find the source and the destination comp info
     const srcCompInfo: object = parseCompName(source.mainComponent.name);
     const destCompInfo: object = parseCompName(destination.mainComponent.name);
+
     // What's the desired comp we want?
-    const expCompo: ComponentNode = PRISMA_TABLE_COMPONENTS.filter(
-        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
-    ).find((d) => {
-        return (
-            d.variantObj['Icon Left'] === destCompInfo['Icon Left'] &&
-            d.variantObj['Icon Right'] === destCompInfo['Icon Right'] &&
-            d.variantObj['Label'] === destCompInfo['Label'] &&
-            d.variantObj['State'] === srcCompInfo['State']
-        );
-    })['comp'];
-    destination.swapComponent(expCompo);
+    let expCompo: any;
+    if (destination.name === 'Cell - Text') {
+        expCompo = PRISMA_TABLE_COMPONENTS.filter(
+            (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
+        ).find((d) => {
+            return (
+                d.variantObj['Icon Left'] === destCompInfo['Icon Left'] &&
+                d.variantObj['Icon Right'] === destCompInfo['Icon Right'] &&
+                d.variantObj['Label'] === destCompInfo['Label'] &&
+                d.variantObj['State'] === srcCompInfo['State']
+            );
+        });
+    } else if (destination.name === 'Cell - Checkbox') {
+        expCompo = PRISMA_TABLE_COMPONENTS.filter(
+            (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']
+        ).find((d) => {
+            return (
+                // d.variantObj['Type'] === destCompInfo['Type'] &&
+                d.variantObj['State'] === srcCompInfo['State']
+            );
+        });
+    }
+    if (expCompo) {
+        destination.swapComponent(expCompo['comp']);
+    }
 }
 
 // Update the target's icon state (e.g., icon left/right/label) according to the source's while keeping the target's mouse state:
@@ -710,7 +679,7 @@ function updateColmnHeader(source: SceneNode) {
         }
     }
 }
-
+/* ** Return all the cells in the same row as the cell specified */
 function rowForCell(cell: SceneNode): SceneNode[] {
     const reg = /\d+/;
     const rowMatches = cell.name.match(reg);
