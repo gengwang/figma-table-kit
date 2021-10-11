@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '../styles/ui.css';
-import {prisma_cloud_policies, prisma_cloud_alerts} from '../assets/datasets.js';
+import {prisma_cloud_policies, prisma_cloud_alerts, prisma_compute_rules} from '../assets/datasets.js';
 import * as _ from 'lodash';
 // import * as csv from 'csvtojson';
 import * as d3 from 'd3-dsv';
@@ -11,6 +11,7 @@ const App = ({}) => {
     const INITIAL_DATA_SOURCE = [
         {name: 'Prisma Cloud - Alerts', data: prisma_cloud_alerts},
         {name: 'Prisma Cloud - Policies', data: prisma_cloud_policies},
+        {name: 'Prisma Compute - Rules', data: prisma_compute_rules},
     ];
 
     const [dataSources, setDataSources] = React.useState(INITIAL_DATA_SOURCE);
