@@ -75,15 +75,9 @@ const App = ({}) => {
     };
 
     function parseCSV(content: string): [] {
-        // console.log("csv::::", csv());
-        console.log('d3::::', d3.dsvFormat('\t').parse(content));
-        // console.log("d3::::", d3.parse(content));
-        /*  
-        const jsonArray= await csv().fromFile(filePath).then((jsonObj)=>{
-            console.log(jsonObj);
-        });
-         */
-        const rows = d3.dsvFormat('\t').parse(content);
+        // console.log('d3::::', d3.dsvFormat('\t').parse(content));
+        console.log('d3::::', d3.csvParse(content));
+        const rows = d3.csvParse(content);
         return rows || [];
     }
     const onFileChange = (e) => {
