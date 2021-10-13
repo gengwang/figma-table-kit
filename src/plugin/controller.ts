@@ -38,6 +38,12 @@ const PRISMA_TABLE_COMPONENTS: {
     variantObj: object;
 }[] = [
     {
+        key: 'f443506ec395fdb3b15b54e5c963273ce5b5d3a0',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'],
+        variantObj: null,
+    },
+    {
         key: 'd66c4bf33a2083e909bd4d074ec178060f35927f',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
@@ -245,8 +251,11 @@ figma.ui.onmessage = (msg) => {
             drawTable(msg.dataset);
             break;
         case 'update-table':
+            console.log('update-table');
+
             if (figma.currentPage.selection.length > 0) {
-                drawTableBody(msg.dataset);
+                // drawTableBody(msg.dataset);
+                drawTable(msg.dataset);
             }
         case 'update-striped':
             updateStriped(msg.striped);
@@ -716,11 +725,11 @@ function selectRow() {
 
 // Quick and dirty way to see if the selection is a table
 function isTable(selection: readonly SceneNode[]): boolean {
-    return selection.length == 1 && selection[0].name.includes('pa-table-body');
+    return selection.length === 1 && selection[0].name === 'pa-table';
 }
 
 function drawTable(data) {
-    // console.log('draw table with data:::', data);
+    console.log('draw table with data:::', data);
 
     Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
         const tableElWidth = 1440 - 32 * 2;
@@ -910,7 +919,7 @@ async function drawTableBody(data) {
     // column based data source
     const dataframe = transpose(datagrid);
 
-    if (isTable(sel)) {
+    if (sel.length === 1 && sel[0].name === 'pa-table-body') {
         // See if the selection is a table by checking out the name of the frame
 
         const tableEl = sel[0] as FrameNode;
@@ -1043,17 +1052,29 @@ function tableBodyCellWithText(
 }
 
 function drawPagination(data): FrameNode {
-    const container = baseFrameWithAutoLayout({name: 'pa-table-pagination', itemSpacing: 0, padding: 0}) as FrameNode;
-    const paginationInst = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination)
-        .get('comp')
-        .value()
-        .createInstance() as InstanceNode;
-    paginationInst.layoutGrow = 1;
-    container.appendChild(paginationInst);
-    container.resize(paginationInst.width, paginationInst.height);
-    container.layoutGrow = 1;
-    container.layoutAlign = 'MIN';
+    // Are we looking at an existing table?
+    let sel = figma.currentPage.selection;
+    let container: FrameNode;
+    let paginationInst: InstanceNode;
+    if (isTable(sel)) {
+        // If we are looking at an existing table
+        const tableEl = sel[0] as FrameNode;
+        container = tableEl.findChild((d) => d.name === 'pa-table-pagination') as FrameNode;
+        paginationInst = container.findChild((d) => d.name === 'Pagination') as InstanceNode;
+    } else {
+        // If we are creating something new
+        container = baseFrameWithAutoLayout({name: 'pa-table-pagination', itemSpacing: 0, padding: 0}) as FrameNode;
+        paginationInst = _.chain(PRISMA_TABLE_COMPONENTS)
+            .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination)
+            .get('comp')
+            .value()
+            .createInstance() as InstanceNode;
+        paginationInst.layoutGrow = 1;
+        container.appendChild(paginationInst);
+        container.resize(paginationInst.width, paginationInst.height);
+        container.layoutGrow = 1;
+        container.layoutAlign = 'MIN';
+    }
 
     // Update the counter
     const count = data['rows'] ? data['rows'].length : undefined;
