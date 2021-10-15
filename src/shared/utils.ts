@@ -101,6 +101,24 @@ function baseFrameWithAutoLayout({
     });
     return frame;
 }
+// Estimate the number of characters that can fit into an area.
+// Based on Cell - Text style in Prisma DS:
+// Lato size: 12px line-height: 20px
+// The paddings should not be counted.
+function charactersPerArea(width: number, heigh: number, offsetChars = 14): number {
+    const fontConstant = 5.18333333333333;
+    const lineHeight = 20;
+    let charCountPerLine = Math.floor(width / fontConstant);
+    const rowCount = Math.floor(heigh / lineHeight);
+
+    // We want some paddings on the top and the bottom
+    if (heigh > 40) heigh -= 24;
+    if (heigh <= 40 && heigh > 32) heigh -= 12;
+
+    // Manually cut off some characters since it appears we'd overcount if we didn't
+    if (charCountPerLine > offsetChars + 2) charCountPerLine -= offsetChars;
+    return charCountPerLine * rowCount;
+}
 
 //* Source: https://www.figma.com/plugin-docs/editing-properties/ */
 function clone(val) {
@@ -134,4 +152,4 @@ function transpose(a) {
     });
 }
 
-export {baseFrameWithAutoLayout, configFoCWithAutoLayout, clone, transpose, parseCompName};
+export {baseFrameWithAutoLayout, configFoCWithAutoLayout, charactersPerArea, clone, transpose, parseCompName};

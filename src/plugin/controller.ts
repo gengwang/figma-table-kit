@@ -1,6 +1,13 @@
 import * as _ from 'lodash';
+import {fill} from 'lodash';
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
-import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose, parseCompName} from '../shared/utils';
+import {
+    baseFrameWithAutoLayout,
+    configFoCWithAutoLayout,
+    transpose,
+    parseCompName,
+    charactersPerArea,
+} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
@@ -20,20 +27,30 @@ const settings = {
     'manual-update': false,
 };
 
-enum PRISMA_TABLE_COMPONENTS_INST_NAME {
-    'Header - Text',
-    'Header - Checkbox',
-    'Cell - Text',
-    'Cell - Checkbox',
-    'Cell - Actions',
-    'Cell - Severity',
-    'Cell - Toggle',
-    'Pagination',
+enum TABLE_PART {
+    'BodyCellFrame',
+    'HeaderCellFrame',
+    'BodyColumnFrame',
+    // "PaginationFrame",
+    'BodyCellInstance',
+    'HeaderCellInstance',
+    // "PaginationInstance",
 }
+
+const PRISMA_TABLE_COMPONENTS_INST_NAME = {
+    'Header - Text': 'Header - Text',
+    'Header - Checkbox': 'Header - Checkbox',
+    'Cell - Text': 'Cell - Text',
+    'Cell - Checkbox': 'Cell - Checkbox',
+    'Cell - Actions': 'Cell - Actions',
+    'Cell - Severity': 'Cell - Severity',
+    'Cell - Toggle': 'Cell - Toggle',
+    Pagination: 'Pagination',
+};
 
 const PRISMA_TABLE_COMPONENTS: {
     key: string;
-    instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME;
+    instanceName: string;
     comp: any;
     variantObj: object;
 }[] = [
@@ -265,7 +282,6 @@ figma.ui.onmessage = (msg) => {
             break;
         case 'update-row-height':
             const height = table_style[msg.height]['rowHeight'] as number;
-            console.log('update row height:', msg.height, '==', height);
             const target = figma.currentPage.selection.concat()[0];
             // updateRow(target);
             updateRowHeight(target, height);
@@ -335,7 +351,8 @@ figma.on('selectionchange', () => {
             const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
             updateRow(source);
             updateColumnComps(source);
-            updateColmnHeader(source);
+            updateColumnHeader(source);
+            updateColumn(source);
         } else if (sourceObj.type === 'TEXT') {
             console.log('source is a text and it is ', sourceObj, '; name: ', sourceObj.name);
 
@@ -369,10 +386,45 @@ function updateSettings(msg: any) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Utilities
+// Is the node a table part?
+function tablePart(source: SceneNode): TABLE_PART {
+    if (!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME')) return null;
+
+    const headerCelFrameReg = /(?<=col-)\d*/,
+        bodyCelFrameReg = /(?<=cell-row-)\d*/,
+        bodyColFrameReg = /(?<=col-)\d*/,
+        bodyCellInstReg = /Cell - [A-Za-z]*/,
+        headerCellInstReg = /Header - [A-Za-z]*/;
+
+    if (source.type === 'FRAME') {
+        if (source.parent && source.parent.name === 'pa-table-header') {
+            if (source.name.match(headerCelFrameReg)) {
+                return TABLE_PART.HeaderCellFrame;
+            } else {
+                return null;
+            }
+        } else if (source.name.match(bodyCelFrameReg)) {
+            return TABLE_PART.BodyCellFrame;
+        } else if (source.name.match(bodyColFrameReg)) {
+            return TABLE_PART.BodyColumnFrame;
+        } else {
+            return null;
+        }
+    } else if (source.type === 'INSTANCE') {
+        if (source.name.match(bodyCellInstReg)) {
+            return TABLE_PART.BodyCellInstance;
+        } else if (source.name.match(headerCellInstReg)) {
+            return TABLE_PART.HeaderCellInstance;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Returns a frame node under the parent node; reuses one if it exists, otherwise
 // creates a new one.
 // This is applicable for a table frame constructed by this plugin:
-// a table frame contains a collection of column frames, which in tern contains a collection
+// a table frame contains a collection of column frames, which contains a collection
 // of cell frames.
 function frameNodeOn({
     parent,
@@ -468,7 +520,7 @@ function updateStriped(striped: boolean) {
                         const variantObj: object = parseCompName(srcInst.mainComponent.name);
 
                         let destComp: ComponentNode;
-                        if (srcInst.name === 'Cell - Text') {
+                        if (srcInst.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) {
                             destComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
                                 return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
                             }).find((d) => {
@@ -479,7 +531,7 @@ function updateStriped(striped: boolean) {
                                           d.variantObj['Icon Right'] === variantObj['Icon Right'] &&
                                           d.variantObj['Label'] === variantObj['Label'];
                             })['comp'];
-                        } else if (srcInst.name === 'Cell - Checkbox') {
+                        } else if (srcInst.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']) {
                             destComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
                                 return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'];
                             }).find((d) => {
@@ -520,47 +572,65 @@ function updateRowHeight(target: SceneNode, height: number) {
         cel.resize(cel.width, height);
     });
 }
-// target can be a frame cell or the instance node it contains
-async function updateRow(source: SceneNode) {
-    if (!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME')) return;
 
-    if (
-        (source.type === 'INSTANCE' && source.name === 'Cell - Text') ||
-        (source.type === 'INSTANCE' && source.name === 'Cell - Checkbox') ||
-        (source.type === 'FRAME' && source.name.includes('cell-row-'))
-    ) {
-        // if it's a component instance
-        let cell, cellHeight;
-        cellHeight = source.height;
-
-        if (source.type === 'INSTANCE') {
-            cell = source.parent;
-        } else if (source.type === 'FRAME') {
-            cell = source;
-        }
-
-        let row = rowForCell(cell);
-
-        row.forEach((cel) => {
-            // const inst = cell.children[0] as InstanceNode;
-            const inst = (cel as FrameNode).children[0] as InstanceNode;
-
-            // Update target cell height
-            inst.resize(cel.width, cellHeight);
-            // Rig the auto-layout again after explicitly setting the instance node's height
-            inst.layoutAlign = 'STRETCH';
-            inst.layoutGrow = 1;
-
-            // Update the height for all the other cells in the same row
-            cel.resize(cel.width, cellHeight);
-
-            const thisInst = (cell as FrameNode).children[0] as InstanceNode;
-            const insto = (cel as FrameNode).children[0] as InstanceNode;
-
-            // Update the mouse states to be the same as the target
-            updateCompMouseState(thisInst, insto);
+// TODO: If a column has just been resized, we want to re-fill the text for all the cell-text
+// instances in that column
+function updateColumn(source: SceneNode) {
+    // TMP. Currently only support when the column frame is resized
+    const reg = /(?<=col-)\d*/;
+    const matches = source.name.match(reg);
+    // if the user has just selected a column
+    if (matches !== null) {
+        const colEl = source as FrameNode;
+        console.log('a column was just resized!');
+        colEl.children.forEach((el) => {
+            let inst = (el as FrameNode).children[0] as InstanceNode;
+            fillTableBodyCellWithText(inst, el.getPluginData('cellText'));
+            // console.log("cell text: ", el.getPluginData("cellText"));
         });
     }
+}
+// target can be a frame cell or the instance node it contains
+async function updateRow(source: SceneNode) {
+    // if it's a component instance
+    let cell, cellHeight;
+
+    if (tablePart(source) === TABLE_PART.BodyCellInstance) {
+        cell = source.parent;
+    } else if (tablePart(source) === TABLE_PART.BodyCellFrame) {
+        cell = source;
+    } else {
+        return;
+    }
+
+    cellHeight = source.height;
+
+    let row = rowForCell(cell);
+
+    row.forEach((cel) => {
+        const text = (cel as FrameNode).getPluginData('cellText');
+        const inst = (cel as FrameNode).children[0] as InstanceNode;
+
+        // Update target cell height
+        inst.resize(cel.width, cellHeight);
+        // Rig the auto-layout again after explicitly setting the instance node's height
+        inst.layoutAlign = 'STRETCH';
+        inst.layoutGrow = 1;
+
+        // Update the height for all the other cells in the same row
+        cel.resize(cel.width, cellHeight);
+
+        const thisInst = (cell as FrameNode).children[0] as InstanceNode;
+        const insto = (cel as FrameNode).children[0] as InstanceNode;
+
+        // Update the text
+        if (text !== '') {
+            fillTableBodyCellWithText(inst, text);
+        }
+
+        // Update the mouse states to be the same as the target
+        updateCompMouseState(thisInst, insto);
+    });
 }
 // if the source inst comp is HOVER/SELECTED, then find the non-hover/selected version
 // if the source inst comp is alt, then find both the default and even versions
@@ -574,7 +644,7 @@ function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
 
     // What's the desired comp we want?
     let expCompo: any;
-    if (destination.name === 'Cell - Text') {
+    if (destination.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) {
         expCompo = PRISMA_TABLE_COMPONENTS.filter(
             (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
         ).find((d) => {
@@ -585,7 +655,7 @@ function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
                 d.variantObj['State'] === srcCompInfo['State']
             );
         });
-    } else if (destination.name === 'Cell - Checkbox') {
+    } else if (destination.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']) {
         expCompo = PRISMA_TABLE_COMPONENTS.filter(
             (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']
         ).find((d) => {
@@ -624,7 +694,7 @@ async function updateColumnComps(source: SceneNode) {
     if (!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME')) return;
 
     if (
-        (source.type === 'INSTANCE' && source.name === 'Cell - Text') ||
+        (source.type === 'INSTANCE' && source.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) ||
         (source.type === 'FRAME' && source.name.includes('cell-row-'))
     ) {
         // find all the instance for the column
@@ -663,7 +733,7 @@ async function updateColumnIcons(source: TextNode) {
     });
 }
 
-function updateColmnHeader(source: SceneNode) {
+function updateColumnHeader(source: SceneNode) {
     if (!source) return;
 
     const reg = /(?<=col-)\d*/;
@@ -738,8 +808,9 @@ function drawTable(data) {
         tableEl.layoutMode = 'VERTICAL';
         tableEl.layoutGrow = 1;
 
-        header.layoutGrow = 0;
-        tableEl.appendChild(header);
+        const _header = header as unknown as FrameNode;
+        _header.layoutGrow = 0;
+        tableEl.appendChild(_header);
         body.layoutGrow = 0;
         tableEl.appendChild(body);
 
@@ -751,7 +822,7 @@ function drawTable(data) {
         paginationEl.layoutAlign = 'STRETCH';
 
         // TMP: set the width to 1440 for now.
-        tableEl.resize(tableElWidth, header.height + body.height + table_style.paginationHeight);
+        tableEl.resize(tableElWidth, _header.height + body.height + table_style.paginationHeight);
     });
 }
 async function drawTableHeader(data) {
@@ -759,7 +830,7 @@ async function drawTableHeader(data) {
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
     // const tableHeaderCellTextDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
-    //     (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text']
+    //     (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text' : 'Header - Text']
     // ).find((d) => d.variantObj['State'] === 'Default')['comp'];
 
     const tableHeaderTextDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
@@ -953,10 +1024,11 @@ async function drawTableBody(data) {
                 cellContainer.layoutAlign = 'STRETCH';
 
                 // Set up for alternate row coloring. Note index starts from 0
+                const text = (cell as any).toString();
                 const t =
                     j % 2 == 0
-                        ? tableBodyCellWithText(colEl, j, tableCellTextDefaultComp, cell as string)
-                        : tableBodyCellWithText(colEl, j, tableCellTextStripedEvenRowComp, cell as string);
+                        ? tableBodyCellWithText(colEl, j, tableCellTextDefaultComp, text)
+                        : tableBodyCellWithText(colEl, j, tableCellTextStripedEvenRowComp, text);
 
                 // Set up resizing to be h: 'Fill Container'/w: 'Fill Container'
                 // This will cause this instance node to fill the parent cell frame when
@@ -965,6 +1037,9 @@ async function drawTableBody(data) {
                 t.layoutGrow = 1;
                 t.resize(t.width, rowHeight);
                 cellContainer.appendChild(t);
+
+                // Write the text as meta data to the parent frame so that we can use it when we resize.
+                cellContainer.setPluginData('cellText', text);
             });
         });
 
@@ -1035,20 +1110,32 @@ function tableBodyCellWithText(
     comp: ComponentNode,
     text: string = 'ipsum loram!'
 ): InstanceNode {
-    let tableCell;
+    let tableCell: InstanceNode;
     if (parent.children.length > rowIndex && parent.children[rowIndex].type === 'INSTANCE') {
-        tableCell = parent.children[rowIndex];
+        tableCell = parent.children[rowIndex] as InstanceNode;
     } else {
         tableCell = comp.createInstance();
     }
+    text = text.toString();
+    fillTableBodyCellWithText(tableCell, text);
+
+    return tableCell;
+}
+// Set the characters for the text node in an instance of Cell - Text based on available space for the text
+async function fillTableBodyCellWithText(tableCell: InstanceNode, originalText: string) {
+    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
+
+    if (tableCell.name !== PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) return;
+
     const textEl = tableCell.findChild((n) => n.type === 'TEXT') as TextNode;
-    // TMP. Truncate the string brutally. TODO: truncate based on available space
-    // 24 is the magic number that a string of normal text can fit into 200px width
-    const [truncatedLength, originalText] = [24, text.toString()];
+    // const charCount = charactersPerArea(tableCell.width, tableCell.height);
+    // console.log(`tableCell width: ${tableCell.width}; height: ${tableCell.height}`);
+    let truncatedLength = charactersPerArea(tableCell.width, tableCell.height);
+    // if (truncatedLength > 3) truncatedLength - 3;
+    // console.log(`parent width: ${parent.width}; height: ${parent.height}`);
     const _text: string =
         originalText.substring(0, truncatedLength) + (originalText.length > truncatedLength ? '...' : '');
     textEl.characters = _text;
-    return tableCell;
 }
 
 function drawPagination(data): FrameNode {
@@ -1091,7 +1178,24 @@ function logSelection() {
     console.log(`${_keyInfo}\nname: ${sel[0].name}`);
     console.log('sel: ', sel[0]);
 }
+
+async function _numOfChars() {
+    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
+    // draw a box
+    const sel = figma.currentPage.selection[0];
+    const [w, h] = [sel.width, sel.height];
+    const charCount = charactersPerArea(w, h);
+    const text =
+        'Golden Ratio Typography is more than just a way to make text look great on a webpage. It’s a deceptively simple design system that maintains perfect proportionality in any design. Play around with this Calculator and see what Golden Ratio Typography is all about. Whenever you change settings or select a different GRT optimization, you’ll be able to examine the effects right here on this text! You can use GRT to create better-looking webpages, software, books, magazines, or countless other applications where text is a vital component of the design.The GRT Calculator is growing fast! Get notified when we release the website-ready (S)CSS generator and a new series on unit-based design: GRT Text Formatting Demo';
+    console.log(`w: ${w}; h: ${h}; c: ${charCount}`);
+    const tEl = (sel as FrameNode).findChild((d) => d.name === '_t') as TextNode;
+    // console.log("text: ", tEl);
+    // get width and height
+    // calculate
+    tEl.characters = text.substr(0, charCount);
+}
 function test() {
+    // _numOfChars();
     // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
     logSelection();

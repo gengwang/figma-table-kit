@@ -75,6 +75,8 @@ const App = ({}) => {
         }
     };
 
+    console.clear();
+
     function parseCSV(content: string): [] {
         // console.log('d3::::', d3.dsvFormat('\t').parse(content));
         console.log('d3::::', d3.csvParse(content));
