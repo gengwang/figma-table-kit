@@ -41,7 +41,7 @@ function configFoCWithAutoLayout({
     // nodeType = 'FRAME',
     width = 240,
     height = 160,
-    padding = 8,
+    padding = [6, 0],
     itemSpacing = 0,
 }: {
     foc?: BaseFrameMixin; // either a 'FRAME' or a 'COMPONENT'
@@ -50,7 +50,7 @@ function configFoCWithAutoLayout({
     // nodeType?: 'FRAME' | 'COMPONENT';
     width?: number;
     height?: number;
-    padding?: number;
+    padding?: number | number[];
     itemSpacing?: number;
 } = {}) {
     foc.layoutMode = direction;
@@ -60,13 +60,33 @@ function configFoCWithAutoLayout({
     foc.layoutGrow = 1;
     foc.layoutAlign = 'STRETCH';
 
-    foc.paddingTop = foc.paddingRight = foc.paddingBottom = foc.paddingLeft = padding;
+    if (typeof padding === 'number') {
+        const _padding: number = padding;
+        foc.paddingTop = foc.paddingRight = foc.paddingBottom = foc.paddingLeft = _padding;
+    } else if (Array.isArray(padding)) {
+        if (padding.length === 2) {
+            foc.paddingTop = foc.paddingBottom = padding[0];
+            foc.paddingLeft = foc.paddingRight = padding[1];
+        } else if (padding.length === 4) {
+            foc.paddingTop = padding[0];
+            foc.paddingRight = padding[1];
+            foc.paddingBottom = padding[2];
+            foc.paddingLeft = padding[3];
+        } else if (padding.length === 3) {
+            foc.paddingTop = padding[0];
+            foc.paddingRight = foc.paddingLeft = padding[1];
+            foc.paddingBottom = padding[2];
+        } else {
+            console.error('padding should have a length of 2, 4, or 3');
+        }
+    }
+
     foc.itemSpacing = itemSpacing;
     foc.name = name;
     foc.resize(width, height);
 
     const dummyRect = figma.createRectangle();
-    dummyRect.resize(width - padding * 2, height - padding * 2);
+    dummyRect.resize(width - foc.paddingLeft - foc.paddingRight, height - foc.paddingTop - foc.paddingBottom);
 
     // Gotcha: the foc needs to have some content in order to "activate" the auto layout.
     foc.appendChild(dummyRect);
@@ -102,9 +122,12 @@ function baseFrameWithAutoLayout({
     return frame;
 }
 // Estimate the number of characters that can fit into an area.
-// Based on Cell - Text style in Prisma DS:
+// Based on 'Cell - Text' style in Prisma DS:
 // Lato size: 12px line-height: 20px
 // The paddings should not be counted.
+// It looks like the only solution would be to modify the Prisma DS "Cell - Text" component so that
+// it has an auto-layout frame wrapping the text with some top/bottom padding (6px), and then wrapping
+// the bottom line and this frame inside another, non auto-layout frame.
 function charactersPerArea(width: number, heigh: number, offsetChars = 14): number {
     const fontConstant = 5.18333333333333;
     const lineHeight = 20;

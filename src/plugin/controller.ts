@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {fill} from 'lodash';
+import {difference, fill} from 'lodash';
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
 import {
     baseFrameWithAutoLayout,
@@ -979,7 +979,7 @@ async function drawTableBody(data) {
             name: 'pa-table-body',
             width: foc.width,
             height: foc.height,
-            padding: 0,
+            padding: [6, 0],
         });
         sel = figma.currentPage.selection = [foc] as FrameNode[];
     }
@@ -1128,11 +1128,9 @@ async function fillTableBodyCellWithText(tableCell: InstanceNode, originalText: 
     if (tableCell.name !== PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) return;
 
     const textEl = tableCell.findChild((n) => n.type === 'TEXT') as TextNode;
-    // const charCount = charactersPerArea(tableCell.width, tableCell.height);
-    // console.log(`tableCell width: ${tableCell.width}; height: ${tableCell.height}`);
+
     let truncatedLength = charactersPerArea(tableCell.width, tableCell.height);
-    // if (truncatedLength > 3) truncatedLength - 3;
-    // console.log(`parent width: ${parent.width}; height: ${parent.height}`);
+
     const _text: string =
         originalText.substring(0, truncatedLength) + (originalText.length > truncatedLength ? '...' : '');
     textEl.characters = _text;
@@ -1179,24 +1177,51 @@ function logSelection() {
     console.log('sel: ', sel[0]);
 }
 
-async function _numOfChars() {
+async function _testPaddings() {
+    console.log('test paddings');
+
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    // draw a box
-    const sel = figma.currentPage.selection[0];
-    const [w, h] = [sel.width, sel.height];
-    const charCount = charactersPerArea(w, h);
+    // // draw a box
+    // const sel = figma.currentPage.selection[0];
+    // const [w, h] = [sel.width, sel.height];
+    // const charCount = charactersPerArea(w, h);
     const text =
         'Golden Ratio Typography is more than just a way to make text look great on a webpage. It’s a deceptively simple design system that maintains perfect proportionality in any design. Play around with this Calculator and see what Golden Ratio Typography is all about. Whenever you change settings or select a different GRT optimization, you’ll be able to examine the effects right here on this text! You can use GRT to create better-looking webpages, software, books, magazines, or countless other applications where text is a vital component of the design.The GRT Calculator is growing fast! Get notified when we release the website-ready (S)CSS generator and a new series on unit-based design: GRT Text Formatting Demo';
-    console.log(`w: ${w}; h: ${h}; c: ${charCount}`);
-    const tEl = (sel as FrameNode).findChild((d) => d.name === '_t') as TextNode;
-    // console.log("text: ", tEl);
-    // get width and height
-    // calculate
-    tEl.characters = text.substr(0, charCount);
+    // console.log(`w: ${w}; h: ${h}; c: ${charCount}`);
+    // const tEl = (sel as FrameNode).findChild((d) => d.name === '_t') as TextNode;
+    // // console.log("text: ", tEl);
+    // // get width and height
+    // // calculate
+    // tEl.characters = text.substr(0, charCount);
+
+    const cellText = _.chain(PRISMA_TABLE_COMPONENTS)
+        .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'])
+        .get('comp')
+        .value()
+        .createInstance() as InstanceNode;
+
+    const cellContainer = baseFrameWithAutoLayout({
+        name: 'cell-007',
+        direction: 'VERTICAL',
+        nodeType: 'FRAME',
+        padding: 6,
+        width: 300,
+        height: 57,
+    });
+
+    cellContainer.appendChild(cellText);
+    cellText.layoutGrow = 1;
+    cellText.layoutAlign = 'STRETCH';
+    fillTableBodyCellWithText(cellText, text);
+    // cellContainer.resize(32, 32);
+
+    let padding: number | number[];
+    padding = [12, 0];
+    padding = 8;
 }
 function test() {
-    // _numOfChars();
+    _testPaddings();
     // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
-    logSelection();
+    // logSelection();
 }
