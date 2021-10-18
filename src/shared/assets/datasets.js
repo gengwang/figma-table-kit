@@ -2,15 +2,6 @@ const prisma_cloud_alerts = {
     title: 'Alerts Overview',
     rows: [
         {
-            'Policy Name': 'AWS EBS volumes are not encrypted deleted on Aug 05, 2021 at 21:35 by template@redlock.io',
-            Alerts: 8766,
-            'Policy Type': 'Config',
-            Severity: 'Low',
-            Labels: 'PCI DSS v3.2',
-            'Compliance Standard':
-                'Prime Therapeutic, ISM - IRAP - Protected [Example}, Copy of CCPA 2018, Copy of GDPR, GDPRのコピー',
-        },
-        {
             'Policy Name': 'AWS EC2 Instance IAM Role not enabled',
             Alerts: 8205,
             'Policy Type': 'Config',
@@ -20,13 +11,13 @@ const prisma_cloud_alerts = {
                 'CIS v1.2.0 (AWS), MITRE ATT&CK v6.3, PIPEDA, CCPA 2018, Backup of ASAE 3150 (Beta), APRA (CPS 234) Information Security, CIS v1.3.0 (AWS), Brazilian Data Protection Law (LGPD), Copy of CCPA 2018, NIST 800-53 Rev 5, Multi-Level Protection Scheme (MLPS) v2.0, NIST 800-53 Rev4, Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, ASAE 3150 (Beta), MITRE ATT&CK v8.2, PCI DSS v3.2.1, NIST SP 800-172, HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1, CIS v1.4.0 (AWS)',
         },
         {
-            'Policy Name': 'GCP VM disks not encrypted with Customer-Supplied Encryption Keys (CSEK)',
-            Alerts: 8079,
+            'Policy Name': 'AWS EBS volumes are not encrypted deleted on Aug 05, 2021 at 21:35 by template@redlock.io',
+            Alerts: 8766,
             'Policy Type': 'Config',
             Severity: 'Low',
-            Labels: '',
+            Labels: 'PCI DSS v3.2',
             'Compliance Standard':
-                'CIS v1.0.0 (GCP), ISO 27001:2013, PIPEDA, CCPA 2018, ASAE 3150 (Beta), APRA (CPS 234) Information Security, CIS v1.1.0 (GCP), NIST 800-53 Rev 5, NIST 800-53 Rev4, Copy of CCPA 2018, Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, Backup of ASAE 3150 (Beta), Brazilian Data Protection Law (LGPD), PCI DSS v3.2.1, NIST SP 800-172, CIS v1.2.0 (GCP), Copy of CIS v1.2.0 (GCP), HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1',
+                'Prime Therapeutic, ISM - IRAP - Protected [Example}, Copy of CCPA 2018, Copy of GDPR, GDPRのコピー',
         },
         {
             'Policy Name':
@@ -64,6 +55,15 @@ const prisma_cloud_alerts = {
             'Compliance Standard': 'ISM - IRAP - Protected [Example}, ASAE 3150 (Beta), Backup of ASAE 3150 (Beta)',
         },
         {
+            'Policy Name': 'GCP VM disks not encrypted with Customer-Supplied Encryption Keys (CSEK)',
+            Alerts: 1911,
+            'Policy Type': 'Config',
+            Severity: 'Low',
+            Labels: '',
+            'Compliance Standard':
+                'CIS v1.0.0 (GCP), ISO 27001:2013, PIPEDA, CCPA 2018, ASAE 3150 (Beta), APRA (CPS 234) Information Security, CIS v1.1.0 (GCP), NIST 800-53 Rev 5, Test Standard, NIST 800-53 Rev4, Copy of CCPA 2018, Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, Backup of ASAE 3150 (Beta), Brazilian Data Protection Law (LGPD), PCI DSS v3.2.1, NIST SP 800-172, CIS v1.2.0 (GCP), Copy of CIS v1.2.0 (GCP), HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1',
+        },
+        {
             'Policy Name': 'AWS EC2 instances with Public IP and associated with Security Groups have Internet Access',
             Alerts: 1385,
             'Policy Type': 'Config',
@@ -71,6 +71,149 @@ const prisma_cloud_alerts = {
             Labels: '',
             'Compliance Standard':
                 'MITRE ATT&CK v6.3, PIPEDA, CCPA 2018, Backup of ASAE 3150 (Beta), Brazilian Data Protection Law (LGPD), Copy of CCPA 2018, NIST 800-53 Rev 5, Multi-Level Protection Scheme (MLPS) v2.0, NIST 800-53 Rev4, APRA (CPS 234) Information Security, Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, ASAE 3150 (Beta), MITRE ATT&CK v8.2, PCI DSS v3.2.1, NIST SP 800-172, HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1',
+        },
+        {
+            'Policy Name': 'GCP VM instances have block project-wide SSH keys feature disabled (check)',
+            Alerts: 481,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard':
+                'CIS v1.0.0 (GCP), ISO 27001:2013, PIPEDA, CCPA 2018, MITRE ATT&CK v6.3, CIS v1.1.0 (GCP), Test Standard, APRA (CPS 234) Information Security, ASAE 3150 (Beta), Copy of CCPA 2018, Cybersecurity Maturity Model Certification (CMMC) v.1.02, Brazilian Data Protection Law (LGPD), Backup of ASAE 3150 (Beta), MITRE ATT&CK v8.2, NIST SP 800-171 Revision 2, PCI DSS v3.2.1, NIST SP 800-172, CIS v1.2.0 (GCP), Copy of CIS v1.2.0 (GCP), HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1',
+        },
+        {
+            'Policy Name': 'Suspicious Networks',
+            Alerts: 217,
+            'Policy Type': 'Network',
+            Severity: 'High',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'Instances exposed to network traffic from the internet',
+            Alerts: 193,
+            'Policy Type': 'Network',
+            Severity: 'High',
+            Labels: 'Network, PCI DSS v3.2',
+            'Compliance Standard':
+                'CSA CCM v3.0.1, HIPAA, PCI DSS v3.2.1, SOC 2, NIST CSF, GDPR, NIST 800-53 Rev4, HITRUST CSF v9.3, PIPEDA, CCPA 2018, MITRE ATT&CK v6.3, Copy of GDPR, Prime Therapeutic, ISM - IRAP - Protected [Example}, ASAE 3150 (Beta), Copy of CCPA 2018, Backup of ASAE 3150 (Beta), MITRE ATT&CK v8.2, GDPRのコピ',
+        },
+        {
+            'Policy Name': 'AWS Access logging not enabled on S3 buckets',
+            Alerts: 119,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: 'PCI DSS v3.2',
+            'Compliance Standard':
+                'NIST 800-171 Rev1, CSA CCM v3.0.1, PCI DSS v3.2.1, SOC 2, GDPR, NIST 800-53 Rev4, HITRUST CSF v9.3, MITRE ATT&CK v6.3, PIPEDA, NIST CSF, CCPA 2018, Risk Management in Technology (RMiT), Backup of ASAE 3150 (Beta), Copy of CCPA 2018, CIS v1.3.0 (AWS), NIST 800-53 Rev 5, Multi-Level Protection Scheme (MLPS) v2.0, APRA (CPS 234) Information Security, NIST SP 800-171 Revision 2, Copy of GDPR, ISM - IRAP - Protected [Example}, Prime Therapeutic, ASAE 3150 (Beta), MITRE ATT&CK v8.2, NIST SP 800-172, GDPRのコピー, CIS v1.4.0 (AWS), MAS TRM 2021',
+        },
+        {
+            'Policy Name': 'Port scan activity (External)',
+            Alerts: 116,
+            'Policy Type': 'Anomaly',
+            Severity: 'High',
+            Labels: 'Discovery, Reconaissance',
+            'Compliance Standard': 'MITRE ATT&CK v6.3, MITRE ATT&CK v8.2',
+        },
+        {
+            'Policy Name': 'AWS effective permissions granting wildcard resource access (check)',
+            Alerts: 111,
+            'Policy Type': 'IAM',
+            Severity: 'High',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'AWS CloudWatch Log groups encrypted using default encryption key instead of KMS CMK',
+            Alerts: 87,
+            'Policy Type': 'Config',
+            Severity: 'Low',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'AWS IAM effective permissions are over-privileged (7 days) (check)',
+            Alerts: 85,
+            'Policy Type': 'IAM',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'AWS CloudWatch Log groups not configured with definite retention days',
+            Alerts: 71,
+            'Policy Type': 'Config',
+            Severity: 'Low',
+            Labels: '',
+            'Compliance Standard': 'Risk Management in Technology (RMiT), MAS TRM 2021',
+        },
+        {
+            'Policy Name': 'AWS S3 Object Versioning is disabled (check)',
+            Alerts: 71,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard':
+                'MITRE ATT&CK v6.3, Backup of ASAE 3150 (Beta), APRA (CPS 234) Information Security, Brazilian Data Protection Law (LGPD), Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, ASAE 3150 (Beta), MITRE ATT&CK v8.2, PCI DSS v3.2.1, NIST SP 800-172, HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1, MAS TRM 2021',
+        },
+        {
+            'Policy Name': 'S3 Buckets Not Encrypted',
+            Alerts: 71,
+            'Policy Type': 'Config',
+            Severity: 'High',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'AWS S3 buckets do not have server side encryption',
+            Alerts: 70,
+            'Policy Type': 'Config',
+            Severity: 'Low',
+            Labels: 'PCI DSS v3.2',
+            'Compliance Standard':
+                'PCI DSS v3.2 NIST 800-171 Rev1, CSA CCM v3.0.1, SOC 2, NIST CSF, GDPR, NIST 800-53 Rev4, ISO 27001:2013, HITRUST CSF v9.3, Copy of GDPR, MITRE ATT&CK v6.3, PIPEDA, Prime Therapeutic, ISM - IRAP - Protected [Example}, CCPA 2018, ASAE 3150 (Beta), Risk Management in Technology (RMiT), APRA (CPS 234) Information Security, Copy of CCPA 2018, NIST 800-53 Rev 5, Multi-Level Protection Scheme (MLPS) v2.0, Brazilian Data Protection Law (LGPD), Cybersecurity Maturity Model Certification (CMMC) v.1.02, CIS v1.3.0 (AWS), NIST SP 800-171 Revision 2, Backup of ASAE 3150 (Beta), MITRE ATT&CK v8.2, PCI DSS v3.2.1, NIST SP 800-172, GDPRのコピー, HITRUST v.9.4.2, CIS v1.4.0 (AWS), MAS TRM 2021',
+        },
+        {
+            'Policy Name': 'GCP Firewall rule logging disabled (check)',
+            Alerts: 69,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'AWS SQS server side encryption not enabled',
+            Alerts: 66,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard':
+                'PIPEDA, CCPA 2018, APRA (CPS 234) Information Security, Backup of ASAE 3150 (Beta), Risk Management in Technology (RMiT), NIST 800-53 Rev 5, Multi-Level Protection Scheme (MLPS) v2.0, NIST 800-53 Rev4, Copy of CCPA 2018, Brazilian Data Protection Law (LGPD), Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, ASAE 3150 (Beta), PCI DSS v3.2.1, NIST SP 800-172, HITRUST v.9.4.2, NIST CSF, CSA CCM v.4.0.1, MAS TRM 2021',
+        },
+        {
+            'Policy Name': 'AWS VPC subnets should not allow automatic public IP assignment',
+            Alerts: 60,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard':
+                'NIST 800-171 Rev1, CSA CCM v3.0.1, SOC 2, NIST CSF, GDPR, NIST 800-53 Rev4, ISO 27001:2013, HITRUST CSF v9.3, PIPEDA, CCPA 2018, Backup of ASAE 3150 (Beta), APRA (CPS 234) Information Security, NIST 800-53 Rev 5, Multi-Level Protection Scheme (MLPS) v2.0, Copy of CCPA 2018, Cybersecurity Maturity Model Certification (CMMC) v.1.02, NIST SP 800-171 Revision 2, Brazilian Data Protection Law (LGPD), Copy of GDPR, Prime Therapeutic, ISM - IRAP - Protected [Example}, ASAE 3150 (Beta), PCI DSS v3.2.1, NIST SP 800-172, GDPRのコピー, HITRUST v.9.4.2, MAS TRM 2021',
+        },
+        {
+            'Policy Name': 'S3 Buckets Public Access Not Blocked',
+            Alerts: 59,
+            'Policy Type': 'Config',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard': '',
+        },
+        {
+            'Policy Name': 'AWS entities with risky permissions (check)',
+            Alerts: 55,
+            'Policy Type': 'IAM',
+            Severity: 'Medium',
+            Labels: '',
+            'Compliance Standard': '',
         },
     ],
 };
