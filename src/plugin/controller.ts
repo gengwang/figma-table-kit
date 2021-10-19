@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import {over} from 'lodash';
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
 import {
     baseFrameWithAutoLayout,
@@ -20,6 +21,9 @@ let table_style = {
     },
     cozy: {
         rowHeight: 44,
+    },
+    spacious: {
+        rowHeight: 100,
     },
 };
 const settings = {
@@ -44,9 +48,12 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
     'Cell - Actions': 'Cell - Actions',
     'Cell - Severity': 'Cell - Severity',
     'Cell - Toggle': 'Cell - Toggle',
+    'Table - Background': 'Table - Background',
     Pagination: 'Pagination',
 };
 
+// TODO: auto populate this from one single instance node: one for header checkbox, one for header text, etc.
+// https://forum.figma.com/t/find-all-variant-property-values/7809
 const PRISMA_TABLE_COMPONENTS: {
     key: string;
     instanceName: string;
@@ -66,6 +73,12 @@ const PRISMA_TABLE_COMPONENTS: {
         variantObj: null,
     },
     {
+        key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
+        comp: null,
+        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+        variantObj: null,
+    },
+    {
         key: '60d6f3490e882a82275e5671b75c07c6d2eb5c2e',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
@@ -73,12 +86,6 @@ const PRISMA_TABLE_COMPONENTS: {
     },
     {
         key: '1300cccd151f3975fc971e0ec9d2be85d04ac96b',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
         comp: null,
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
         variantObj: null,
@@ -131,12 +138,12 @@ const PRISMA_TABLE_COMPONENTS: {
         instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
         variantObj: null,
     },
-    {
-        key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
+    // {
+    //     key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
+    //     comp: null,
+    //     instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+    //     variantObj: null,
+    // },
     {
         key: '71e41e2c9c97ecd2ec6e118b4fd56313f6632510',
         comp: null,
@@ -323,7 +330,7 @@ function assignStyles() {
     const _default = _.pick(
         table_style,
         Object.keys(table_style).filter((d) => {
-            return d !== 'compact' && d !== 'cozy' && d !== 'default';
+            return d !== 'compact' && d !== 'cozy' && d !== 'default' && d !== 'spacious';
         })
     );
     table_style = {
@@ -333,6 +340,7 @@ function assignStyles() {
         },
         ...{compact: {..._default, ...table_style.compact}},
         ...{cozy: {..._default, ...table_style.cozy}},
+        ...{spacious: {..._default, ...table_style.spacious}},
     };
 }
 // figma.showUI(__html__, {height: 320});
@@ -343,9 +351,13 @@ figma.on('selectionchange', () => {
     // We'll do nothing if the user wants manual upate
     if (settings['manual-update']) return;
 
-    if (figma.currentPage.getPluginData('selectedEl') !== '' && figma.currentPage.selection.length === 0) {
+    if (
+        figma.currentPage.getPluginData('selectedEl') !== '' &&
+        (figma.currentPage.selection.length === 0 || figma.currentPage.selection[0].name !== 'pa-table-container')
+    ) {
         // if the user just de-selected something, we may want to update the row
         const sourceObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
+
         if (sourceObj.type === 'FRAME' || sourceObj.type === 'INSTANCE') {
             const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
             updateRow(source);
@@ -353,7 +365,7 @@ figma.on('selectionchange', () => {
             updateColumnHeader(source);
             updateColumn(source);
         } else if (sourceObj.type === 'TEXT') {
-            console.log('source is a text and it is ', sourceObj, '; name: ', sourceObj.name);
+            // console.log('source is a text and it is ', sourceObj, '; name: ', sourceObj.name);
 
             // if the previous node was a text node and the rest of the column is not????
             const source = figma.currentPage.findOne((n) => n.id === sourceObj.id) as TextNode;
@@ -363,7 +375,6 @@ figma.on('selectionchange', () => {
     }
     // Store the selection so we can use in the next change event
     if (figma.currentPage.selection.length > 0) {
-        ``;
         const el = figma.currentPage.selection[0];
         const obj = {
             name: el.name,
@@ -489,11 +500,15 @@ function updateStriped(striped: boolean) {
     // First select the table body, pls
     if (figma.currentPage.selection.length === 0) return;
 
-    // TODO. For now you have to select a table frame. TODO: to select any child
-    const tableEl = figma.currentPage.selection[0] as FrameNode;
-    if (tableEl.name !== 'pa-table') return;
+    // TODO. For now you have to select a table container frame. TODO: to select any child
+    const tableContainerEl = figma.currentPage.selection[0] as FrameNode;
+    if (tableContainerEl.name !== 'pa-table-container') return;
 
-    const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
+    const tableEl = tableContainerEl.findOne((d) => d.name === 'pa-table') as FrameNode;
+
+    if (!tableEl) return;
+
+    const tableBodyEl = tableEl.findOne((d) => d.name === 'pa-table-body') as FrameNode;
 
     // TODO: Maybe we should get the color from the imported component named Default - Alt
     const evenRowColor = striped ? {r: 244 / 255, g: 245 / 255, b: 245 / 255} : {r: 1, g: 1, b: 1};
@@ -554,8 +569,13 @@ function updateStriped(striped: boolean) {
 // Update row height for all the rows in this table
 function updateRowHeight(target: SceneNode, height: number) {
     // For now, make sure we are looking at a table
-    if (!target || target.type !== 'FRAME' || target.name !== 'pa-table') return;
-    const tableBodyEl = target.findOne((d) => d.name === 'pa-table-body') as FrameNode;
+
+    if (!target || target.type !== 'GROUP' || target.name !== 'pa-table-container') return;
+
+    const tableContainerEl = target as GroupNode;
+
+    const tableEl = tableContainerEl.findOne((d) => d.name === 'pa-table') as FrameNode;
+    const tableBodyEl = tableEl.findOne((d) => d.name === 'pa-table-body') as FrameNode;
     const cells = tableBodyEl.findAll((d) => d.type === 'FRAME' && d.name.includes('cell-row-')) as FrameNode[];
 
     cells.forEach((cel) => {
@@ -575,13 +595,14 @@ function updateRowHeight(target: SceneNode, height: number) {
 // TODO: If a column has just been resized, we want to re-fill the text for all the cell-text
 // instances in that column
 function updateColumn(source: SceneNode) {
+    if (source === null) return;
+
     // TMP. Currently only support when the column frame is resized
     const reg = /(?<=col-)\d*/;
     const matches = source.name.match(reg);
     // if the user has just selected a column
     if (matches !== null) {
         const colEl = source as FrameNode;
-        console.log('a column was just resized!');
         colEl.children.forEach((el) => {
             let inst = (el as FrameNode).children[0] as InstanceNode;
             fillTableBodyCellWithText(inst, el.getPluginData('cellText'));
@@ -801,6 +822,12 @@ function drawTable(data) {
     console.log('draw table with data:::', data);
 
     Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
+        const bkg = _.chain(PRISMA_TABLE_COMPONENTS)
+            .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
+            .get('comp')
+            .value()
+            .createInstance() as InstanceNode;
+
         const tableElWidth = 1440 - 32 * 2;
         const tableEl = figma.createFrame();
         tableEl.name = 'pa-table';
@@ -821,7 +848,19 @@ function drawTable(data) {
         paginationEl.layoutAlign = 'STRETCH';
 
         // TMP: set the width to 1440 for now.
-        tableEl.resize(tableElWidth, _header.height + body.height + table_style.paginationHeight);
+        const w = tableElWidth,
+            h = _header.height + body.height + table_style.paginationHeight;
+
+        tableEl.resize(w, h);
+        bkg.resize(w, h);
+
+        const overlayEl = figma.createFrame();
+        overlayEl.name = 'pa-table-overlay';
+        overlayEl.fills = [];
+        overlayEl.resize(w, h);
+
+        const tableContainer = figma.group([overlayEl, tableEl, bkg], figma.currentPage);
+        tableContainer.name = 'pa-table-container';
     });
 }
 async function drawTableHeader(data) {
@@ -1218,9 +1257,10 @@ async function _testPaddings() {
     padding = [12, 0];
     padding = 8;
 }
+
 function test() {
-    _testPaddings();
+    // _testPaddings();
     // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
-    // logSelection();
+    logSelection();
 }

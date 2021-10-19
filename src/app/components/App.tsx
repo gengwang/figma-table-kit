@@ -33,6 +33,7 @@ const App = ({}) => {
         {name: 'Compact', value: 'compact'},
         {name: 'Default', value: 'default'},
         {name: 'Cozy', value: 'cozy'},
+        {name: 'Spacious', value: 'spacious'},
     ];
 
     const [striped, onStripedChange] = React.useReducer((striped) => {
