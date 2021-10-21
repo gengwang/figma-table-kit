@@ -76,7 +76,7 @@ const App = ({}) => {
         }
     };
 
-    console.clear();
+    // console.clear();
 
     function parseCSV(content: string): [] {
         // console.log('d3::::', d3.dsvFormat('\t').parse(content));
@@ -107,6 +107,10 @@ const App = ({}) => {
             parent.postMessage({pluginMessage: {type: 'create-table', dataset: table_data}}, '*');
         };
         fileReader.readAsText(fileToRead);
+    };
+
+    const onLog = () => {
+        parent.postMessage({pluginMessage: {type: 'log'}}, '*');
     };
 
     const onTest = () => {
@@ -182,8 +186,12 @@ const App = ({}) => {
 
             <hr style={{width: '100%'}} />
 
-            <button id="test" onClick={onTest}>
+            <button id="test" onClick={onLog}>
                 Debug: Log selection
+            </button>
+
+            <button id="test" onClick={onTest}>
+                Debug: Test
             </button>
         </div>
     );

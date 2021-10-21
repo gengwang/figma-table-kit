@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {over} from 'lodash';
+
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
 import {
     baseFrameWithAutoLayout,
@@ -52,218 +52,44 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
     Pagination: 'Pagination',
 };
 
-// TODO: auto populate this from one single instance node: one for header checkbox, one for header text, etc.
-// https://forum.figma.com/t/find-all-variant-property-values/7809
-const PRISMA_TABLE_COMPONENTS: {
-    key: string;
-    instanceName: string;
-    comp: any;
-    variantObj: object;
-}[] = [
-    {
-        key: 'f443506ec395fdb3b15b54e5c963273ce5b5d3a0',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'],
-        variantObj: null,
-    },
-    {
-        key: 'd66c4bf33a2083e909bd4d074ec178060f35927f',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '60d6f3490e882a82275e5671b75c07c6d2eb5c2e',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '1300cccd151f3975fc971e0ec9d2be85d04ac96b',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '3dbf7c863bd75b41ab3f7f716878a1c6d953b72c',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '71e41e2c9c97ecd2ec6e118b4fd56313f6632510',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'],
-        variantObj: null,
-    },
-    {
-        key: 'f8df0a61c1015d39c58f188dd5baa5a88a9f3160',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '2590bf08f497888877c7c6afa7652fbc3bf619e7',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '5252d456900df27ff3a28d7aac54c78a674afa0f',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '3de5d7e2d79fb7035d5c93a028c7fc81212e9251',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: 'a6fdad4ab07146a8a540647a875d4c33a983a6ba',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    // {
-    //     key: '37b442f0d828f0afe39d3cf7d0b9b1e4cf0b887f',
-    //     comp: null,
-    //     instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-    //     variantObj: null,
-    // },
-    {
-        key: '71e41e2c9c97ecd2ec6e118b4fd56313f6632510',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '3dbf7c863bd75b41ab3f7f716878a1c6d953b72c',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
-        variantObj: null,
-    },
-    {
-        key: '52f8db8c3eb06811177462ca81794c1e1b80b36d',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: 'aeae4ca0fb4b52e8501f7288bd71859b5ff87df1',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '7c7c603f0d37e6cb2b21149b865d3eeb6ea70c4e',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '414c2a284ecd78ef15d9fa3b5abd33635f29cf38',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '4b3a13c71ecd87ecb955f3c27be566b5d1fa64d3',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '1b38e2108373907af387083e7c80614289cb323a',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '943c5b15b37a43f61753ff62e8e36fddcb4ce472',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '07ad0a31821a24c118ecdd7b258637be5fb5b400',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '3782e1e0a293fb1272f309e9dea168bf5253912e',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '271f306487b02aadbd8e91fa00bc07441ad66bc6',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: 'ad98c22abd70dc4cc7c416f4d60236eae8af64d8',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: 'bad9f37873cdfe29d1a3e3109481316ced867fef',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '2cffc40473d91e306a8abd83de636cc6bf2a665c',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '5f0ce4db2559489c1f6d64de01e087fc71990c50',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '4d1a18c202a9add97412f4773de1bdab6bd252e6',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: '7596452dfedf909c25cfad654b2c40a6fef34311',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'],
-        variantObj: null,
-    },
-    {
-        key: 'a0dce3a552cfbe21ab347fd85677990281b6e4eb',
-        comp: null,
-        instanceName: PRISMA_TABLE_COMPONENTS_INST_NAME['Pagination'],
-        variantObj: null,
-    },
-];
+// Including names of component names such as 'Cell - Text'
+let PRISMA_TABLE_COMPONENT_NAMES = new Set();
 
-// First making sure all Table Cell components are loaded, then show the UI
-PRISMA_TABLE_COMPONENTS.forEach((d) => {
-    d.comp = figma.importComponentByKeyAsync(d.key);
-});
+// Used to load all variants components from Prisma DS library
+const PRISMA_TABLE_COMPONENT_SAMPLES = [
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'], key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'], key: 'd66c4bf33a2083e909bd4d074ec178060f35927f'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'], key: '52f8db8c3eb06811177462ca81794c1e1b80b36d'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'], key: 'f8df0a61c1015d39c58f188dd5baa5a88a9f3160'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Actions'], key: '95a16fd43a583bec88fbe376f5cac1bc2471b09e'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Severity'], key: '32336a641c8d8bf847a19b2582d7fcd0c53e6696'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Toggle'], key: 'bc73a96bfe0005857390306323f2dbd91f62b536'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'], key: 'f443506ec395fdb3b15b54e5c963273ce5b5d3a0'},
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination, key: 'a0dce3a552cfbe21ab347fd85677990281b6e4eb'},
+];
+interface tableCompInfo {
+    compName: string;
+    variantProperties?: object;
+    component: ComponentNode;
+    key: string;
+}
+// We only want to load all the components once
+let _tableComponentsLoaded = false;
+let allTableComponents: Array<tableCompInfo> = [];
+
+loadAllTableComponents()
+    .then(() => {
+        console.log(
+            `### Welcome to Palo Alto Design System \n#### Table components ready; ${allTableComponents.length} variants loaded.`
+        );
+        assignStyles();
+    })
+    .then(() => {
+        figma.showUI(__html__, {height: 320});
+    })
+    .catch((error) => {
+        console.error('error in loading Prisma Table cell components', error);
+    });
 
 figma.ui.onmessage = (msg) => {
     switch (msg.type) {
@@ -300,6 +126,9 @@ figma.ui.onmessage = (msg) => {
         case 'test':
             test();
             break;
+        case 'log':
+            log();
+            break;
         case 'cancel':
             break;
         default:
@@ -308,23 +137,6 @@ figma.ui.onmessage = (msg) => {
 
     // figma.closePlugin();
 };
-
-Promise.all(PRISMA_TABLE_COMPONENTS.map((d) => d.comp))
-    .then((comps) => {
-        comps.forEach((comp, i) => {
-            PRISMA_TABLE_COMPONENTS[i]['comp'] = comp;
-            PRISMA_TABLE_COMPONENTS[i]['variantObj'] = parseCompName(comp.name);
-        });
-    })
-    .then(() => {
-        assignStyles();
-    })
-    .then(() => {
-        figma.showUI(__html__, {height: 320});
-    })
-    .catch((error) => {
-        console.error('error in loading Prisma Table cell components', error);
-    });
 
 function assignStyles() {
     const _default = _.pick(
@@ -535,24 +347,28 @@ function updateStriped(striped: boolean) {
 
                         let destComp: ComponentNode;
                         if (srcInst.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) {
-                            destComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
-                                return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
-                            }).find((d) => {
-                                return d.variantObj['State'] === striped
-                                    ? 'Default - Alt'
-                                    : 'Default' &&
-                                          d.variantObj['Icon Left'] === variantObj['Icon Left'] &&
-                                          d.variantObj['Icon Right'] === variantObj['Icon Right'] &&
-                                          d.variantObj['Label'] === variantObj['Label'];
-                            })['comp'];
+                            destComp = allTableComponents
+                                .filter((d) => {
+                                    return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+                                })
+                                .find((d) => {
+                                    return d.variantProperties['State'] === striped
+                                        ? 'Default - Alt'
+                                        : 'Default' &&
+                                              d.variantProperties['Icon Left'] === variantObj['Icon Left'] &&
+                                              d.variantProperties['Icon Right'] === variantObj['Icon Right'] &&
+                                              d.variantProperties['Label'] === variantObj['Label'];
+                                })['component'];
                         } else if (srcInst.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']) {
-                            destComp = PRISMA_TABLE_COMPONENTS.filter((d) => {
-                                return d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'];
-                            }).find((d) => {
-                                return d.variantObj['State'] === striped
-                                    ? 'Default - Alt'
-                                    : 'Default' && d.variantObj['Type'] === variantObj['Type'];
-                            })['comp'];
+                            destComp = allTableComponents
+                                .filter((d) => {
+                                    return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'];
+                                })
+                                .find((d) => {
+                                    return d.variantProperties['State'] === striped
+                                        ? 'Default - Alt'
+                                        : 'Default' && d.variantProperties['Type'] === variantObj['Type'];
+                                })['component'];
                         }
 
                         srcInst.swapComponent(destComp);
@@ -657,36 +473,45 @@ async function updateRow(source: SceneNode) {
 
 // Update the target's mouse state according to the source's: this is mostly used when we want to update the whole row
 // TODO: FIXME: Not working when striped is off
+// TODO: FIXME: Not quite working on header checkbox
 function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
     // Find the source and the destination comp info
-    const srcCompInfo: object = parseCompName(source.mainComponent.name);
-    const destCompInfo: object = parseCompName(destination.mainComponent.name);
+    const srcCompInfo: object = source.mainComponent['variantProperties'];
+    const destCompInfo: object = destination.mainComponent['variantProperties'];
 
     // What's the desired comp we want?
-    let expCompo: any;
+    let expCompo: tableCompInfo;
     if (destination.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) {
-        expCompo = PRISMA_TABLE_COMPONENTS.filter(
-            (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
-        ).find((d) => {
-            return (
-                d.variantObj['Icon Left'] === destCompInfo['Icon Left'] &&
-                d.variantObj['Icon Right'] === destCompInfo['Icon Right'] &&
-                d.variantObj['Label'] === destCompInfo['Label'] &&
-                d.variantObj['State'] === srcCompInfo['State']
-            );
-        });
+        expCompo = allTableComponents
+            .filter((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'])
+            .find((d) => {
+                const _criteriaCheckboxSrc = d.variantProperties['State'] === srcCompInfo['State'];
+
+                const _criteriaCellTextSrc =
+                    d.variantProperties['Icon Left'] === destCompInfo['Icon Left'] &&
+                    d.variantProperties['Icon Right'] === destCompInfo['Icon Right'] &&
+                    d.variantProperties['Label'] === destCompInfo['Label'] &&
+                    d.variantProperties['State'] === srcCompInfo['State'];
+
+                if (source.name === 'Cell - Text') {
+                    return _criteriaCellTextSrc;
+                } else if (source.name === 'Cell - Checkbox') {
+                    return _criteriaCheckboxSrc;
+                } else {
+                    console.error('Error assessing criteria for updating row cells.');
+                    return undefined;
+                }
+            });
     } else if (destination.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']) {
-        expCompo = PRISMA_TABLE_COMPONENTS.filter(
-            (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox']
-        ).find((d) => {
-            return (
-                // d.variantObj['Type'] === destCompInfo['Type'] &&
-                d.variantObj['State'] === srcCompInfo['State']
+        expCompo = allTableComponents
+            .filter((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'])
+            .filter((d) => d.variantProperties['State'] === srcCompInfo['State'])
+            .find(
+                (d) => d.variantProperties['Type'] === (srcCompInfo['State'] === 'Selected' ? 'Selected' : 'Unselected')
             );
-        });
     }
     if (expCompo) {
-        destination.swapComponent(expCompo['comp']);
+        destination.swapComponent(expCompo['component']);
     }
 }
 
@@ -694,22 +519,27 @@ function updateCompMouseState(source: InstanceNode, destination: InstanceNode) {
 // This is mostly applicable when we want to update the whole column
 function updateCompIconLabelVariant(source: InstanceNode, destination: InstanceNode) {
     // Find the source and the destination comp info
-    const srcCompoInfo: object = parseCompName(source.mainComponent.name);
-    const destCompInfo: object = parseCompName(destination.mainComponent.name);
+
+    const srcCompoInfo: object = source['variantProperties'];
+    const destCompInfo: object = destination['variantProperties'];
+    if (!srcCompoInfo || !destCompInfo) return;
+
     // What's the desired comp we want?
-    const expCompo: ComponentNode = PRISMA_TABLE_COMPONENTS.filter(
-        (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']
-    ).find((d) => {
-        return (
-            d.variantObj['Icon Left'] === srcCompoInfo['Icon Left'] &&
-            d.variantObj['Icon Right'] === srcCompoInfo['Icon Right'] &&
-            d.variantObj['Label'] === srcCompoInfo['Label'] &&
-            d.variantObj['State'] === destCompInfo['State']
-        );
-    })['comp'];
+    const expCompo: ComponentNode = allTableComponents
+        .filter((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'])
+        .find((d) => {
+            return (
+                d.variantProperties['Icon Left'] === srcCompoInfo['Icon Left'] &&
+                d.variantProperties['Icon Right'] === srcCompoInfo['Icon Right'] &&
+                d.variantProperties['Label'] === srcCompoInfo['Label'] &&
+                d.variantProperties['State'] === destCompInfo['State']
+            );
+        })['component'];
+
     destination.swapComponent(expCompo);
 }
 
+// TODO: FIXME: Not working on header checkboxes
 async function updateColumnComps(source: SceneNode) {
     if (!source || (source.type !== 'INSTANCE' && source.type !== 'FRAME')) return;
 
@@ -726,10 +556,12 @@ async function updateColumnComps(source: SceneNode) {
         }
         const colEl = sourceInst.parent.parent as FrameNode;
 
-        colEl.children.forEach((el) => {
-            let targetInst = (el as FrameNode).children[0] as InstanceNode;
+        colEl.children.forEach((cellEl) => {
+            let targetInst = (cellEl as FrameNode).children[0] as InstanceNode;
             updateCompIconLabelVariant(sourceInst, targetInst);
         });
+    } else {
+        console.log('It IS SUPPORTED...');
     }
 }
 
@@ -822,11 +654,9 @@ function drawTable(data) {
     console.log('draw table with data:::', data);
 
     Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
-        const bkg = _.chain(PRISMA_TABLE_COMPONENTS)
-            .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
-            .get('comp')
-            .value()
-            .createInstance() as InstanceNode;
+        const bkg = allTableComponents
+            .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
+            ['component'].createInstance() as InstanceNode;
 
         const tableElWidth = 1440 - 32 * 2;
         const tableEl = figma.createFrame();
@@ -867,19 +697,13 @@ async function drawTableHeader(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Bold'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
-    // const tableHeaderCellTextDefaultComp = PRISMA_TABLE_COMPONENTS.filter(
-    //     (d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text' : 'Header - Text']
-    // ).find((d) => d.variantObj['State'] === 'Default')['comp'];
 
-    const tableHeaderTextDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find((d) => {
-            return (
-                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'] &&
-                d.variantObj['State'] === 'Default'
-            );
-        })
-        .get('comp')
-        .value();
+    const tableHeaderTextDefaultComp = allTableComponents.find((d) => {
+        return (
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'] &&
+            d.variantProperties['State'] === 'Default'
+        );
+    })['component'];
 
     // Get the header title:
     const headerTitles: string[] = Object.keys(data['rows'][0] as object);
@@ -927,16 +751,13 @@ async function drawTableHeader(data) {
     });
 
     // Add checkbox at the beginning
-    const tableHeaderCheckboxDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find((d) => {
-            return (
-                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'] &&
-                d.variantObj['State'] === 'Default' &&
-                d.variantObj['Type'] === 'Unselected'
-            );
-        })
-        .get('comp')
-        .value();
+    const tableHeaderCheckboxDefaultComp = allTableComponents.find((d) => {
+        return (
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'] &&
+            d.variantProperties['State'] === 'Default' &&
+            d.variantProperties['Type'] === 'Unselected'
+        );
+    })['component'];
 
     const checkboxInst = tableHeaderCheckboxDefaultComp.createInstance();
     const checkboxInstContainer = baseFrameWithAutoLayout({
@@ -960,46 +781,39 @@ async function drawTableHeader(data) {
 // TODO: Move 'pa-table-body' to a const
 // The component we use need to be loaded first, plus all the assets
 // such as fonts and styles(?)
-async function drawTableBody(data) {
+async function drawTableBody(data, limitRows: number = 25) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
+    const tableCellTextDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
 
-    const tableCellTextDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find(
-            (d) =>
-                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
-                d.variantObj['State'] === 'Default'
-        )
-        .get('comp')
-        .value();
+    const tableCellTextStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default - Alt' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
 
-    const tableCellTextStripedEvenRowComp = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find(
-            (d) =>
-                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
-                d.variantObj['State'] === 'Default - Alt'
-        )
-        .get('comp')
-        .value();
+    const tableCellCheckboxDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+            d.variantProperties['State'] === 'Default'
+    )['component'];
 
-    const tableCellCheckboxDefaultComp = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find(
-            (d) =>
-                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
-                d.variantObj['State'] === 'Default'
-        )
-        .get('comp')
-        .value();
-
-    const tableCellCheckboxStripedEvenRowComp = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find(
-            (d) =>
-                d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
-                d.variantObj['State'] === 'Default - Alt'
-        )
-        .get('comp')
-        .value();
+    const tableCellCheckboxStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+            d.variantProperties['State'] === 'Default - Alt'
+    )['component'];
 
     const rowHeight = table_style.rowHeight;
 
@@ -1023,7 +837,11 @@ async function drawTableBody(data) {
     }
 
     // row based data source
-    const datagrid = _.chain(data.rows).take(25).value();
+    let datagrid = data.rows;
+
+    if (limitRows > 0) {
+        datagrid = _.chain(data.rows).take(limitRows).value();
+    }
 
     // column based data source
     const dataframe = transpose(datagrid);
@@ -1160,6 +978,7 @@ function tableBodyCellWithText(
     return tableCell;
 }
 // Set the characters for the text node in an instance of Cell - Text based on available space for the text
+// TODO: FIXME: Currently only works on text only cells. TODO: Support cells with icons.
 async function fillTableBodyCellWithText(tableCell: InstanceNode, originalText: string) {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
@@ -1187,11 +1006,9 @@ function drawPagination(data): FrameNode {
     } else {
         // If we are creating something new
         container = baseFrameWithAutoLayout({name: 'pa-table-pagination', itemSpacing: 0, padding: 0}) as FrameNode;
-        paginationInst = _.chain(PRISMA_TABLE_COMPONENTS)
-            .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination)
-            .get('comp')
-            .value()
-            .createInstance() as InstanceNode;
+        paginationInst = allTableComponents
+            .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination)
+            ['component'].createInstance() as InstanceNode;
         paginationInst.layoutGrow = 1;
         container.appendChild(paginationInst);
         container.resize(paginationInst.width, paginationInst.height);
@@ -1215,52 +1032,56 @@ function logSelection() {
     console.log('sel: ', sel[0]);
 }
 
-async function _testPaddings() {
-    console.log('test paddings');
+async function loadAllTableComponents() {
+    if (_tableComponentsLoaded) {
+        console.log('++++++we have all components: ', allTableComponents);
+        return;
+    }
 
-    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    // // draw a box
-    // const sel = figma.currentPage.selection[0];
-    // const [w, h] = [sel.width, sel.height];
-    // const charCount = charactersPerArea(w, h);
-    const text =
-        'Golden Ratio Typography is more than just a way to make text look great on a webpage. It’s a deceptively simple design system that maintains perfect proportionality in any design. Play around with this Calculator and see what Golden Ratio Typography is all about. Whenever you change settings or select a different GRT optimization, you’ll be able to examine the effects right here on this text! You can use GRT to create better-looking webpages, software, books, magazines, or countless other applications where text is a vital component of the design.The GRT Calculator is growing fast! Get notified when we release the website-ready (S)CSS generator and a new series on unit-based design: GRT Text Formatting Demo';
-    // console.log(`w: ${w}; h: ${h}; c: ${charCount}`);
-    // const tEl = (sel as FrameNode).findChild((d) => d.name === '_t') as TextNode;
-    // // console.log("text: ", tEl);
-    // // get width and height
-    // // calculate
-    // tEl.characters = text.substr(0, charCount);
+    for (const {key} of PRISMA_TABLE_COMPONENT_SAMPLES) {
+        const comp = await figma.importComponentByKeyAsync(key);
+        const inst = comp.createInstance();
 
-    const cellText = _.chain(PRISMA_TABLE_COMPONENTS)
-        .find((d) => d.instanceName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'])
-        .get('comp')
-        .value()
-        .createInstance() as InstanceNode;
+        const mainComponent = inst.mainComponent;
+        const mainComponentParentNode = mainComponent?.parent;
+        if (mainComponentParentNode && mainComponentParentNode.type === 'COMPONENT_SET') {
+            // if it's a component set, e.g., Cell - Text
+            const componentSetName = mainComponentParentNode.name;
+            PRISMA_TABLE_COMPONENT_NAMES.add(componentSetName);
+            const allCompsInSet = mainComponentParentNode.children as ComponentNode[];
+            const comps = allCompsInSet.map((comp) => ({
+                compName: componentSetName,
+                variantProperties: comp['variantProperties'],
+                component: comp,
+                key: comp.key,
+            }));
+            allTableComponents = [...allTableComponents, ...comps];
+        } else {
+            // if it's not a set, e.g., Table - Background, which has only one component
+            const tableComp1: tableCompInfo = {
+                compName: mainComponent.name,
+                variantProperties: mainComponent['variantProperties'],
+                component: mainComponent,
+                key: mainComponent.key,
+            };
+            allTableComponents = [...allTableComponents, tableComp1];
+        }
+        inst.remove();
+    }
 
-    const cellContainer = baseFrameWithAutoLayout({
-        name: 'cell-007',
-        direction: 'VERTICAL',
-        nodeType: 'FRAME',
-        padding: 6,
-        width: 300,
-        height: 57,
-    });
+    _tableComponentsLoaded = true;
 
-    cellContainer.appendChild(cellText);
-    cellText.layoutGrow = 1;
-    cellText.layoutAlign = 'STRETCH';
-    fillTableBodyCellWithText(cellText, text);
-    // cellContainer.resize(32, 32);
+    // console.log("___+++now we should have all components: ", allTableComponents);
+}
 
-    let padding: number | number[];
-    padding = [12, 0];
-    padding = 8;
+function log() {
+    logSelection();
 }
 
 function test() {
+    loadAllTableComponents();
     // _testPaddings();
     // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
-    logSelection();
+    // logSelection();
 }
