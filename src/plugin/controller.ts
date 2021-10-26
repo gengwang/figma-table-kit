@@ -1,13 +1,7 @@
 import * as _ from 'lodash';
 
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
-import {
-    baseFrameWithAutoLayout,
-    configFoCWithAutoLayout,
-    transpose,
-    parseCompName,
-    charactersPerArea,
-} from '../shared/utils';
+import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose, charactersPerArea} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
@@ -343,7 +337,7 @@ function updateStriped(striped: boolean) {
                         // Repaint the backdrop color
                         cell.fills = [{type: 'SOLID', color: evenRowColor}];
 
-                        const variantObj: object = parseCompName(srcInst.mainComponent.name);
+                        const variantObj = srcInst.mainComponent['variantProperties'];
 
                         let destComp: ComponentNode;
                         if (srcInst.name === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text']) {
@@ -370,7 +364,6 @@ function updateStriped(striped: boolean) {
                                         : 'Default' && d.variantProperties['Type'] === variantObj['Type'];
                                 })['component'];
                         }
-
                         srcInst.swapComponent(destComp);
                     }
                     // draw the line for a cell

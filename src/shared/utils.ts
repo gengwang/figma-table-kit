@@ -1,3 +1,4 @@
+/*
 // A master component in Figma are named something like
 // "Icon Left=True, Icon Right=False, Label=True, State=Default - Alt".
 // This function returns a JSON representation of the name:
@@ -7,7 +8,7 @@
 //     "Label": true,
 //     "State": "Default - Alt"
 // }
-function parseCompName(name: string): object {
+ function parseCompName(name: string): object {
     return name
         .split(',')
         .map((d) => d.split('='))
@@ -24,7 +25,7 @@ function parseCompName(name: string): object {
             const v = Object.values(d)[0];
             return {...acc, [k]: v};
         }, {});
-}
+} */
 function baseFrame(nodeType: 'FRAME' | 'COMPONENT'): BaseFrameMixin {
     switch (nodeType) {
         case 'COMPONENT':
@@ -175,4 +176,4 @@ function transpose(a) {
     });
 }
 
-export {baseFrameWithAutoLayout, configFoCWithAutoLayout, charactersPerArea, clone, transpose, parseCompName};
+export {baseFrameWithAutoLayout, configFoCWithAutoLayout, charactersPerArea, clone, transpose};
