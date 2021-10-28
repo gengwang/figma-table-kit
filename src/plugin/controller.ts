@@ -6,6 +6,8 @@ import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose, charactersP
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
 let table_style = {
+    titleHeight: 48, // without subtitle
+    titleWithSubtitleHeight: 64,
     rowHeight: 32,
     headerHeight: 32,
     columnWidth: 200,
@@ -35,6 +37,7 @@ enum TABLE_PART {
 }
 
 const PRISMA_TABLE_COMPONENTS_INST_NAME = {
+    'Card / Header': 'Card / Header',
     'Header - Text': 'Header - Text',
     'Header - Checkbox': 'Header - Checkbox',
     'Cell - Text': 'Cell - Text',
@@ -51,6 +54,7 @@ let PRISMA_TABLE_COMPONENT_NAMES = new Set();
 
 // Used to load all variants components from Prisma DS library
 const PRISMA_TABLE_COMPONENT_SAMPLES = [
+    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Card / Header'], key: '061cacb1563153645cdd94fe1f0e5d9ec51c85bc'}, // Title for table
     {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'], key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7'},
     {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'], key: 'd66c4bf33a2083e909bd4d074ec178060f35927f'},
     {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'], key: '52f8db8c3eb06811177462ca81794c1e1b80b36d'},
@@ -170,6 +174,7 @@ figma.on('selectionchange', () => {
             updateColumnComps(source);
             updateColumnHeader(source);
             updateColumn(source);
+            updateTableSize(source);
         } else if (sourceObj.type === 'TEXT') {
             // console.log('source is a text and it is ', sourceObj, '; name: ', sourceObj.name);
 
@@ -554,7 +559,7 @@ async function updateColumnComps(source: SceneNode) {
             updateCompIconLabelVariant(sourceInst, targetInst);
         });
     } else {
-        console.log('It IS SUPPORTED...');
+        // console.log('It IS NOT SUPPORTED...');
     }
 }
 
@@ -603,6 +608,32 @@ function updateColumnHeader(source: SceneNode) {
         }
     }
 }
+// Update table size including the background
+// TODO: Currently only updates when the title inst has been resized.
+function updateTableSize(source: SceneNode) {
+    console.log('>>> update table size.... for ', source);
+
+    if (source?.type === 'INSTANCE') {
+        if (source?.name === 'Card / Header') {
+            const _titleInst = source as InstanceNode;
+            const _tableTitle = source?.parent as FrameNode;
+            const _tableEl = _tableTitle?.parent as FrameNode;
+            const tableContainer = _tableEl?.parent as FrameNode;
+            const _tableBackground = tableContainer?.findOne((d) => d.name === 'Table - Background');
+            const _tableOverlay = tableContainer?.findOne((d) => d.name === 'pa-table-overlay');
+            // update size
+            _tableTitle.resize(_titleInst.width, _titleInst.height);
+            let _tableHeight = 0,
+                _tableWidth = _tableEl?.width;
+            _tableEl?.children?.forEach((d) => {
+                _tableHeight += d.height;
+            });
+            _tableEl?.resize(_tableWidth, _tableHeight);
+            _tableBackground?.resize(_tableWidth, _tableHeight);
+            _tableOverlay?.resize(_tableWidth, _tableHeight);
+        }
+    }
+}
 /* ** Return all the cells in the same row as the cell specified */
 function rowForCell(cell: SceneNode): SceneNode[] {
     const reg = /\d+/;
@@ -646,7 +677,7 @@ function isTable(selection: readonly SceneNode[]): boolean {
 function drawTable(data) {
     console.log('draw table with data:::', data);
 
-    Promise.all([drawTableHeader(data), drawTableBody(data)]).then(([header, body]) => {
+    Promise.all([drawTableTitle(data), drawTableHeader(data), drawTableBody(data)]).then(([title, header, body]) => {
         const bkg = allTableComponents
             .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
             ['component'].createInstance() as InstanceNode;
@@ -657,22 +688,32 @@ function drawTable(data) {
         tableEl.layoutMode = 'VERTICAL';
         tableEl.layoutGrow = 1;
 
+        const _title = title as unknown as FrameNode;
+        // _title.layoutGrow = 0; //
+
         const _header = header as unknown as FrameNode;
-        _header.layoutGrow = 0;
+        // _header.resize(tableElWidth, table_style.headerHeight);
+        _header.layoutGrow = 0; // Fixed height for header
+        // _header.layoutAlign = 'STRETCH';
+
+        const paginationEl: FrameNode = drawPagination(data);
+        paginationEl.resize(tableElWidth, table_style.paginationHeight);
+        paginationEl.layoutGrow = 0; // Fixed height for pagination
+        // paginationEl.layoutAlign = 'STRETCH';
+
+        // TMP: set the width to 1440 for now.
+        // Record the "intrinsic" heights before appendment
+        const w = tableElWidth,
+            h = _header.height + body.height + table_style.paginationHeight + _title.height;
+
+        tableEl.appendChild(_title);
+
         tableEl.appendChild(_header);
+
         body.layoutGrow = 0;
         tableEl.appendChild(body);
 
-        const paginationEl: FrameNode = drawPagination(data);
-
         tableEl.appendChild(paginationEl);
-        paginationEl.resize(tableElWidth, table_style.paginationHeight);
-        paginationEl.layoutGrow = 1;
-        paginationEl.layoutAlign = 'STRETCH';
-
-        // TMP: set the width to 1440 for now.
-        const w = tableElWidth,
-            h = _header.height + body.height + table_style.paginationHeight;
 
         tableEl.resize(w, h);
         bkg.resize(w, h);
@@ -769,6 +810,49 @@ async function drawTableHeader(data) {
     return headerContainer;
 }
 
+// Returns title container frame
+async function drawTableTitle(data) {
+    await figma.loadFontAsync({family: 'Lato', style: 'Semibold'});
+
+    const tableTitleComp = allTableComponents.find((d) => {
+        return (
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Card / Header'] &&
+            d.variantProperties['Caption'] === 'True' &&
+            d.variantProperties['Icon'] === 'False'
+        );
+    })['component'];
+
+    const titleEl = tableTitleComp?.createInstance();
+    const frameEl = titleEl.findOne((d) => d.name === 'Frame 1') as FrameNode;
+    const textEl = frameEl?.findOne((d) => d.name === 'Title') as TextNode;
+    const closeBtnEl = frameEl?.findOne((d) => d.name === 'Button - Icon Only') as InstanceNode;
+
+    // FIXME: "Untitled" doesn't work.
+    textEl.characters = data.title || 'Untitled';
+    closeBtnEl.visible = false;
+
+    const titleContainer = baseFrameWithAutoLayout({
+        name: 'pa-table-title',
+        // height: table_style.titleHeight,
+        height: table_style.titleWithSubtitleHeight,
+        // width: table_style.columnWidth * headerTitles.length,
+        // width: 600,
+        padding: 0,
+        itemSpacing: 0,
+        direction: 'HORIZONTAL',
+    }) as FrameNode;
+
+    titleContainer.layoutAlign = 'STRETCH';
+    titleContainer.layoutGrow = 1;
+
+    // titleEl.resize(960, table_style.titleHeight);
+
+    titleContainer.appendChild(titleEl);
+
+    titleEl.layoutGrow = 1; // Set width to be "stretch"
+
+    return titleContainer;
+}
 // Draw table using the d3 update pattern(e.g., enter/update/exit).
 // Using imported external components.
 // TODO: Move 'pa-table-body' to a const
@@ -949,6 +1033,7 @@ async function drawTableBody(data, limitRows: number = 25) {
 
     figma.viewport.scrollAndZoomIntoView(sel);
     figma.currentPage.selection = sel;
+
     return sel[0];
 }
 
@@ -1067,12 +1152,36 @@ async function loadAllTableComponents() {
     // console.log("___+++now we should have all components: ", allTableComponents);
 }
 
+async function _loadSomeComponentsFromFigmaDS() {
+    const _compKeys = ['be67cfb6dd2772a959bcb2feed1fc50658b91392'];
+
+    const _frame = baseFrameWithAutoLayout({
+        direction: 'HORIZONTAL',
+        nodeType: 'FRAME',
+    });
+
+    let w = 0,
+        h = 0;
+    for (const key of _compKeys) {
+        const comp = await figma.importComponentByKeyAsync(key);
+        const inst = comp.createInstance();
+        w += inst.width;
+        h = inst.height > h ? inst.height : h;
+        _frame.resize(w, h);
+        _frame.appendChild(inst);
+
+        inst.layoutGrow = 0;
+        inst.layoutAlign = 'MIN';
+    }
+}
 function log() {
     logSelection();
 }
 
 function test() {
-    loadAllTableComponents();
+    _loadSomeComponentsFromFigmaDS();
+    // drawTableTitle()
+    // loadAllTableComponents();
     // _testPaddings();
     // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");

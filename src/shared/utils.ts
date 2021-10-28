@@ -107,7 +107,7 @@ function baseFrameWithAutoLayout({
     nodeType?: 'FRAME' | 'COMPONENT';
     width?: number;
     height?: number;
-    padding?: number;
+    padding?: number | number[];
     itemSpacing?: number;
 } = {}): BaseFrameMixin {
     let frame: BaseFrameMixin = baseFrame(nodeType);
