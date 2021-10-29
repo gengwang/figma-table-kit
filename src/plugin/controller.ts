@@ -1,7 +1,11 @@
 import * as _ from 'lodash';
 
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
-import {baseFrameWithAutoLayout, configFoCWithAutoLayout, transpose, charactersPerArea} from '../shared/utils';
+
+// NOTE: Scrolling: Can't seem have one element with both scrolling and fixed... Rather to have vertical scrolling on table body.
+// Idea: Toggle on plugin GUI for horizontal or vertical scroll.
+
+import {baseFrameWithAutoLayout, loadFontForTextNode, transpose, charactersPerArea} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
@@ -47,6 +51,8 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
     'Cell - Toggle': 'Cell - Toggle',
     'Table - Background': 'Table - Background',
     Pagination: 'Pagination',
+    'Table / Scroll - Vertical': 'Table / Scroll - Vertical',
+    'Table / Scroll - Horizontal': 'Table / Scroll - Horizontal',
 };
 
 // Including names of component names such as 'Cell - Text'
@@ -64,6 +70,14 @@ const PRISMA_TABLE_COMPONENT_SAMPLES = [
     {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Toggle'], key: 'bc73a96bfe0005857390306323f2dbd91f62b536'},
     {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'], key: 'f443506ec395fdb3b15b54e5c963273ce5b5d3a0'},
     {name: PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination, key: 'a0dce3a552cfbe21ab347fd85677990281b6e4eb'},
+    {
+        name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Vertical'],
+        key: '1032d964742d34f6acaaa877da3b5cb6e4a67810',
+    },
+    {
+        name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
+        key: '7b77b1357d1f9d2a4ff538dd3cc37e0494864537',
+    },
 ];
 interface tableCompInfo {
     compName: string;
@@ -95,14 +109,14 @@ figma.ui.onmessage = (msg) => {
             updateSettings(msg);
             break;
         case 'create-table':
-            drawTable(msg.dataset);
+            drawTableComp(msg.dataset);
             break;
         case 'update-table':
             console.log('update-table');
 
             if (figma.currentPage.selection.length > 0) {
                 // drawTableBody(msg.dataset);
-                drawTable(msg.dataset);
+                drawTableComp(msg.dataset);
             }
         case 'update-striped':
             updateStriped(msg.striped);
@@ -163,7 +177,7 @@ figma.on('selectionchange', () => {
 
     if (
         figma.currentPage.getPluginData('selectedEl') !== '' &&
-        (figma.currentPage.selection.length === 0 || figma.currentPage.selection[0].name !== 'pa-table-container')
+        (figma.currentPage.selection.length === 0 || figma.currentPage.selection[0].name !== 'pa-table-comp')
     ) {
         // if the user just de-selected something, we may want to update the row
         const sourceObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
@@ -313,9 +327,9 @@ function updateStriped(striped: boolean) {
 
     // TODO. For now you have to select a table container frame. TODO: to select any child
     const tableContainerEl = figma.currentPage.selection[0] as FrameNode;
-    if (tableContainerEl.name !== 'pa-table-container') return;
+    if (tableContainerEl.name !== 'pa-table-comp') return;
 
-    const tableEl = tableContainerEl.findOne((d) => d.name === 'pa-table') as FrameNode;
+    const tableEl = tableContainerEl.findOne((d) => d.name === 'pa-table-container') as FrameNode;
 
     if (!tableEl) return;
 
@@ -384,11 +398,11 @@ function updateStriped(striped: boolean) {
 function updateRowHeight(target: SceneNode, height: number) {
     // For now, make sure we are looking at a table
 
-    if (!target || target.type !== 'GROUP' || target.name !== 'pa-table-container') return;
+    if (!target || target.type !== 'GROUP' || target.name !== 'pa-table-comp') return;
 
     const tableContainerEl = target as GroupNode;
 
-    const tableEl = tableContainerEl.findOne((d) => d.name === 'pa-table') as FrameNode;
+    const tableEl = tableContainerEl.findOne((d) => d.name === 'pa-table-container') as FrameNode;
     const tableBodyEl = tableEl.findOne((d) => d.name === 'pa-table-body') as FrameNode;
     const cells = tableBodyEl.findAll((d) => d.type === 'FRAME' && d.name.includes('cell-row-')) as FrameNode[];
 
@@ -404,6 +418,22 @@ function updateRowHeight(target: SceneNode, height: number) {
         // Update the height for all the other cells in the same row
         cel.resize(cel.width, height);
     });
+
+    resizeColumnsHeight(tableBodyEl);
+}
+
+function resizeColumnsHeight(tableBodyEl: FrameNode) {
+    const colEls = tableBodyEl?.children;
+
+    // what is the column intrinsic height? And the tallest height of all columns?
+    const maxColHeight = colEls
+        ?.map((col) => {
+            const _colHeight = (col as FrameNode)?.children.map((c) => c.height).reduce((h1, h2) => h1 + h2, 0);
+            return _colHeight;
+        })
+        .reduce((h1, h2) => (h1 > h2 ? h1 : h2));
+
+    colEls.forEach((col) => col.resize(col.width, maxColHeight));
 }
 
 // TODO: If a column has just been resized, we want to re-fill the text for all the cell-text
@@ -578,6 +608,7 @@ async function updateColumnIcons(source: TextNode) {
         // Prisma Library is using icon font for left/right icons
         const targetIcon: TextNode = targetInst.findChild((d) => d.name === source.name) as TextNode;
         if (targetIcon) {
+            loadFontForTextNode(targetIcon);
             targetIcon.characters = sourceIcon.characters;
         }
     });
@@ -613,25 +644,28 @@ function updateColumnHeader(source: SceneNode) {
 function updateTableSize(source: SceneNode) {
     console.log('>>> update table size.... for ', source);
 
-    if (source?.type === 'INSTANCE') {
-        if (source?.name === 'Card / Header') {
-            const _titleInst = source as InstanceNode;
-            const _tableTitle = source?.parent as FrameNode;
-            const _tableEl = _tableTitle?.parent as FrameNode;
-            const tableContainer = _tableEl?.parent as FrameNode;
-            const _tableBackground = tableContainer?.findOne((d) => d.name === 'Table - Background');
-            const _tableOverlay = tableContainer?.findOne((d) => d.name === 'pa-table-overlay');
-            // update size
-            _tableTitle.resize(_titleInst.width, _titleInst.height);
-            let _tableHeight = 0,
-                _tableWidth = _tableEl?.width;
-            _tableEl?.children?.forEach((d) => {
-                _tableHeight += d.height;
-            });
-            _tableEl?.resize(_tableWidth, _tableHeight);
-            _tableBackground?.resize(_tableWidth, _tableHeight);
-            _tableOverlay?.resize(_tableWidth, _tableHeight);
-        }
+    if (source?.type === 'INSTANCE' && source?.name === 'Card / Header') {
+        const _titleInst = source as InstanceNode;
+        const _tableTitle = source?.parent as FrameNode;
+        const _tableEl = _tableTitle?.parent as FrameNode;
+        const tableContainer = _tableEl?.parent as FrameNode;
+        const _tableBackground = tableContainer?.findOne((d) => d.name === 'Table - Background');
+        const _tableOverlay = tableContainer?.findOne((d) => d.name === 'pa-table-overlay');
+        // update size
+        _tableTitle.resize(_titleInst.width, _titleInst.height);
+        let _tableHeight = 0,
+            _tableWidth = _tableEl?.width;
+        _tableEl?.children?.forEach((d) => {
+            _tableHeight += d.height;
+        });
+        _tableEl?.resize(_tableWidth, _tableHeight);
+        _tableBackground?.resize(_tableWidth, _tableHeight);
+        _tableOverlay?.resize(_tableWidth, _tableHeight);
+    } else if (source?.type === 'FRAME' && source?.name.match(/cell-row-\d-col-\d/)?.length > 0) {
+        // if it's a column frame
+        const _tableBodyEl = (source as FrameNode).parent.parent as FrameNode;
+
+        resizeColumnsHeight(_tableBodyEl);
     }
 }
 /* ** Return all the cells in the same row as the cell specified */
@@ -671,10 +705,11 @@ function selectRow() {
 
 // Quick and dirty way to see if the selection is a table
 function isTable(selection: readonly SceneNode[]): boolean {
-    return selection.length === 1 && selection[0].name === 'pa-table';
+    return selection.length === 1 && selection[0].name === 'pa-table-container';
 }
 
-function drawTable(data) {
+// Draw table including pagination and title.
+function drawTableComp(data) {
     console.log('draw table with data:::', data);
 
     Promise.all([drawTableTitle(data), drawTableHeader(data), drawTableBody(data)]).then(([title, header, body]) => {
@@ -683,10 +718,11 @@ function drawTable(data) {
             ['component'].createInstance() as InstanceNode;
 
         const tableElWidth = 1440 - 32 * 2;
-        const tableEl = figma.createFrame();
-        tableEl.name = 'pa-table';
-        tableEl.layoutMode = 'VERTICAL';
-        tableEl.layoutGrow = 1;
+        const tableContainerEl = figma.createFrame();
+        tableContainerEl.name = 'pa-table-container';
+        tableContainerEl.layoutMode = 'VERTICAL';
+        tableContainerEl.layoutGrow = 1;
+        tableContainerEl.clipsContent = false;
 
         const _title = title as unknown as FrameNode;
         // _title.layoutGrow = 0; //
@@ -706,16 +742,16 @@ function drawTable(data) {
         const w = tableElWidth,
             h = _header.height + body.height + table_style.paginationHeight + _title.height;
 
-        tableEl.appendChild(_title);
+        tableContainerEl.appendChild(_title);
 
-        tableEl.appendChild(_header);
+        tableContainerEl.appendChild(_header);
 
         body.layoutGrow = 0;
-        tableEl.appendChild(body);
+        tableContainerEl.appendChild(body);
 
-        tableEl.appendChild(paginationEl);
+        tableContainerEl.appendChild(paginationEl);
 
-        tableEl.resize(w, h);
+        tableContainerEl.resize(w, h);
         bkg.resize(w, h);
 
         const overlayEl = figma.createFrame();
@@ -723,8 +759,12 @@ function drawTable(data) {
         overlayEl.fills = [];
         overlayEl.resize(w, h);
 
-        const tableContainer = figma.group([overlayEl, tableEl, bkg], figma.currentPage);
-        tableContainer.name = 'pa-table-container';
+        const tableCompContainer = figma.group([overlayEl, tableContainerEl, bkg], figma.currentPage);
+        tableCompContainer.name = 'pa-table-comp';
+
+        figma.viewport.scrollAndZoomIntoView([tableCompContainer]);
+        // select it
+        figma.currentPage.selection = [tableCompContainer];
     });
 }
 async function drawTableHeader(data) {
@@ -757,9 +797,9 @@ async function drawTableHeader(data) {
 
     headerTitles.forEach((title, i) => {
         const headerInst: InstanceNode = tableHeaderTextDefaultComp.createInstance();
-        const label = headerInst.findOne((d) => d.name === 'Label') as TextNode;
-        if (label) {
-            label.characters = title;
+        const textEl = headerInst.findOne((d) => d.name === 'Label') as TextNode;
+        if (textEl) {
+            textEl.characters = title;
         }
         headerInst.resize(table_style.columnWidth, table_style.headerHeight);
         headerInst.layoutGrow = i < headerTitles.length - 1 ? 0 : 1; // Set Last header cell to "Fill Width" while all other cells "Fixed Width"
@@ -813,6 +853,7 @@ async function drawTableHeader(data) {
 // Returns title container frame
 async function drawTableTitle(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Semibold'});
+    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
     const tableTitleComp = allTableComponents.find((d) => {
         return (
@@ -822,13 +863,16 @@ async function drawTableTitle(data) {
         );
     })['component'];
 
-    const titleEl = tableTitleComp?.createInstance();
-    const frameEl = titleEl.findOne((d) => d.name === 'Frame 1') as FrameNode;
-    const textEl = frameEl?.findOne((d) => d.name === 'Title') as TextNode;
+    const titleContainerEl = tableTitleComp?.createInstance();
+    const frameEl = titleContainerEl.findOne((d) => d.name === 'Frame 1') as FrameNode;
+    const titleEl = frameEl?.findOne((d) => d.name === 'Title') as TextNode;
+    const subtitleEl = frameEl?.findOne((d) => d.name === 'Subtitle') as TextNode;
     const closeBtnEl = frameEl?.findOne((d) => d.name === 'Button - Icon Only') as InstanceNode;
 
     // FIXME: "Untitled" doesn't work.
-    textEl.characters = data.title || 'Untitled';
+    titleEl.characters = data.title || '';
+    subtitleEl.characters = data.subtitle || '';
+
     closeBtnEl.visible = false;
 
     const titleContainer = baseFrameWithAutoLayout({
@@ -847,9 +891,9 @@ async function drawTableTitle(data) {
 
     // titleEl.resize(960, table_style.titleHeight);
 
-    titleContainer.appendChild(titleEl);
+    titleContainer.appendChild(titleContainerEl);
 
-    titleEl.layoutGrow = 1; // Set width to be "stretch"
+    titleContainerEl.layoutGrow = 1; // Set width to be "stretch"
 
     return titleContainer;
 }
@@ -859,7 +903,7 @@ async function drawTableTitle(data) {
 // The component we use need to be loaded first, plus all the assets
 // such as fonts and styles(?)
 async function drawTableBody(data, limitRows: number = 25) {
-    await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
+    // await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
 
     // TMP. TODO. Figure out what component we need by looking at header or the previously drawn instance
     const tableCellTextDefaultComp = allTableComponents.find(
@@ -894,24 +938,11 @@ async function drawTableBody(data, limitRows: number = 25) {
 
     const rowHeight = table_style.rowHeight;
 
-    let sel = figma.currentPage.selection;
-    if (sel.length === 0) {
-        // if nothing is selected, go ahead and create a baseFrameWithAutoLayout and proceed
-        const bodyContainer = baseFrameWithAutoLayout({name: 'pa-table-body', itemSpacing: 0, padding: 0}) as FrameNode;
-        sel = figma.currentPage.selection = [bodyContainer] as FrameNode[];
-    } else if (sel[0].type === 'FRAME' && sel[0].children.length === 0) {
-        // if selection is an empty frame, configure it using autolayout for table and proceed
-        let foc = sel[0];
-
-        configFoCWithAutoLayout({
-            foc: foc,
-            name: 'pa-table-body',
-            width: foc.width,
-            height: foc.height,
-            padding: [6, 0],
-        });
-        sel = figma.currentPage.selection = [foc] as FrameNode[];
-    }
+    let bodyContainer: FrameNode = baseFrameWithAutoLayout({
+        name: 'pa-table-body',
+        itemSpacing: 0,
+        padding: 0,
+    }) as FrameNode;
 
     // row based data source
     let datagrid = data.rows;
@@ -923,118 +954,119 @@ async function drawTableBody(data, limitRows: number = 25) {
     // column based data source
     const dataframe = transpose(datagrid);
 
-    if (sel.length === 1 && sel[0].name === 'pa-table-body') {
-        // See if the selection is a table by checking out the name of the frame
+    // See if the selection is a table by checking out the name of the frame
 
-        const tableEl = sel[0] as FrameNode;
-        const colsEl = tableEl.children as FrameNode[];
-        const existingColCount = colsEl.length;
-        const newColCount = dataframe.length;
-        const existingRowCount = existingColCount === 0 ? 0 : (colsEl[0].children as FrameNode[]).length;
-        const newRowCount = datagrid.length;
+    const tableEl = bodyContainer as FrameNode;
+    const colsEl = tableEl.children as FrameNode[];
+    const existingColCount = colsEl.length;
+    const newColCount = dataframe.length;
+    const existingRowCount = existingColCount === 0 ? 0 : (colsEl[0].children as FrameNode[]).length;
+    const newRowCount = datagrid.length;
 
-        let [tableWidth, tableHeight] = [tableEl.width, newRowCount * rowHeight];
+    let [tableWidth, tableHeight] = [tableEl.width, newRowCount * rowHeight];
 
-        dataframe.forEach((cells, i) => {
-            // Enter
-            // Text
-            const colEl = frameNodeOn({parent: tableEl, colIndex: i + 1}); // leave 0 for the checkbox
-            colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
+    dataframe.forEach((colCells, i) => {
+        // Enter
+        let colHeight = 0;
+        // Text
+        const colEl = frameNodeOn({parent: tableEl, colIndex: i + 1}); // leave 0 for the checkbox
+        colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
 
-            const cellsData = cells as [];
-            cellsData.forEach((cell, j) => {
-                // Enter/Upate
-                const cellContainer = frameNodeOn({
-                    parent: colEl,
-                    colIndex: i + 1,
-                    rowIndex: j,
-                    frameType: 'CELL',
-                    height: rowHeight,
-                });
-                // Set up resizing to be w: 'Fill Container'/h: 'Fixed Height'
-                // TODO: w: 'Fill COntainer' / h: 'Hug content'
-                cellContainer.layoutGrow = 0;
-                cellContainer.layoutAlign = 'STRETCH';
+        const colCellsData = colCells as [];
 
-                // Set up for alternate row coloring. Note index starts from 0
-                const text = (cell as any).toString();
-                const t =
-                    j % 2 == 0
-                        ? tableBodyCellWithText(colEl, j, tableCellTextDefaultComp, text)
-                        : tableBodyCellWithText(colEl, j, tableCellTextStripedEvenRowComp, text);
-
-                // Set up resizing to be h: 'Fill Container'/w: 'Fill Container'
-                // This will cause this instance node to fill the parent cell frame when
-                // the parent cell frame resizes
-                t.layoutAlign = 'STRETCH'; //'MIN';
-                t.layoutGrow = 1;
-                t.resize(t.width, rowHeight);
-                cellContainer.appendChild(t);
-
-                // Write the text as meta data to the parent frame so that we can use it when we resize.
-                cellContainer.setPluginData('cellText', text);
-            });
-        });
-
-        // Checkbox
-        // const colEl0 = frameNodeOn({parent: tableEl, colIndex: 0, width: table_style.rowHeight });
-        const colEl0 = baseFrameWithAutoLayout({
-            name: 'col-' + 0,
-            // height: table_style.rowHeight,
-            // width: table_style.columnWidth * headerTitles.length,
-            width: table_style.rowHeight, // TMP: checkbox in Prisma DS happens to be a box
-            padding: 0,
-            itemSpacing: 0,
-            direction: 'VERTICAL',
-        }) as FrameNode;
-
-        colEl0.layoutGrow = 0;
-        tableEl.insertChild(0, colEl0);
-
-        const cellsData = dataframe[0] as [];
-        cellsData.forEach((_, j) => {
-            const ck =
-                j % 2 === 0
-                    ? tableCellCheckboxDefaultComp.createInstance()
-                    : tableCellCheckboxStripedEvenRowComp.createInstance();
-
+        colCellsData.forEach((cell, j) => {
+            // Enter/Upate
             const cellContainer = frameNodeOn({
-                parent: colEl0,
-                colIndex: 0,
+                parent: colEl,
+                colIndex: i + 1,
                 rowIndex: j,
                 frameType: 'CELL',
                 height: rowHeight,
             });
-            cellContainer.layoutGrow = 0; // so that it hugs content
-            cellContainer.appendChild(ck);
-            cellContainer.resize(table_style.rowHeight, table_style.rowHeight);
-        });
-        colEl0.resize(table_style.rowHeight, colEl0.height);
+            // Set up resizing to be w: 'Fill Container'/h: 'Fixed Height'
+            // TODO: w: 'Fill COntainer' / h: 'Hug content'
+            cellContainer.layoutGrow = 0;
+            cellContainer.layoutAlign = 'STRETCH';
 
-        // Exit
-        if (newColCount < existingColCount || newRowCount < existingRowCount) {
-            colsEl.forEach((colEl, i) => {
-                const rowsEl = colEl.children as FrameNode[];
-                rowsEl.forEach((rowEl, j) => {
-                    // remove extra rows
-                    if (j >= newRowCount) {
-                        rowEl.remove();
-                    }
-                });
-                // remove the extra columns
-                if (i >= newColCount) {
-                    colEl.remove();
+            // Set up for alternate row coloring. Note index starts from 0
+            const text = (cell as any).toString();
+            const t =
+                j % 2 == 0
+                    ? tableBodyCellWithText(colEl, j, tableCellTextDefaultComp, text)
+                    : tableBodyCellWithText(colEl, j, tableCellTextStripedEvenRowComp, text);
+
+            // Set up resizing to be h: 'Fill Container'/w: 'Fill Container'
+            // This will cause this instance node to fill the parent cell frame when
+            // the parent cell frame resizes
+            t.layoutAlign = 'STRETCH'; //'MIN';
+            t.layoutGrow = 1;
+            t.resize(t.width, rowHeight);
+            cellContainer.appendChild(t);
+
+            // Write the text as meta data to the parent frame so that we can use it when we resize.
+            cellContainer.setPluginData('cellText', text);
+
+            colHeight += rowHeight;
+        });
+
+        colEl.resize(colEl.width, colHeight);
+    });
+
+    // Checkbox
+    const colEl0 = baseFrameWithAutoLayout({
+        name: 'col-' + 0,
+        // height: table_style.rowHeight,
+        // width: table_style.columnWidth * headerTitles.length,
+        width: table_style.rowHeight, // TMP: checkbox in Prisma DS happens to be a box
+        padding: 0,
+        itemSpacing: 0,
+        direction: 'VERTICAL',
+    }) as FrameNode;
+
+    colEl0.layoutGrow = 0;
+    tableEl.insertChild(0, colEl0);
+
+    const cellsData = dataframe[0] as [];
+    cellsData.forEach((_, j) => {
+        const ck =
+            j % 2 === 0
+                ? tableCellCheckboxDefaultComp.createInstance()
+                : tableCellCheckboxStripedEvenRowComp.createInstance();
+
+        const cellContainer = frameNodeOn({
+            parent: colEl0,
+            colIndex: 0,
+            rowIndex: j,
+            frameType: 'CELL',
+            height: rowHeight,
+        });
+        cellContainer.layoutGrow = 0; // so that it has fixed height
+        cellContainer.appendChild(ck);
+        cellContainer.resize(table_style.rowHeight, table_style.rowHeight);
+    });
+    colEl0.resize(table_style.rowHeight, colEl0.height);
+
+    // Exit
+    if (newColCount < existingColCount || newRowCount < existingRowCount) {
+        colsEl.forEach((colEl, i) => {
+            const rowsEl = colEl.children as FrameNode[];
+            rowsEl.forEach((rowEl, j) => {
+                // remove extra rows
+                if (j >= newRowCount) {
+                    rowEl.remove();
                 }
             });
-        }
-
-        tableEl.resize(tableWidth, tableHeight);
+            // remove the extra columns
+            if (i >= newColCount) {
+                colEl.remove();
+            }
+        });
     }
 
-    figma.viewport.scrollAndZoomIntoView(sel);
-    figma.currentPage.selection = sel;
+    tableEl.resize(tableWidth, tableHeight);
+    tableEl.overflowDirection = 'VERTICAL';
 
-    return sel[0];
+    return bodyContainer;
 }
 
 // NOTE: The client function needs to loadFontAsync at the top of the function
@@ -1119,6 +1151,9 @@ async function loadAllTableComponents() {
     for (const {key} of PRISMA_TABLE_COMPONENT_SAMPLES) {
         const comp = await figma.importComponentByKeyAsync(key);
         const inst = comp.createInstance();
+
+        // TODO: Load all the fonts for all the text nodes.
+        // await figma.loadFontAsync(textEl.fontName as FontName);
 
         const mainComponent = inst.mainComponent;
         const mainComponentParentNode = mainComponent?.parent;

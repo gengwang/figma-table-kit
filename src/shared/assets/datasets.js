@@ -1706,7 +1706,8 @@ const prisma_cloud_policies = {
 };
 
 const prisma_compute_rules = {
-    title: 'Deployed containers and images compliance policy',
+    title: 'Rules',
+    subtitle: 'Deployed containers and images compliance policy',
     rows: [
         {
             Disabled: 'No',
@@ -1792,6 +1793,43 @@ const prisma_compute_rules = {
         },
     ],
 };
+
+const cortex_xdr_agents = {
+    title: 'Endpoint Administration',
+    rows: [
+        {
+            'Endpoint Name': 'LAPTOP-DT4293AU',
+            'Endpoint Type': 'Workstation',
+            'Endpoint Status': 'Disconnected',
+            'Operating System': 'Windows 10',
+            'Agent Version': '7.2.2.8697',
+            'IP Address': '192.168.1.160',
+            User: 'hopes',
+            'Endpoint Alias': '',
+            'Last Seen': 'Oct 20th 2021 19:41:41',
+            'Content Version': '198-70600',
+            'Assigned Prevention Policy': 'Windows Default',
+            'Assigned Extensions Policy': 'Windows Default',
+            'Active Directory': '',
+        },
+        {
+            'Endpoint Name': 'SJCWIN9137C62',
+            'Endpoint Type': 'Workstation',
+            'Endpoint Status': 'Connected',
+            'Operating System': 'Windows 10',
+            'Agent Version': '7.5.1.38697',
+            'IP Address': '10.101.101.94,  192.168.0.151,  192.168.48.1,  192.168.229.1,  192.168.239.1',
+            User: 'paloaltonetworks.com\\efrancis',
+            'Endpoint Alias': 'Tupac',
+            'Last Seen': 'Nov 2nd 2021 15:47:05',
+            'Content Version': '230-74345',
+            'Assigned Prevention Policy': 'Auto Agent Upgrade',
+            'Assigned Extensions Policy': 'ef-allow',
+            'Active Directory': '',
+        },
+    ],
+};
+
 const artists = {
     title: 'Notable Artists',
     rows: [
@@ -1864,4 +1902,4 @@ const songs = {
     ],
 };
 
-export {prisma_cloud_alerts, prisma_cloud_policies, prisma_compute_rules, artists, songs};
+export {prisma_cloud_alerts, prisma_cloud_policies, prisma_compute_rules, cortex_xdr_agents, artists, songs};

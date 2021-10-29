@@ -122,6 +122,10 @@ function baseFrameWithAutoLayout({
     });
     return frame;
 }
+
+async function loadFontForTextNode(textEl: TextNode) {
+    await figma.loadFontAsync(textEl.fontName as FontName);
+}
 // Estimate the number of characters that can fit into an area.
 // Based on 'Cell - Text' style in Prisma DS:
 // Lato size: 12px line-height: 20px
@@ -176,4 +180,4 @@ function transpose(a) {
     });
 }
 
-export {baseFrameWithAutoLayout, configFoCWithAutoLayout, charactersPerArea, clone, transpose};
+export {baseFrameWithAutoLayout, configFoCWithAutoLayout, loadFontForTextNode, charactersPerArea, clone, transpose};
