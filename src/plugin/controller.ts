@@ -58,25 +58,83 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
 // Including names of component names such as 'Cell - Text'
 let PRISMA_TABLE_COMPONENT_NAMES = new Set();
 
-// Used to load all variants components from Prisma DS library
-const PRISMA_TABLE_COMPONENT_SAMPLES = [
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Card / Header'], key: '061cacb1563153645cdd94fe1f0e5d9ec51c85bc'}, // Title for table
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'], key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'], key: 'd66c4bf33a2083e909bd4d074ec178060f35927f'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'], key: '52f8db8c3eb06811177462ca81794c1e1b80b36d'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'], key: 'f8df0a61c1015d39c58f188dd5baa5a88a9f3160'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Actions'], key: '95a16fd43a583bec88fbe376f5cac1bc2471b09e'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Severity'], key: '32336a641c8d8bf847a19b2582d7fcd0c53e6696'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Toggle'], key: 'bc73a96bfe0005857390306323f2dbd91f62b536'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'], key: 'f443506ec395fdb3b15b54e5c963273ce5b5d3a0'},
-    {name: PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination, key: 'a0dce3a552cfbe21ab347fd85677990281b6e4eb'},
+// Used to load all variants components from a "published" library
+const TABLE_COMPONENT_SAMPLES = [
     {
-        name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Vertical'],
-        key: '1032d964742d34f6acaaa877da3b5cb6e4a67810',
+        library: {name: 'Prisma Component Library'},
+        components: [
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Card / Header'], key: '061cacb1563153645cdd94fe1f0e5d9ec51c85bc'}, // Title for table
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'], key: 'faa7a0e47753b0f79a71c29c61ee340e83b087c7'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+                key: 'd66c4bf33a2083e909bd4d074ec178060f35927f',
+            },
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'], key: '52f8db8c3eb06811177462ca81794c1e1b80b36d'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+                key: 'f8df0a61c1015d39c58f188dd5baa5a88a9f3160',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Actions'],
+                key: '95a16fd43a583bec88fbe376f5cac1bc2471b09e',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Severity'],
+                key: '32336a641c8d8bf847a19b2582d7fcd0c53e6696',
+            },
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Toggle'], key: 'bc73a96bfe0005857390306323f2dbd91f62b536'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'],
+                key: 'f443506ec395fdb3b15b54e5c963273ce5b5d3a0',
+            },
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination, key: 'a0dce3a552cfbe21ab347fd85677990281b6e4eb'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Vertical'],
+                key: '1032d964742d34f6acaaa877da3b5cb6e4a67810',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
+                key: '7b77b1357d1f9d2a4ff538dd3cc37e0494864537',
+            },
+        ],
     },
     {
-        name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
-        key: '7b77b1357d1f9d2a4ff538dd3cc37e0494864537',
+        library: {name: 'Prisma Component Library (Copy)'},
+        components: [
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Card / Header'], key: 'e0aef4c4a00e05cf585974908c58b66b8a235fc5'}, // Title for table
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Text'], key: 'e15eb24664e5549b28ef8382813b8838fe9f4355'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'],
+                key: '6bd448f4fae1eb8e2283ff6fb60f338b45751512',
+            },
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'], key: '943641d4d02f7ecb4f3d417fd07a43f92d5538f3'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'],
+                key: 'd4583b98a3cb254038985daa9b6d824be42d10b1',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Actions'],
+                key: 'b06683485c616d4d0cb1f93454f40c1ff22a3f95',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Severity'],
+                key: '1ab3dcf6c6327cc10a344e350e1b7c94c9b31b51',
+            },
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Toggle'], key: '4b5b6dc0fb56cb5d260b49b4e991740207fb2fd1'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'],
+                key: '101b57641c1a9a5f5fe9d20ed9de2dde69d08aba',
+            },
+            {name: PRISMA_TABLE_COMPONENTS_INST_NAME.Pagination, key: 'ae597ac63e31c3ba6e7fc4d3311d6537d9dce3d7'},
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Vertical'],
+                key: 'c11e7023d16023dbdd2a091d9e5eb3c10c981792',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
+                key: '0d4c7291abd5b8f4f0cad282144e17b8759c2436',
+            },
+        ],
     },
 ];
 interface tableCompInfo {
@@ -1148,7 +1206,14 @@ async function loadAllTableComponents() {
         return;
     }
 
-    for (const {key} of PRISMA_TABLE_COMPONENT_SAMPLES) {
+    // TODO: set external library from figma UI settings page:
+    const component_samples = TABLE_COMPONENT_SAMPLES.find(
+        (d) => d.library.name === 'Prisma Component Library (Copy)'
+    ).components;
+
+    console.log('component_samples>>>', component_samples);
+
+    for (const {key} of component_samples) {
         const comp = await figma.importComponentByKeyAsync(key);
         const inst = comp.createInstance();
 
