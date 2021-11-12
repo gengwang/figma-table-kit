@@ -123,6 +123,10 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'test'}}, '*');
     };
 
+    const onTest1 = () => {
+        parent.postMessage({pluginMessage: {type: 'test1'}}, '*');
+    };
+
     React.useEffect(() => {
         // This is how we read messages sent from the plugin controller
         window.onmessage = (event) => {
@@ -197,7 +201,11 @@ const App = ({}) => {
             </button>
 
             <button id="test" onClick={onTest}>
-                Debug: Test
+                Test
+            </button>
+
+            <button id="test" onClick={onTest1}>
+                Test 1
             </button>
         </div>
     );

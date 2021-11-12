@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import {Children} from 'react';
 
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
 
@@ -53,6 +54,8 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
     Pagination: 'Pagination',
     'Table / Scroll - Vertical': 'Table / Scroll - Vertical',
     'Table / Scroll - Horizontal': 'Table / Scroll - Horizontal',
+    // TMP
+    _row: '_row',
 };
 
 // Including names of component names such as 'Cell - Text'
@@ -134,6 +137,11 @@ const TABLE_COMPONENT_SAMPLES = [
                 name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
                 key: '0d4c7291abd5b8f4f0cad282144e17b8759c2436',
             },
+            // TMP
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME._row,
+                key: '109e824f1f674ba7c04d05033cb4c12f8c8ca763',
+            },
         ],
     },
 ];
@@ -155,7 +163,8 @@ loadAllTableComponents()
         assignStyles();
     })
     .then(() => {
-        figma.showUI(__html__, {height: 320});
+        // figma.showUI(__html__, {height: 320});
+        figma.showUI(__html__, {height: 500});
     })
     .catch((error) => {
         console.error('error in loading Prisma Table cell components', error);
@@ -195,6 +204,10 @@ figma.ui.onmessage = (msg) => {
 
         case 'test':
             test();
+            break;
+
+        case 'test1':
+            test1();
             break;
         case 'log':
             log();
@@ -1277,16 +1290,213 @@ function _hugContent() {
     rect2.fills = [{type: 'SOLID', color: {r: 255 / 255, g: 0 / 255, b: 0 / 255}}];
     fr.appendChild(rect2);
 }
+// This works. Pros: We have hover, maybe also select. Cons: It's hard to change height: aka various height
+function _runtimeComp1() {
+    // default
+    const compDefault = figma.createComponent();
+    compDefault.name = '_row/State=Default';
+    compDefault.layoutMode = 'HORIZONTAL';
+    compDefault.primaryAxisSizingMode = 'AUTO';
+    compDefault.counterAxisSizingMode = 'AUTO';
+
+    // const compDefaultId = compDefault.id;
+    console.log('compDefault.id: ', compDefault.id);
+
+    const cellTextComp = allTableComponents
+        .filter((d) => {
+            return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+        })
+        .find((d) => {
+            return (
+                d.variantProperties['State'] === 'Default' &&
+                d.variantProperties['Icon Left'] === 'False' &&
+                d.variantProperties['Icon Right'] === 'False' &&
+                d.variantProperties['Label'] === 'True'
+            );
+        })?.['component'];
+
+    const cellTextEl = cellTextComp?.createInstance();
+    const cellTextEl2 = cellTextComp?.createInstance();
+    // console.log("cellTextEl: ", cellTextEl.id);
+    if (cellTextComp) {
+        compDefault.appendChild(cellTextEl);
+        compDefault.appendChild(cellTextEl2);
+    }
+
+    // hover
+    const compHover = figma.createComponent();
+    compHover.name = '_row/State=Hover';
+    compHover.layoutMode = 'HORIZONTAL';
+    compHover.primaryAxisSizingMode = 'AUTO';
+    compHover.counterAxisSizingMode = 'AUTO';
+
+    console.log('compHover.id: ', compHover.id);
+
+    // const compHoverId = compHover.id;
+
+    const cellTextCompHover = allTableComponents
+        .filter((d) => {
+            return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+        })
+        .find((d) => {
+            return (
+                d.variantProperties['State'] === 'Hover' &&
+                d.variantProperties['Icon Left'] === 'False' &&
+                d.variantProperties['Icon Right'] === 'False' &&
+                d.variantProperties['Label'] === 'True'
+            );
+        })?.['component'];
+
+    const cellTextElHover = cellTextCompHover?.createInstance();
+    const cellTextElHover2 = cellTextCompHover?.createInstance();
+
+    if (cellTextCompHover) {
+        compHover.appendChild(cellTextElHover);
+        compHover.appendChild(cellTextElHover2);
+    }
+
+    // compHover.reactions.concat()
+
+    // variant set
+    const cs = figma.combineAsVariants([compDefault, compHover], figma.currentPage);
+    cs.name = '__row004';
+    cs.layoutMode = 'VERTICAL';
+    cs.primaryAxisSizingMode = 'AUTO';
+    cs.counterAxisSizingMode = 'AUTO';
+    cs.itemSpacing = 8;
+    cs.paddingLeft = cs.paddingRight = cs.paddingTop = cs.paddingBottom = 8;
+
+    // interaction for presentation mode
+    // const reactions: {}[] = [];
+    let enter = {
+        action: {
+            type: 'NODE',
+            destinationId: compHover.id,
+            navigation: 'CHANGE_TO',
+            transition: {
+                type: 'DISSOLVE',
+                easing: {
+                    type: 'EASE_OUT',
+                },
+                duration: 0.30000001192092896,
+            },
+            preserveScrollPosition: false,
+        },
+        trigger: {
+            type: 'MOUSE_ENTER',
+            delay: 0,
+        },
+    };
+    // reactions.push(enter as Reaction);
+
+    const leave = {
+        action: {
+            type: 'NODE',
+            destinationId: compDefault.id,
+            navigation: 'CHANGE_TO',
+            transition: {
+                type: 'DISSOLVE',
+                easing: {
+                    type: 'EASE_OUT',
+                },
+                duration: 0.30000001192092896,
+            },
+            preserveScrollPosition: false,
+        },
+        trigger: {
+            type: 'MOUSE_LEAVE',
+            delay: 0,
+        },
+    };
+
+    compDefault.reactions = [enter, ...compDefault.reactions];
+    compHover.reactions = [leave, ...compHover.reactions];
+
+    // for(let node of cs.children) {
+    //     console.log("node>>>>", (node as ComponentNode).id);
+    //     // node
+    //     // (node as FrameNode).reactions = reactions;
+    //     // const reactions = (node as ComponentNode).reactions.slice();
+    //     // (node as ComponentNode).reactions = reactions;
+    // }
+
+    // const _fr = figma.createFrame();
+    // compDefault.reactions = reactions;
+    // compDefault.reactions[0].action = newReaction.action as Action;
+    // compDefault.reactions[0].trigger = newReaction.trigger as Trigger;
+    // console.log("compDefault::: ", compDefault.reactions);
+    // compDefault.reactions.push({});
+
+    // see if we can edit the row at runtime
+}
 function log() {
     logSelection();
 }
+// See if we can insert into some new cells into a canned component set node,
+// which already has had interactions wired up
+// Not working: "Cannot move node. Node is an internal, readonly-only node"
+function _runtimeComp2() {
+    console.log('hello 2nd try!');
+
+    let comp = figma.getNodeById('1527:35606') as ComponentSetNode;
+
+    const compEl = comp.clone();
+    console.log('comp set>>> ', comp);
+    const defaultStateRow: ComponentNode = compEl.children.find((d) => {
+        const c = d as ComponentNode;
+        return c['variantProperties']['State'] === 'Default';
+    }) as ComponentNode;
+
+    // console.log("did we find the default state? ", defaultStateRow);
+    const cellTextComp = allTableComponents
+        .filter((d) => {
+            return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'];
+        })
+        .find((d) => {
+            return (
+                d.variantProperties['State'] === 'Default' &&
+                d.variantProperties['Icon Left'] === 'False' &&
+                d.variantProperties['Icon Right'] === 'False' &&
+                d.variantProperties['Label'] === 'True'
+            );
+        })?.['component'];
+
+    defaultStateRow?.appendChild(cellTextComp);
+}
+
+// 109e824f1f674ba7c04d05033cb4c12f8c8ca763
+function _runtimeComp3() {
+    const comp = allTableComponents
+        .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME._row)
+        ['component'].createInstance() as InstanceNode;
+
+    console.log('_row??? ', comp);
+}
+
+function _modifyComp() {
+    const comp = figma.currentPage.findOne((d) => d.id === '1541:36127') as ComponentSetNode;
+    const defaultComp = comp.children[0] as ComponentNode;
+    console.log('where is the comp set? ', defaultComp);
+    const cell1 = defaultComp.children[0] as ComponentNode;
+    const cellHover1 = (comp.children[1] as ComponentNode).children[0] as ComponentNode;
+    const row = defaultComp.createInstance();
+    row.name = 'ROW';
+
+    cell1.resize(300, cell1.height + 16);
+    cellHover1.resize(300, cellHover1.height + 16);
+}
 
 function test() {
-    _hugContent();
+    _runtimeComp1();
+    // _hugContent();
     // drawTableTitle()
     // loadAllTableComponents();
     // _testPaddings();
     // console.log("let's load external component...");
     // tableBodyCellWithText("one two three");
     // logSelection();
+}
+
+function test1() {
+    _modifyComp();
 }
