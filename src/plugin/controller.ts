@@ -1194,6 +1194,10 @@ function drawPagination(data): FrameNode {
 
 function logSelection() {
     const sel = figma.currentPage.selection;
+    if (sel.length === 0) {
+        console.log('Select something first...');
+        return;
+    }
     console.clear();
     const _keyInfo = sel[0].type === 'INSTANCE' ? `key: ${(sel[0] as InstanceNode).mainComponent.key}` : ``;
     console.log(`${_keyInfo}\nname: ${sel[0].name}`);
@@ -1252,34 +1256,33 @@ async function loadAllTableComponents() {
     // console.log("___+++now we should have all components: ", allTableComponents);
 }
 
-async function _loadSomeComponentsFromFigmaDS() {
-    const _compKeys = ['be67cfb6dd2772a959bcb2feed1fc50658b91392'];
+function _hugContent() {
+    // Source: https://forum.figma.com/t/hug-content-in-auto-layout-frame-via-plugin-api/9641
+    console.log('hug content...');
+    const fr = figma.createFrame();
+    fr.name = '_hug';
+    fr.layoutMode = 'VERTICAL';
+    // This will set to hug content vertically
+    fr.primaryAxisSizingMode = 'AUTO';
+    // This will set to hug content horizontally
+    fr.counterAxisSizingMode = 'AUTO';
 
-    const _frame = baseFrameWithAutoLayout({
-        direction: 'HORIZONTAL',
-        nodeType: 'FRAME',
-    });
+    const rect1 = figma.createRectangle();
+    rect1.resize(200, 80);
+    rect1.fills = [{type: 'SOLID', color: {r: 244 / 255, g: 245 / 255, b: 245 / 255}}];
+    fr.appendChild(rect1);
 
-    let w = 0,
-        h = 0;
-    for (const key of _compKeys) {
-        const comp = await figma.importComponentByKeyAsync(key);
-        const inst = comp.createInstance();
-        w += inst.width;
-        h = inst.height > h ? inst.height : h;
-        _frame.resize(w, h);
-        _frame.appendChild(inst);
-
-        inst.layoutGrow = 0;
-        inst.layoutAlign = 'MIN';
-    }
+    const rect2 = figma.createRectangle();
+    rect2.resize(80, 320);
+    rect2.fills = [{type: 'SOLID', color: {r: 255 / 255, g: 0 / 255, b: 0 / 255}}];
+    fr.appendChild(rect2);
 }
 function log() {
     logSelection();
 }
 
 function test() {
-    _loadSomeComponentsFromFigmaDS();
+    _hugContent();
     // drawTableTitle()
     // loadAllTableComponents();
     // _testPaddings();
