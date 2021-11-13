@@ -58,6 +58,10 @@ const App = ({}) => {
         parent.postMessage({pluginMessage: {type: 'create-table', dataset: dataset}}, '*');
     };
 
+    const onCreate2 = () => {
+        parent.postMessage({pluginMessage: {type: 'create-table-w-mouse-states', dataset: dataset}}, '*');
+    };
+
     const onDataSetChange = (dsName) => {
         // TMP. TODO: React way
         const dataset = _.chain(dataSources)
@@ -143,6 +147,10 @@ const App = ({}) => {
 
             <button id="create" onClick={onCreate}>
                 Create Table
+            </button>
+
+            <button id="create" onClick={onCreate2}>
+                Create Table With Mouse States
             </button>
 
             <div className="checkbox-group">
