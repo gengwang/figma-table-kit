@@ -1415,6 +1415,12 @@ function createTableRowCompWithMouseStates({
 
     return cs;
 }
+// Since we have only one component node for all the rows, we don't need to specify row index
+function setHeightForRowWithMouseStateAt(compSet: ComponentSetNode, height: number = undefined) {
+    compSet.children.forEach((stateEl) => {
+        stateEl.resize(stateEl.width, height);
+    });
+}
 // In order to resize a cell instance, we have to change its component counterpart
 function resizeCellWithMouseStatesAt(
     compSet: ComponentSetNode,
@@ -1438,11 +1444,18 @@ function resizeCellWithMouseStatesAt(
 }
 
 function drawTableCompWithMouseStates(data) {
+    // const tableBody = drawTableBodyWithMouseStates(data.rows, false, 24);
+    // const tableBody = drawTableBodyWithMouseStates(data.rows, true, 24);
     const tableBody = drawTableBodyWithMouseStates(data.rows, true);
     // return tableBody;
 }
 // TODO: limit num of rows
-async function drawTableBodyWithMouseStates(data: any[], striped = true, limitRows: number = 25): Promise<FrameNode> {
+async function drawTableBodyWithMouseStates(
+    data: any[],
+    striped = true,
+    rowHeight = table_style.rowHeight,
+    limitRows: number = 25
+): Promise<FrameNode> {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
     const bodyContainer: FrameNode = figma.createFrame();
     bodyContainer.name = 'pa-tablems-body';
@@ -1457,6 +1470,10 @@ async function drawTableBodyWithMouseStates(data: any[], striped = true, limitRo
         const rowEl = drawTableRowWithMouseStates(cellsData, rowComp, striped ? (i % 2) + 1 : StripedIndex.None);
         bodyContainer.appendChild(rowEl);
     });
+
+    if (rowHeight !== table_style.rowHeight) {
+        setHeightForRowWithMouseStateAt(rowComp, rowHeight);
+    }
 
     return bodyContainer;
 }
