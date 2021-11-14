@@ -1438,13 +1438,12 @@ function resizeCellWithMouseStatesAt(
 }
 
 function drawTableCompWithMouseStates(data) {
-    const tableBody = drawTableBodyWithMouseStates(data.rows);
+    const tableBody = drawTableBodyWithMouseStates(data.rows, true);
     // return tableBody;
 }
-
-async function drawTableBodyWithMouseStates(data: any[], limitRows: number = 25): Promise<FrameNode> {
+// TODO: limit num of rows
+async function drawTableBodyWithMouseStates(data: any[], striped = true, limitRows: number = 25): Promise<FrameNode> {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
-    console.log('rows:', data);
     const bodyContainer: FrameNode = figma.createFrame();
     bodyContainer.name = 'pa-tablems-body';
     bodyContainer.layoutMode = 'VERTICAL';
@@ -1455,31 +1454,44 @@ async function drawTableBodyWithMouseStates(data: any[], limitRows: number = 25)
 
     data.forEach((r, i) => {
         const cellsData = Object.values(r);
-        const rowEl = drawTableRowWithMouseStates(cellsData, rowComp, i % 2 === 0);
+        const rowEl = drawTableRowWithMouseStates(cellsData, rowComp, striped ? (i % 2) + 1 : StripedIndex.None);
         bodyContainer.appendChild(rowEl);
     });
 
     return bodyContainer;
 }
 
-function drawTableRowWithMouseStates(cellsData: any[], rowCompSet: ComponentSetNode, evenRow = false): InstanceNode {
-    const rowOddEl = rowCompSet.defaultVariant.createInstance();
+enum StripedIndex {
+    None = 0,
+    RowOdd = 1,
+    RowEven = 2,
+}
 
-    const rowEvenEl = (
-        rowCompSet.children.find((d) => {
-            return d['variantProperties']['Striped'] === 'RowEven' && d['variantProperties']['State'] === 'Default';
-        }) as ComponentNode
-    )?.createInstance();
+function drawTableRowWithMouseStates(
+    cellsData: any[],
+    rowCompSet: ComponentSetNode,
+    stripedIndex: StripedIndex
+): InstanceNode {
+    const rowOddComp = rowCompSet.defaultVariant;
 
-    const rowEl = evenRow ? rowEvenEl : rowOddEl;
+    const rowEvenComp = rowCompSet.children.find((d) => {
+        return d['variantProperties']['Striped'] === 'RowEven' && d['variantProperties']['State'] === 'Default';
+    }) as ComponentNode;
+
+    const rowEl = stripedIndex === StripedIndex.RowEven ? rowEvenComp.createInstance() : rowOddComp.createInstance();
 
     const txtCellEl = rowEl.findChildren((d) => d.name === 'Cell - Text') as InstanceNode[];
     txtCellEl.forEach((el, i) => {
-        const labelEl = el.findOne((d) => d.name === 'Label') as TextNode;
+        const labelEl = el.findChild((d) => d.name === 'Label') as TextNode;
         const label = cellsData[i] ? cellsData[i].toString() : '';
         // labelEl.characters = label;
         // tmp
         labelEl.characters = label.substr(0, 12);
+
+        if (stripedIndex === StripedIndex.None) {
+            const bottomBorderEl = el.findChild((d) => d.name === 'bottom border') as LineNode;
+            bottomBorderEl.visible = true;
+        }
     });
 
     rowEl.clipsContent = true;
