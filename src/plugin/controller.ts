@@ -836,6 +836,17 @@ function drawTableComp(data) {
         const tableCompContainer = figma.group([overlayEl, tableContainerEl, bkg], figma.currentPage);
         tableCompContainer.name = 'pa-table-comp';
 
+        // position the new table comp in the center of the viewport
+        tableCompContainer.x = figma.viewport.center.x - tableCompContainer.width / 2;
+        tableCompContainer.y = figma.viewport.center.y - tableCompContainer.height / 2;
+
+        // TODO: Attach to the current selection of frame node if any, and position it in the center of focus
+        // if(figma.currentPage.selection.length === 1
+        //     && figma.currentPage.selection[0].type === 'FRAME') {
+        //     const sel = figma.currentPage.selection[0] as FrameNode;
+        //     sel.appendChild(tableCompContainer);
+        // }
+
         figma.viewport.scrollAndZoomIntoView([tableCompContainer]);
         // select it
         figma.currentPage.selection = [tableCompContainer];
