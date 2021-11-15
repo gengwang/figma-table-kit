@@ -1710,7 +1710,8 @@ const prisma_compute_rules = {
     subtitle: 'Deployed containers and images compliance policy',
     rows: [
         {
-            Disabled: 'No',
+            OrderIndex: '1',
+            Enabled: 'Yes',
             'Rule Name': 'CPU Check',
             Effect: 'Alert',
             Owner: 'bkottarathil@paloaltonetworks.com',
@@ -1720,7 +1721,8 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'Yes',
+            OrderIndex: '2',
+            Enabled: 'Yes',
             'Rule Name': 'Fahd - Compliance Rule',
             Effect: 'Alert, Block',
             Owner: 'fsuleman@paloaltonetworks.com',
@@ -1730,7 +1732,8 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'No',
+            OrderIndex: '3',
+            Enabled: 'No',
             'Rule Name': 'Apply NIST to sock-shop',
             Effect: 'Apply NIST to sock-shop',
             Owner: 'mbarker@paloaltonetworks.com',
@@ -1741,8 +1744,9 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'No',
-            'Rule Name': 'compaliance rule test',
+            OrderIndex: '4',
+            Enabled: 'No',
+            'Rule Name': 'compliance rule test',
             Effect: 'Alert, Block',
             Owner: 'rbenavente@paloaltonetworks.com',
             Scope: 'All',
@@ -1752,7 +1756,8 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'No',
+            OrderIndex: '5',
+            Enabled: 'Yes',
             'Rule Name': 'Compliance-rule test',
             Effect: 'Alert',
             Owner: 'smustapid@paloaltonetworks.com',
@@ -1762,7 +1767,8 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'No',
+            OrderIndex: '6',
+            Enabled: 'Yes',
             'Rule Name': 'Kubernetest compliance checks',
             Effect: 'Alert',
             Owner: 'Security',
@@ -1772,7 +1778,8 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'No',
+            OrderIndex: '7',
+            Enabled: 'Yes',
             'Rule Name': 'Apply NIST 800 SP 190 to NoteMaker',
             Effect: 'Alert, Block',
             Owner: 'operator',
@@ -1782,7 +1789,8 @@ const prisma_compute_rules = {
             Actions: 'Export, Edit',
         },
         {
-            Disabled: 'No',
+            OrderIndex: '8',
+            Enabled: 'Yes',
             'Rule Name': 'Default - for Twistlock components',
             Effect: 'Alert',
             Owner: 'rbenavente@paloaltonetworks.com',
