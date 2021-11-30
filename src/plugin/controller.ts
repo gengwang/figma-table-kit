@@ -185,7 +185,6 @@ figma.ui.onmessage = (msg) => {
             console.log('update-table');
 
             if (figma.currentPage.selection.length > 0) {
-                // drawTableBody(msg.dataset);
                 drawTableComp(msg.dataset);
             }
         case 'update-striped':
@@ -199,10 +198,6 @@ figma.ui.onmessage = (msg) => {
             const target = figma.currentPage.selection.concat()[0];
             // updateRow(target);
             updateRowHeight(target, height);
-            break;
-
-        case 'draw-table-header':
-            drawTableHeader(msg.dataset);
             break;
 
         case 'test':
@@ -256,29 +251,42 @@ figma.on('selectionchange', () => {
         // if the user just de-selected something, we may want to update the row
         const sourceObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
 
+        const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
+        // const source = figma.getNodeById(sourceObj.id);
+        console.log('sourceObj:::', sourceObj);
+
         if (sourceObj.type === 'FRAME' || sourceObj.type === 'INSTANCE') {
-            const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
             updateRow(source);
             updateColumnComps(source);
             updateColumnHeader(source);
             updateColumn(source);
             updateTableSize(source);
         } else if (sourceObj.type === 'TEXT') {
-            // console.log('source is a text and it is ', sourceObj, '; name: ', sourceObj.name);
-
             // if the previous node was a text node and the rest of the column is not????
-            const source = figma.currentPage.findOne((n) => n.id === sourceObj.id) as TextNode;
+            // const source = figma.currentPage.findOne((n) => n.id === sourceObj.id) as TextNode;
             // TMP. TODO
-            updateColumnIcons(source);
+            updateColumnIcons(source as TextNode);
         }
+
+        // see if any columns have been deleted
+        if (source === null) {
+            updateTableAfterColDeleted(sourceObj);
+        }
+        // see if any columns have been rearranged
     }
     // Store the selection so we can use in the next change event
     if (figma.currentPage.selection.length > 0) {
         const el = figma.currentPage.selection[0];
+        // columns in the header and in the body have tableId so that we can handle
+        // deleted/re-ordered columns
+        // const tableId = el.getPluginData('tableId');
+        const colId = el.getPluginData('headerColId') || el.getPluginData('bodyColId');
         const obj = {
             name: el.name,
             type: el.type,
             id: el.id,
+            // tableId: tableId,
+            colId: colId,
         };
         figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
     }
@@ -688,7 +696,7 @@ async function updateColumnIcons(source: TextNode) {
     });
 }
 
-function updateColumnHeader(source: SceneNode) {
+function updateColumnHeader(source: any) {
     if (!source) return;
 
     const reg = /(?<=col-)\d*/;
@@ -741,6 +749,12 @@ function updateTableSize(source: SceneNode) {
 
         resizeColumnsHeight(_tableBodyEl);
     }
+}
+
+function updateTableAfterColDeleted(sourceObj: any) {
+    if (sourceObj.colId === '') return; // This was not a column
+    const colEl = figma.getNodeById(sourceObj.colId) as FrameNode;
+    colEl.remove();
 }
 /* ** Return all the cells in the same row as the cell specified */
 function rowForCell(cell: SceneNode): SceneNode[] {
@@ -799,17 +813,13 @@ function drawTableComp(data) {
         tableContainerEl.clipsContent = false;
 
         const _title = title as unknown as FrameNode;
-        // _title.layoutGrow = 0; //
 
         const _header = header as unknown as FrameNode;
-        // _header.resize(tableElWidth, table_style.headerHeight);
         _header.layoutGrow = 0; // Fixed height for header
-        // _header.layoutAlign = 'STRETCH';
 
         const paginationEl: FrameNode = drawPagination(data);
         paginationEl.resize(tableElWidth, table_style.paginationHeight);
         paginationEl.layoutGrow = 0; // Fixed height for pagination
-        // paginationEl.layoutAlign = 'STRETCH';
 
         // TMP: set the width to 1440 for now.
         // Record the "intrinsic" heights before appendment
@@ -846,6 +856,25 @@ function drawTableComp(data) {
         //     const sel = figma.currentPage.selection[0] as FrameNode;
         //     sel.appendChild(tableCompContainer);
         // }
+
+        // wire up table body and its header so we can handle deleted/reordered columns
+
+        let headerColIds: string[] = header.children.map((col) => col.id);
+
+        // const tableId = tableContainerEl.id;
+        //
+
+        body.children.forEach((col, i) => {
+            const headerColId = headerColIds[i];
+            col.setPluginData('headerColId', headerColIds[i]);
+            // col.setPluginData('tableId', tableId);
+
+            const headerColEl = figma.getNodeById(headerColId);
+            headerColEl.setPluginData('bodyColId', col.id);
+            // headerColEl.setPluginData('tableId', tableId);
+        });
+
+        //////// end of wiring
 
         figma.viewport.scrollAndZoomIntoView([tableCompContainer]);
         // select it
@@ -1432,40 +1461,20 @@ function setHeightForRowWithMouseStateAt(compSet: ComponentSetNode, height: numb
         stateEl.resize(stateEl.width, height);
     });
 }
-// In order to resize a cell instance, we have to change its component counterpart
-function resizeCellWithMouseStatesAt(
-    compSet: ComponentSetNode,
-    cellIndex = 0,
-    width: number = undefined,
-    height: number = undefined
-) {
-    compSet.children.forEach((stateEl) => {
-        const cellsEl = (stateEl as ComponentNode).children as ComponentNode[];
-        // resize each cell in the row
-        let rowWidth = 0,
-            rowHeight = height === undefined ? stateEl.height : height;
-        cellsEl.forEach((cell, i) => {
-            const w = width !== undefined && i === cellIndex ? width : cell.width;
-            rowWidth += w;
-            cell.resize(w, height);
-        });
-        // resize the whole row
-        stateEl.resize(rowWidth, rowHeight);
-    });
-}
 
 function drawTableCompWithMouseStates(data) {
     // const tableBody = drawTableBodyWithMouseStates(data.rows, false, 24);
     // const tableBody = drawTableBodyWithMouseStates(data.rows, true, 24);
-    const tableBody = drawTableBodyWithMouseStates(data.rows, true);
+    // const tableBody = drawTableBodyWithMouseStates(data.rows, true);
     // return tableBody;
+    drawTableBodyWithMouseStates(data.rows, true);
 }
 // TODO: limit num of rows
 async function drawTableBodyWithMouseStates(
     data: any[],
     striped = true,
-    rowHeight = table_style.rowHeight,
-    limitRows: number = 25
+    rowHeight = table_style.rowHeight
+    // limitRows: number = 25
 ): Promise<FrameNode> {
     await figma.loadFontAsync({family: 'Lato', style: 'Regular'});
     const bodyContainer: FrameNode = figma.createFrame();
