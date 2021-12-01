@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 /*
 // A master component in Figma are named something like
 // "Icon Left=True, Icon Right=False, Label=True, State=Default - Alt".
@@ -180,4 +181,19 @@ function transpose(a) {
     });
 }
 
-export {baseFrameWithAutoLayout, configFoCWithAutoLayout, loadFontForTextNode, charactersPerArea, clone, transpose};
+// source: https://stackoverflow.com/questions/31681732/lodash-get-duplicate-values-from-an-array
+// retun the duplicates as an array:
+// example: dups([1, 1, 2, 2, 3]) returns [1, 2]
+function dups(arr) {
+    return _.uniq(_.filter(arr, (v, i, a) => a.indexOf(v) !== i));
+}
+
+export {
+    baseFrameWithAutoLayout,
+    configFoCWithAutoLayout,
+    loadFontForTextNode,
+    charactersPerArea,
+    clone,
+    transpose,
+    dups,
+};

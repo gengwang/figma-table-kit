@@ -1,12 +1,11 @@
 import * as _ from 'lodash';
-import {Children} from 'react';
 
 // import {prisma_cloud_policies, prisma_cloud_alerts, artists, songs} from '../app/assets/datasets.js';
 
 // NOTE: Scrolling: Can't seem have one element with both scrolling and fixed... Rather to have vertical scrolling on table body.
 // Idea: Toggle on plugin GUI for horizontal or vertical scroll.
 
-import {baseFrameWithAutoLayout, loadFontForTextNode, transpose, charactersPerArea} from '../shared/utils';
+import {baseFrameWithAutoLayout, loadFontForTextNode, transpose, charactersPerArea, dups} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
@@ -268,25 +267,21 @@ figma.on('selectionchange', () => {
             updateColumnIcons(source as TextNode);
         }
 
-        // see if any columns have been deleted
-        if (source === null) {
-            updateTableAfterColDeleted(sourceObj);
-        }
-        // see if any columns have been rearranged
+        updateTableColumns(sourceObj);
     }
     // Store the selection so we can use in the next change event
     if (figma.currentPage.selection.length > 0) {
         const el = figma.currentPage.selection[0];
         // columns in the header and in the body have tableId so that we can handle
         // deleted/re-ordered columns
-        // const tableId = el.getPluginData('tableId');
-        const colId = el.getPluginData('headerColId') || el.getPluginData('bodyColId');
+        const tableId = el.getPluginData('tableId');
+        const colId = el.getPluginData('assColId');
         const obj = {
             name: el.name,
             type: el.type,
             id: el.id,
-            // tableId: tableId,
-            colId: colId,
+            tableId: tableId,
+            assColId: colId,
         };
         figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
     }
@@ -751,10 +746,84 @@ function updateTableSize(source: SceneNode) {
     }
 }
 
-function updateTableAfterColDeleted(sourceObj: any) {
-    if (sourceObj.colId === '') return; // This was not a column
-    const colEl = figma.getNodeById(sourceObj.colId) as FrameNode;
-    colEl.remove();
+function updateTableColumns(sourceObj: any) {
+    const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
+
+    // if the column has just been deleted
+    if (source === null) {
+        if (sourceObj.colId === '') return; // This was not a column
+        const colEl = figma.getNodeById(sourceObj.assColId) as FrameNode;
+        colEl.remove();
+        return;
+    } else {
+        // is this a new column by user duplicating it in Figma designer?
+        if (sourceObj.tableId) {
+            const tableEl = figma.getNodeById(sourceObj.tableId) as FrameNode;
+
+            const headerEl = tableEl.findChild((o) => o.name === 'pa-table-header') as FrameNode;
+            const bodyEl = tableEl.findChild((o) => o.name === 'pa-table-body') as FrameNode;
+            let bodyColInHeader = [];
+            headerEl &&
+                headerEl.children.forEach((o, i) => {
+                    bodyColInHeader.push(o.getPluginData('assColId'));
+                });
+
+            const bodyColInBody = bodyEl.children.map((d) => d.id);
+
+            // TMP. For now, we just consider one dup:
+            const dupIds = dups(bodyColInHeader);
+
+            if (dupIds.length > 0) {
+                const dupId = dupIds[0];
+
+                const dupBodyIndicesInHeader = bodyColInHeader
+                    .map((d, i) => {
+                        if (d === dupId) {
+                            return i;
+                        } else return null;
+                    })
+                    .filter((d) => d !== null);
+
+                const colIndicesInBody = bodyColInBody
+                    .map((d, i) => {
+                        if (d === dupId) {
+                            return i;
+                        } else return null;
+                    })
+                    .filter((d) => d !== null);
+
+                if (dupBodyIndicesInHeader.length > colIndicesInBody.length) {
+                    // We need to duplicate a column in the body
+                    let a = new Set(dupBodyIndicesInHeader);
+                    let b = new Set(colIndicesInBody);
+                    let difference = new Set([...a].filter((x) => !b.has(x)));
+                    let j = Array.from(difference)[0]; // this is where we need to insert the new col into body col
+
+                    const newCol = (figma.getNodeById(dupId) as FrameNode).clone();
+                    bodyEl.insertChild(j, newCol);
+                }
+            }
+
+            bodyEl &&
+                bodyEl.children.forEach((o, i) => {
+                    console.log('body #', i, ':', o.id);
+                });
+
+            // 1. find which id is duplicate
+            // 2. find the counterpart (body<->header) to the existing id for where the id is
+            // 3. there should be an additional id for the duplicate. we should clone the id
+            // and insert it there
+            //     console.log('columnEl???', colEl, 'tableEl?', tableEl, '; header?', headerEl, '; body?', bodyEl);
+
+            //     if (colEl) {
+            //         // const k = colEl.clone();
+            //         // find where the duplicate occurs
+            //         // insert the clone into that position
+            //         // figma.currentPage.selection = [k];
+            //         // figma.viewport.scrollAndZoomIntoView([k]);
+            //     }
+        }
+    }
 }
 /* ** Return all the cells in the same row as the cell specified */
 function rowForCell(cell: SceneNode): SceneNode[] {
@@ -861,17 +930,16 @@ function drawTableComp(data) {
 
         let headerColIds: string[] = header.children.map((col) => col.id);
 
-        // const tableId = tableContainerEl.id;
-        //
+        const tableId = tableContainerEl.id;
 
         body.children.forEach((col, i) => {
             const headerColId = headerColIds[i];
-            col.setPluginData('headerColId', headerColIds[i]);
-            // col.setPluginData('tableId', tableId);
+            col.setPluginData('assColId', headerColIds[i]);
+            col.setPluginData('tableId', tableId);
 
             const headerColEl = figma.getNodeById(headerColId);
-            headerColEl.setPluginData('bodyColId', col.id);
-            // headerColEl.setPluginData('tableId', tableId);
+            headerColEl.setPluginData('assColId', col.id);
+            headerColEl.setPluginData('tableId', tableId);
         });
 
         //////// end of wiring
