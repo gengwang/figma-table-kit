@@ -867,7 +867,7 @@ function isTable(selection: readonly SceneNode[]): boolean {
 
 // Draw table including pagination and title.
 function drawTableComp(data) {
-    console.log('draw table with data:::', data);
+    console.log('>>>draw table with data:::', data);
 
     Promise.all([drawTableTitle(data), drawTableHeader(data), drawTableBody(data)]).then(([title, header, body]) => {
         const bkg = allTableComponents
