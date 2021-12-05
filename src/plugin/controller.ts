@@ -28,6 +28,7 @@ let table_style = {
 };
 const settings = {
     'manual-update': false,
+    'show-actions-column': true, // Test // TMP
 };
 
 enum TABLE_PART {
@@ -53,6 +54,7 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
     Pagination: 'Pagination',
     'Table / Scroll - Vertical': 'Table / Scroll - Vertical',
     'Table / Scroll - Horizontal': 'Table / Scroll - Horizontal',
+    ' Table / Pinned Column': ' Table / Pinned Column',
     // TMP
     _row: '_row',
 };
@@ -135,6 +137,10 @@ const TABLE_COMPONENT_SAMPLES = [
             {
                 name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
                 key: '0d4c7291abd5b8f4f0cad282144e17b8759c2436',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Pinned Column'],
+                key: '4a7de3906ae123683bde968571e28e6a6fa41833',
             },
             // TMP
             {
@@ -251,8 +257,6 @@ figma.on('selectionchange', () => {
         const sourceObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
 
         const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
-        // const source = figma.getNodeById(sourceObj.id);
-        console.log('sourceObj:::', sourceObj);
 
         if (sourceObj.type === 'FRAME' || sourceObj.type === 'INSTANCE') {
             updateRow(source);
@@ -753,7 +757,7 @@ function updateTableColumns(sourceObj: any) {
     if (source === null) {
         if (sourceObj.colId === '') return; // This was not a column
         const colEl = figma.getNodeById(sourceObj.assColId) as FrameNode;
-        colEl.remove();
+        colEl?.remove();
         return;
     } else {
         // is this a new column by user duplicating it in Figma designer?
@@ -869,7 +873,12 @@ function isTable(selection: readonly SceneNode[]): boolean {
 function drawTableComp(data) {
     console.log('>>>draw table with data:::', data);
 
-    Promise.all([drawTableTitle(data), drawTableHeader(data), drawTableBody(data)]).then(([title, header, body]) => {
+    Promise.all([
+        drawTableTitle(data),
+        drawTableHeader(data),
+        drawTableBody(data),
+        drawTableBodyFixedColumns(data),
+    ]).then(([title, header, body, fixedbody]) => {
         const bkg = allTableComponents
             .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
             ['component'].createInstance() as InstanceNode;
@@ -888,7 +897,8 @@ function drawTableComp(data) {
 
         const paginationEl: FrameNode = drawPagination(data);
         paginationEl.resize(tableElWidth, table_style.paginationHeight);
-        paginationEl.layoutGrow = 0; // Fixed height for pagination
+        paginationEl.layoutAlign = 'STRETCH'; // fill container horizontally
+        paginationEl.layoutGrow = 0; // fixed height
 
         // TMP: set the width to 1440 for now.
         // Record the "intrinsic" heights before appendment
@@ -913,6 +923,13 @@ function drawTableComp(data) {
         overlayEl.resize(w, h);
 
         const tableCompContainer = figma.group([overlayEl, tableContainerEl, bkg], figma.currentPage);
+
+        // In the GUI, the index starts from the bottom
+        tableCompContainer.insertChild(2, fixedbody);
+        fixedbody.x = 0;
+        fixedbody.y = _title.height + _header.height;
+        fixedbody.resize(tableContainerEl.width, fixedbody.height);
+
         tableCompContainer.name = 'pa-table-comp';
 
         // position the new table comp in the center of the viewport
@@ -944,9 +961,24 @@ function drawTableComp(data) {
 
         //////// end of wiring
 
-        figma.viewport.scrollAndZoomIntoView([tableCompContainer]);
-        // select it
-        figma.currentPage.selection = [tableCompContainer];
+        // select it if the user has selected an empty frame
+        if (figma.currentPage.selection.length === 1) {
+            const sel = figma.currentPage.selection[0];
+            if (sel.type === 'FRAME' && sel.children.length === 0) {
+                sel.layoutMode = 'VERTICAL';
+                sel.primaryAxisSizingMode = 'AUTO';
+                sel.counterAxisSizingMode = 'AUTO';
+                sel.paddingBottom = sel.paddingTop = sel.paddingLeft = sel.paddingRight = 80;
+                sel.appendChild(tableCompContainer);
+                tableCompContainer.x = 0;
+                tableCompContainer.y = 0;
+            }
+
+            // } else {
+            figma.currentPage.selection = [tableCompContainer];
+        }
+
+        figma.viewport.scrollAndZoomIntoView(figma.currentPage.selection);
     });
 }
 async function drawTableHeader(data) {
@@ -1235,12 +1267,12 @@ async function drawTableBody(data, limitRows: number = 25) {
             rowsEl.forEach((rowEl, j) => {
                 // remove extra rows
                 if (j >= newRowCount) {
-                    rowEl.remove();
+                    rowEl?.remove();
                 }
             });
             // remove the extra columns
             if (i >= newColCount) {
-                colEl.remove();
+                colEl?.remove();
             }
         });
     }
@@ -1250,7 +1282,63 @@ async function drawTableBody(data, limitRows: number = 25) {
 
     return bodyContainer;
 }
+// For checkboxes and actions, and later, maybe other sticky columns
+function drawTableBodyFixedColumns(data, limitRows: number = 25, striped = true): FrameNode {
+    if (!settings['show-actions-column']) return;
 
+    console.log('>>> drawing sticky columns');
+
+    // TODO: Add ' Table / Pinned Column' line to the left of the column
+    let fixedBodyContainer = figma.createFrame();
+
+    fixedBodyContainer.name = 'pa-table-body-fixed-columns';
+
+    const rowCount = limitRows ? limitRows : data.rows?.length;
+
+    // action columns
+    const actionColEl = frameNodeOn({parent: fixedBodyContainer, colIndex: 1});
+    actionColEl.name = 'col-fixed-actions';
+    actionColEl.primaryAxisSizingMode = 'AUTO';
+    actionColEl.counterAxisSizingMode = 'AUTO';
+
+    let comp: ComponentNode = allTableComponents
+        .filter((d) => {
+            return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Actions'];
+        })
+        .find((d) => {
+            return d.variantProperties['State'] === 'Default';
+        })['component'];
+    const rowWidth = comp.width;
+    const rowHeight = comp.height;
+
+    let altComp: ComponentNode = allTableComponents
+        .filter((d) => {
+            return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Actions'];
+        })
+        .find((d) => {
+            return d.variantProperties['State'] === 'Default - Alt';
+        })['component'];
+
+    actionColEl.resize(rowWidth, rowHeight * rowCount);
+
+    // TMP. For now, the actions are not contextual sensitive, so we just use the same action toolbar for all the rows.
+    // In the future, the actions can be configured using data or freestyle
+    for (let i = 0; i < rowCount; i++) {
+        const inst = striped ? (i % 2 ? altComp.createInstance() : comp.createInstance()) : comp.createInstance();
+        actionColEl.appendChild(inst);
+    }
+
+    //fixed to the right? and center
+    actionColEl.constraints = {horizontal: 'MAX', vertical: 'CENTER'};
+    fixedBodyContainer.appendChild(actionColEl);
+    fixedBodyContainer.resize(actionColEl.width, actionColEl.height);
+    actionColEl.x = actionColEl.y = 0;
+    fixedBodyContainer.fills = [{type: 'SOLID', color: {r: 255 / 255, g: 255 / 255, b: 255 / 255}, opacity: 0}];
+
+    return fixedBodyContainer;
+
+    // figma.currentPage.appendChild(bodyContainer);
+}
 // NOTE: The client function needs to loadFontAsync at the top of the function
 function tableBodyCellWithText(
     parent: FrameNode,
