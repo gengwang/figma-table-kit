@@ -54,7 +54,7 @@ const PRISMA_TABLE_COMPONENTS_INST_NAME = {
     Pagination: 'Pagination',
     'Table / Scroll - Vertical': 'Table / Scroll - Vertical',
     'Table / Scroll - Horizontal': 'Table / Scroll - Horizontal',
-    ' Table / Pinned Column': ' Table / Pinned Column',
+    'Table / Pinned Column': 'Table / Pinned Column',
     // TMP
     _row: '_row',
 };
@@ -99,6 +99,10 @@ const TABLE_COMPONENT_SAMPLES = [
             {
                 name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Scroll - Horizontal'],
                 key: '7b77b1357d1f9d2a4ff538dd3cc37e0494864537',
+            },
+            {
+                name: PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Pinned Column'],
+                key: '4a7de3906ae123683bde968571e28e6a6fa41833',
             },
         ],
     },
@@ -1297,9 +1301,10 @@ function drawTableBodyFixedColumns(data, limitRows: number = 25, striped = true)
 
     // action columns
     const actionColEl = frameNodeOn({parent: fixedBodyContainer, colIndex: 1});
-    actionColEl.name = 'col-fixed-actions';
+    actionColEl.name = 'col-actions';
     actionColEl.primaryAxisSizingMode = 'AUTO';
     actionColEl.counterAxisSizingMode = 'AUTO';
+    actionColEl.layoutGrow = 0;
 
     let comp: ComponentNode = allTableComponents
         .filter((d) => {
@@ -1328,11 +1333,33 @@ function drawTableBodyFixedColumns(data, limitRows: number = 25, striped = true)
         actionColEl.appendChild(inst);
     }
 
+    const fixedBodyInnerContainer = figma.createFrame();
+    fixedBodyInnerContainer.name = 'pa-table-body-fixed-columns-inner-container';
+    fixedBodyInnerContainer.layoutMode = 'HORIZONTAL';
+    fixedBodyInnerContainer.primaryAxisSizingMode = 'AUTO';
+    fixedBodyInnerContainer.counterAxisSizingMode = 'AUTO';
+    fixedBodyInnerContainer.itemSpacing = 1; // so that the v-line at index 0 can show up
+
+    const vLineComp: ComponentNode = allTableComponents.filter((d) => {
+        return d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table / Pinned Column'];
+    })[0]['component'];
+
+    const vLine = vLineComp?.createInstance();
+    vLine.layoutAlign = 'STRETCH'; // fill parent
+    fixedBodyInnerContainer.appendChild(vLine);
+
     //fixed to the right? and center
-    actionColEl.constraints = {horizontal: 'MAX', vertical: 'CENTER'};
-    fixedBodyContainer.appendChild(actionColEl);
-    fixedBodyContainer.resize(actionColEl.width, actionColEl.height);
+    fixedBodyInnerContainer.constraints = {horizontal: 'MAX', vertical: 'CENTER'};
+
+    fixedBodyInnerContainer.appendChild(actionColEl);
     actionColEl.x = actionColEl.y = 0;
+    fixedBodyContainer.appendChild(fixedBodyInnerContainer);
+
+    // TODO: Add other fixed columns
+    fixedBodyContainer.resize(fixedBodyInnerContainer.width, actionColEl.height);
+
+    fixedBodyInnerContainer.y = 0;
+
     fixedBodyContainer.fills = [{type: 'SOLID', color: {r: 255 / 255, g: 255 / 255, b: 255 / 255}, opacity: 0}];
 
     return fixedBodyContainer;
