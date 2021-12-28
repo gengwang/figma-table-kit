@@ -1172,6 +1172,8 @@ async function drawTableBody(data, limitRows: number = 25) {
     // column based data source
     const dataframe = transpose(datagrid);
 
+    console.log('?>>> dataframe:', dataframe);
+
     // See if the selection is a table by checking out the name of the frame
 
     const tableEl = bodyContainer as FrameNode;
@@ -1750,6 +1752,287 @@ async function test() {
     // });
 }
 
+function __createTableBody({
+    dataframe,
+    tableEl,
+    width = 860,
+    height = 524,
+    defaultCellWidth = 200,
+    defaultCellHeight = 32,
+    rowSpacing = 0,
+    colSpacing = 0,
+}: {
+    dataframe: any[][]; // column based data source: a 2d array
+    tableEl?: FrameNode;
+    width?: number;
+    height?: number;
+    defaultCellWidth?: number;
+    defaultCellHeight?: number;
+    rowSpacing?: number;
+    colSpacing?: number;
+}): FrameNode {
+    // set up a bare minimum grid without any component in the cells
+    console.log('v2 with data!', dataframe);
+
+    const numCols = dataframe.length; // doesn't include header(s)
+
+    const tableCellTextDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
+
+    const tableCellTextStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default - Alt' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
+
+    if (!tableEl || (tableEl && tableEl.children.length > 0)) {
+        tableEl = figma.createFrame();
+        tableEl.resize(width, height);
+    } else {
+        // if the user gives us an empty frame as a container
+        width = tableEl.width;
+        height = tableEl.height;
+    }
+
+    tableEl.name = 'tableBody'; // non-sticky columns
+    tableEl.layoutMode = 'HORIZONTAL';
+    tableEl.primaryAxisSizingMode = 'AUTO'; //???
+    tableEl.counterAxisAlignItems = 'MIN';
+    tableEl.counterAxisSizingMode = 'AUTO';
+    tableEl.itemSpacing = colSpacing;
+
+    dataframe.forEach((colData, i) => {
+        // column
+        const colEl = createColumnContainer(i);
+        colEl.resize(defaultCellWidth, defaultCellHeight);
+
+        colData.forEach((cellData, j) => {
+            // first row is white; second row is grey
+            const cellEl = createCellContainer(j);
+
+            cellEl.layoutMode = 'HORIZONTAL'; // doesn't matter that much since we only have one child
+            cellEl.primaryAxisSizingMode = 'FIXED';
+            cellEl.counterAxisSizingMode = 'FIXED';
+
+            const cellInst =
+                j % 2 === 0
+                    ? tableCellTextDefaultComp.createInstance()
+                    : tableCellTextStripedEvenRowComp.createInstance();
+            cellInst.layoutAlign = 'STRETCH';
+            cellInst.layoutGrow = 1;
+            fillTableBodyCellWithText(cellInst, cellData.toString());
+            cellEl.appendChild(cellInst);
+
+            colEl.appendChild(cellEl);
+        });
+
+        tableEl.appendChild(colEl);
+    });
+
+    tableEl.resize(width, height);
+
+    return tableEl;
+
+    function createColumnContainer(i: number) {
+        const colEl = figma.createFrame();
+        colEl.name = 'col-' + i;
+        colEl.layoutMode = 'VERTICAL'; // vertical auto-layout
+        colEl.primaryAxisSizingMode = 'FIXED'; // vertically, we'll set the height for the column so that it fits the viewport
+
+        // colEl.primaryAxisSizingMode = 'AUTO'; // vertical
+        colEl.primaryAxisAlignItems = 'MIN'; // children aligned to top
+        colEl.counterAxisSizingMode = 'FIXED'; // user or plugin will set the width
+
+        //tmp. so that we can see the gaps between each cell
+        colEl.itemSpacing = rowSpacing;
+        colEl.layoutGrow = i == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
+        colEl.layoutAlign = 'STRETCH';
+        return colEl;
+    }
+
+    function createCellContainer(j: number): FrameNode {
+        const cellEl = figma.createFrame();
+        cellEl.name = 'cell-' + j;
+        cellEl.resize(defaultCellWidth, defaultCellHeight);
+        // cellEl.fills = [{type: 'SOLID', color: {r: 242 / 255, g: 153 / 255, b: 74 / 255}}];
+
+        cellEl.layoutAlign = 'STRETCH'; // auto-fill horizontally
+        cellEl.layoutGrow = 0; // fixed height
+
+        return cellEl;
+    }
+}
+
+// The user can either draw an empty frame or not
+function __createTableBody_Simple({
+    tableEl,
+    width = 860,
+    height = 524,
+    cellSpacing = 1,
+    colSpacing = 1,
+}: {
+    tableEl?: FrameNode;
+    width?: number;
+    height?: number;
+    cellSpacing?: number;
+    colSpacing?: number;
+}): FrameNode {
+    // set up a bare minimum grid without any component in the cells
+    console.log('v2 with header!');
+
+    const numCells = 12;
+    const cellWidth = 200;
+    const cellHeight = 40;
+    const numCols = 3;
+
+    if (!tableEl || (tableEl && tableEl.children.length > 0)) {
+        tableEl = figma.createFrame();
+        tableEl.resize(width, height);
+    } else {
+        // if the user gives us an empty frame as a container
+        width = tableEl.width;
+        height = tableEl.height;
+    }
+
+    tableEl.name = 'tableBody'; // non-sticky columns
+    tableEl.layoutMode = 'HORIZONTAL';
+    tableEl.primaryAxisSizingMode = 'AUTO'; //???
+    tableEl.counterAxisAlignItems = 'MIN';
+    tableEl.counterAxisSizingMode = 'AUTO';
+    tableEl.itemSpacing = colSpacing;
+
+    for (let i = 0; i < numCols; i++) {
+        // column
+        const colEl = createColumnContainer(i);
+
+        // cells
+        for (let j = 0; j < numCells; j++) {
+            const cellEl = createCellContainer(j);
+            colEl.appendChild(cellEl);
+        }
+
+        tableEl.appendChild(colEl);
+    }
+
+    tableEl.resize(width, height);
+
+    return tableEl;
+
+    function createColumnContainer(i: number) {
+        const colEl = figma.createFrame();
+        colEl.name = 'col-' + i;
+        colEl.layoutMode = 'VERTICAL'; // vertical auto-layout
+        colEl.primaryAxisSizingMode = 'FIXED'; // vertically, we'll set the height for the column so that it fits the viewport
+
+        // colEl.primaryAxisSizingMode = 'AUTO'; // vertical
+        colEl.primaryAxisAlignItems = 'MIN'; // children aligned to top
+        colEl.counterAxisSizingMode = 'FIXED'; // user or plugin will set the width
+
+        //tmp. so that we can see the gaps between each cell
+        colEl.itemSpacing = cellSpacing;
+        colEl.layoutGrow = i == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
+        colEl.layoutAlign = 'STRETCH';
+        return colEl;
+    }
+
+    function createCellContainer(j: number): FrameNode {
+        const cellEl = figma.createFrame();
+        cellEl.name = 'cell-' + j;
+        cellEl.resize(cellWidth, cellHeight);
+        cellEl.fills = [{type: 'SOLID', color: {r: 242 / 255, g: 153 / 255, b: 74 / 255}}];
+
+        cellEl.layoutAlign = 'STRETCH'; // auto-fill horizontally
+        cellEl.layoutGrow = 0; // fixed height
+
+        return cellEl;
+    }
+}
+
+function _layoutColV2_simple() {
+    // set up a bare minimum grid without any component in the cells
+    console.log('v2!');
+    // add a rect to the selection
+    const sel = figma.currentPage.selection;
+
+    const numCells = 12;
+    const cellWidth = 200;
+    const cellHeight = 40;
+    const cellSpacing = 1; // tmp
+    const colSpacing = 1; // tmp
+    const numCols = 3;
+
+    const tableEl = figma.createFrame();
+    tableEl.name = 'tableBody'; // non-sticky columns
+    tableEl.layoutMode = 'HORIZONTAL';
+    tableEl.primaryAxisSizingMode = 'AUTO'; //???
+    tableEl.counterAxisAlignItems = 'MIN';
+    tableEl.counterAxisSizingMode = 'AUTO';
+    tableEl.itemSpacing = colSpacing;
+
+    for (let i = 0; i < numCols; i++) {
+        // column
+        const colEl = figma.createFrame();
+        colEl.name = 'col-' + i;
+        colEl.layoutMode = 'VERTICAL'; // vertical auto-layout
+        colEl.primaryAxisSizingMode = 'FIXED'; // vertically, we'll set the height for the column so that it fits the viewport
+        // colEl.primaryAxisSizingMode = 'AUTO'; // vertical
+        colEl.primaryAxisAlignItems = 'MIN'; // children aligned to top
+        colEl.counterAxisSizingMode = 'FIXED'; // user or plugin will set the width
+        //tmp. so that we can see the gaps between each cell
+        colEl.itemSpacing = cellSpacing;
+        colEl.layoutGrow = i == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
+        colEl.layoutAlign = 'STRETCH';
+
+        // cells
+        for (let j = 0; j < numCells; j++) {
+            const rect = figma.createFrame();
+            rect.name = 'rect-' + j;
+            rect.resize(cellWidth, cellHeight);
+            rect.fills = [{type: 'SOLID', color: {r: 242 / 255, g: 153 / 255, b: 74 / 255}}];
+
+            rect.layoutAlign = 'STRETCH'; // auto-fill horizontally
+            rect.layoutGrow = 0; // fixed height
+
+            colEl.appendChild(rect);
+        }
+
+        tableEl.appendChild(colEl);
+    }
+    tableEl.resize(860, 524); // tmp
+    if (sel) {
+        const _sel = sel[0] as FrameNode;
+        _sel.appendChild(tableEl);
+    }
+}
+
 function test1() {
+    // mock:
+    const dataframe = [
+        // 'Work Space', 'Channel', 'Members'
+        ['Global', 'R&D', 'R&D', 'Global'],
+        ['travel-panw', 'pendo', 'help-flexlearn', 'company-news'],
+        [7192, 18, 1341, 14998],
+    ];
+    // add a rect to the selection
+    const sel = figma.currentPage.selection[0] as FrameNode;
+
+    const tableEl = __createTableBody({dataframe: dataframe, tableEl: sel});
+
+    if (!sel) {
+        tableEl.x = figma.viewport.center.x;
+        tableEl.y = figma.viewport.center.y;
+    }
+    figma.viewport.scrollAndZoomIntoView([tableEl]);
+
+    // _layoutColV2_simple();
     // _modifyComp();
 }
