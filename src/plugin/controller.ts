@@ -535,7 +535,6 @@ function updateColumn(source: SceneNode) {
         colEl.children.forEach((el) => {
             let inst = (el as FrameNode).children[0] as InstanceNode;
             fillTableBodyCellWithText(inst, el.getPluginData('cellText'));
-            // console.log("cell text: ", el.getPluginData("cellText"));
         });
     }
 }
@@ -877,17 +876,18 @@ function isTable(selection: readonly SceneNode[]): boolean {
 function drawTableComp(data) {
     console.log('>>>draw table with data:::', data);
 
+    const tableElWidth = 1440 - 32 * 2;
+
     Promise.all([
         drawTableTitle(data),
         drawTableHeader(data),
-        drawTableBody(data),
+        drawTableBody2({data: data, width: tableElWidth}),
         drawTableBodyFixedColumns(data),
     ]).then(([title, header, body, fixedbody]) => {
         const bkg = allTableComponents
             .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
             ['component'].createInstance() as InstanceNode;
 
-        const tableElWidth = 1440 - 32 * 2;
         const tableContainerEl = figma.createFrame();
         tableContainerEl.name = 'pa-table-container';
         tableContainerEl.layoutMode = 'VERTICAL';
@@ -913,8 +913,9 @@ function drawTableComp(data) {
 
         tableContainerEl.appendChild(_header);
 
-        body.layoutGrow = 0;
         tableContainerEl.appendChild(body);
+        body.layoutGrow = 0;
+        body.layoutAlign = 'STRETCH'; // so that it can fill container horizontally
 
         tableContainerEl.appendChild(paginationEl);
 
@@ -1115,6 +1116,155 @@ async function drawTableTitle(data) {
 
     return titleContainer;
 }
+
+// this async function returns a frame node which is the table body container
+async function drawTableBody2({
+    data,
+    width = 860,
+    height = 524,
+    defaultCellWidth = 200,
+    defaultCellHeight = table_style.rowHeight,
+    rowSpacing = 0,
+    colSpacing = 0,
+    limitRows = 25,
+}: {
+    data: any; // data.rows is the row based data
+    width?: number;
+    height?: number;
+    defaultCellWidth?: number;
+    defaultCellHeight?: number;
+    rowSpacing?: number;
+    colSpacing?: number;
+    limitRows?: number;
+}) {
+    const tableCellTextDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
+
+    const tableCellTextStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default - Alt' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
+
+    const tableCellCheckboxDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+            d.variantProperties['State'] === 'Default'
+    )['component'];
+
+    const tableCellCheckboxStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+            d.variantProperties['State'] === 'Default - Alt'
+    )['component'];
+
+    // row based data source
+    let datagrid = data.rows;
+
+    if (limitRows > 0) {
+        datagrid = _.chain(data.rows).take(limitRows).value();
+    }
+
+    // column based data source
+    const dataframe = transpose(datagrid);
+    const numCols = dataframe.length;
+
+    const tableEl = figma.createFrame();
+
+    tableEl.name = 'pa-table-body'; // non-sticky columns
+    tableEl.layoutMode = 'HORIZONTAL';
+    tableEl.primaryAxisSizingMode = 'FIXED'; // so that the last col can be auto fill
+    tableEl.counterAxisAlignItems = 'MIN';
+    tableEl.counterAxisSizingMode = 'AUTO';
+    tableEl.itemSpacing = colSpacing;
+    tableEl.overflowDirection = 'VERTICAL';
+
+    dataframe.forEach((colData, colIndex) => {
+        // column
+        const colEl = createColumnContainer(colIndex);
+
+        if (colIndex < numCols - 1) {
+            colEl.layoutGrow = 0;
+            colEl.resize(defaultCellWidth, defaultCellHeight);
+        } else {
+            colEl.layoutGrow = 1;
+        }
+
+        colData.forEach((cellData, rowIndex) => {
+            // first row is white; second row is grey
+            const cellEl = createCellContainer(rowIndex, colIndex);
+
+            cellEl.layoutMode = 'HORIZONTAL'; // doesn't matter that much since we only have one child
+            cellEl.primaryAxisSizingMode = 'FIXED';
+            cellEl.counterAxisSizingMode = 'FIXED';
+
+            const cellInst =
+                rowIndex % 2 === 0
+                    ? tableCellTextDefaultComp.createInstance()
+                    : tableCellTextStripedEvenRowComp.createInstance();
+            cellInst.layoutAlign = 'STRETCH';
+            cellInst.layoutGrow = 1;
+            const text = cellData.toString();
+
+            fillTableBodyCellWithText(cellInst, text);
+            cellEl.appendChild(cellInst);
+
+            // Write the text as meta data to the parent frame so that we can use it when we resize.
+            cellEl.setPluginData('cellText', text);
+
+            colEl.appendChild(cellEl);
+        });
+
+        tableEl.appendChild(colEl);
+    });
+
+    if (width && height) {
+        tableEl.resize(width, height);
+    }
+
+    console.log(`w: ${width}`);
+
+    return tableEl;
+
+    function createColumnContainer(col: number) {
+        const colEl = figma.createFrame();
+        colEl.name = 'col-' + col;
+        colEl.layoutMode = 'VERTICAL'; // vertical auto-layout
+        colEl.primaryAxisSizingMode = 'FIXED'; // vertically, we'll set the height for the column so that it fits the viewport
+
+        // colEl.primaryAxisSizingMode = 'AUTO'; // vertical
+        colEl.primaryAxisAlignItems = 'MIN'; // children aligned to top
+        colEl.counterAxisSizingMode = 'FIXED'; // user or plugin will set the width
+
+        //tmp. so that we can see the gaps between each cell
+        colEl.itemSpacing = rowSpacing;
+        colEl.layoutGrow = col == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
+        colEl.layoutAlign = 'STRETCH';
+        return colEl;
+    }
+
+    function createCellContainer(row: number, col: number): FrameNode {
+        const cellEl = figma.createFrame();
+        // cellEl.name = 'cell-' + j;
+        cellEl.name = 'cell-row-' + row + '-col-' + col;
+        cellEl.resize(defaultCellWidth, defaultCellHeight);
+        // cellEl.fills = [{type: 'SOLID', color: {r: 242 / 255, g: 153 / 255, b: 74 / 255}}];
+
+        cellEl.layoutAlign = 'STRETCH'; // auto-fill horizontally
+        cellEl.layoutGrow = 0; // fixed height
+
+        return cellEl;
+    }
+}
 // Draw table using the d3 update pattern(e.g., enter/update/exit).
 // Using imported external components.
 // TODO: Move 'pa-table-body' to a const
@@ -1190,7 +1340,9 @@ async function drawTableBody(data, limitRows: number = 25) {
         let colHeight = 0;
         // Text
         const colEl = frameNodeOn({parent: tableEl, colIndex: i + 1}); // leave 0 for the checkbox
-        colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
+        // colEl.layoutGrow = i < dataframe.length - 1 ? 0 : 1;
+        colEl.layoutGrow = 0;
+        colEl.layoutAlign = 'MIN';
 
         const colCellsData = colCells as [];
 
@@ -1229,7 +1381,10 @@ async function drawTableBody(data, limitRows: number = 25) {
             colHeight += rowHeight;
         });
 
-        colEl.resize(colEl.width, colHeight);
+        console.log('>>drawtablebody: colEl.width:', colEl.width, '; height:', colEl.height);
+
+        // colEl.resize(colEl.width, colHeight);
+        colEl.resize(200, 32);
     });
 
     // Checkbox
@@ -1752,6 +1907,146 @@ async function test() {
     // });
 }
 
+function __createTableBodyRetro({
+    dataframe,
+    tableEl,
+    width = 860,
+    height = 524,
+    defaultCellWidth = 200,
+    defaultCellHeight = table_style.rowHeight,
+    rowSpacing = 0,
+    colSpacing = 0,
+    limitRows = 25,
+}: {
+    dataframe: any[][]; // column based data source: a 2d array
+    tableEl?: FrameNode;
+    width?: number;
+    height?: number;
+    defaultCellWidth?: number;
+    defaultCellHeight?: number;
+    rowSpacing?: number;
+    colSpacing?: number;
+    limitRows?: number;
+}): FrameNode {
+    // set up a bare minimum grid without any component in the cells
+    console.log('v2 with data!', dataframe);
+
+    const numCols = dataframe.length; // doesn't include header(s)
+
+    const tableCellTextDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
+
+    const tableCellTextStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Text'] &&
+            d.variantProperties['State'] === 'Default - Alt' &&
+            d.variantProperties['Label'] === 'True' &&
+            d.variantProperties['Icon Left'] === 'False' &&
+            d.variantProperties['Icon Right'] === 'False'
+    )['component'];
+
+    const tableCellCheckboxDefaultComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+            d.variantProperties['State'] === 'Default'
+    )['component'];
+
+    const tableCellCheckboxStripedEvenRowComp = allTableComponents.find(
+        (d) =>
+            d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Cell - Checkbox'] &&
+            d.variantProperties['State'] === 'Default - Alt'
+    )['component'];
+
+    if (!tableEl || (tableEl && tableEl.children.length > 0)) {
+        tableEl = figma.createFrame();
+        tableEl.resize(width, height);
+    } else {
+        // if the user gives us an empty frame as a container
+        width = tableEl.width;
+        height = tableEl.height;
+    }
+
+    tableEl.name = 'pa-table-body'; // non-sticky columns
+    tableEl.layoutMode = 'HORIZONTAL';
+    tableEl.primaryAxisSizingMode = 'AUTO'; //???
+    tableEl.counterAxisAlignItems = 'MIN';
+    tableEl.counterAxisSizingMode = 'AUTO';
+    tableEl.itemSpacing = colSpacing;
+
+    dataframe.forEach((colData, col) => {
+        // column
+        const colEl = createColumnContainer(col);
+        colEl.resize(defaultCellWidth, defaultCellHeight);
+
+        colData.forEach((cellData, row) => {
+            // first row is white; second row is grey
+            const cellEl = createCellContainer(row, col);
+
+            cellEl.layoutMode = 'HORIZONTAL'; // doesn't matter that much since we only have one child
+            cellEl.primaryAxisSizingMode = 'FIXED';
+            cellEl.counterAxisSizingMode = 'FIXED';
+
+            const cellInst =
+                row % 2 === 0
+                    ? tableCellTextDefaultComp.createInstance()
+                    : tableCellTextStripedEvenRowComp.createInstance();
+            cellInst.layoutAlign = 'STRETCH';
+            cellInst.layoutGrow = 1;
+            const text = cellData.toString();
+            fillTableBodyCellWithText(cellInst, text);
+            cellEl.appendChild(cellInst);
+
+            // Write the text as meta data to the parent frame so that we can use it when we resize.
+            cellEl.setPluginData('cellText', text);
+
+            colEl.appendChild(cellEl);
+        });
+
+        tableEl.appendChild(colEl);
+    });
+
+    tableEl.resize(width, height);
+
+    return tableEl;
+
+    function createColumnContainer(col: number) {
+        const colEl = figma.createFrame();
+        colEl.name = 'col-' + col;
+        colEl.layoutMode = 'VERTICAL'; // vertical auto-layout
+        colEl.primaryAxisSizingMode = 'FIXED'; // vertically, we'll set the height for the column so that it fits the viewport
+
+        // colEl.primaryAxisSizingMode = 'AUTO'; // vertical
+        colEl.primaryAxisAlignItems = 'MIN'; // children aligned to top
+        colEl.counterAxisSizingMode = 'FIXED'; // user or plugin will set the width
+
+        //tmp. so that we can see the gaps between each cell
+        colEl.itemSpacing = rowSpacing;
+        colEl.layoutGrow = col == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
+        colEl.layoutAlign = 'STRETCH';
+        return colEl;
+    }
+
+    function createCellContainer(row: number, col: number): FrameNode {
+        const cellEl = figma.createFrame();
+        // cellEl.name = 'cell-' + j;
+        cellEl.name = 'cell-row-' + row + '-col-' + col;
+        cellEl.resize(defaultCellWidth, defaultCellHeight);
+        // cellEl.fills = [{type: 'SOLID', color: {r: 242 / 255, g: 153 / 255, b: 74 / 255}}];
+
+        cellEl.layoutAlign = 'STRETCH'; // auto-fill horizontally
+        cellEl.layoutGrow = 0; // fixed height
+
+        return cellEl;
+    }
+}
+
+// I think it's probably better to separate the non-fixed columns from the fixed ones (e.g., checkboxes, action columns)
 function __createTableBody({
     dataframe,
     tableEl,
@@ -1803,34 +2098,38 @@ function __createTableBody({
         height = tableEl.height;
     }
 
-    tableEl.name = 'tableBody'; // non-sticky columns
+    tableEl.name = 'pa-table-body'; // non-sticky columns
     tableEl.layoutMode = 'HORIZONTAL';
     tableEl.primaryAxisSizingMode = 'AUTO'; //???
     tableEl.counterAxisAlignItems = 'MIN';
     tableEl.counterAxisSizingMode = 'AUTO';
     tableEl.itemSpacing = colSpacing;
 
-    dataframe.forEach((colData, i) => {
+    dataframe.forEach((colData, col) => {
         // column
-        const colEl = createColumnContainer(i);
+        const colEl = createColumnContainer(col);
         colEl.resize(defaultCellWidth, defaultCellHeight);
 
-        colData.forEach((cellData, j) => {
+        colData.forEach((cellData, row) => {
             // first row is white; second row is grey
-            const cellEl = createCellContainer(j);
+            const cellEl = createCellContainer(row, col);
 
             cellEl.layoutMode = 'HORIZONTAL'; // doesn't matter that much since we only have one child
             cellEl.primaryAxisSizingMode = 'FIXED';
             cellEl.counterAxisSizingMode = 'FIXED';
 
             const cellInst =
-                j % 2 === 0
+                row % 2 === 0
                     ? tableCellTextDefaultComp.createInstance()
                     : tableCellTextStripedEvenRowComp.createInstance();
             cellInst.layoutAlign = 'STRETCH';
             cellInst.layoutGrow = 1;
-            fillTableBodyCellWithText(cellInst, cellData.toString());
+            const text = cellData.toString();
+            fillTableBodyCellWithText(cellInst, text);
             cellEl.appendChild(cellInst);
+
+            // Write the text as meta data to the parent frame so that we can use it when we resize.
+            cellEl.setPluginData('cellText', text);
 
             colEl.appendChild(cellEl);
         });
@@ -1842,9 +2141,9 @@ function __createTableBody({
 
     return tableEl;
 
-    function createColumnContainer(i: number) {
+    function createColumnContainer(col: number) {
         const colEl = figma.createFrame();
-        colEl.name = 'col-' + i;
+        colEl.name = 'col-' + col;
         colEl.layoutMode = 'VERTICAL'; // vertical auto-layout
         colEl.primaryAxisSizingMode = 'FIXED'; // vertically, we'll set the height for the column so that it fits the viewport
 
@@ -1854,14 +2153,15 @@ function __createTableBody({
 
         //tmp. so that we can see the gaps between each cell
         colEl.itemSpacing = rowSpacing;
-        colEl.layoutGrow = i == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
+        colEl.layoutGrow = col == numCols - 1 ? 1 : 0; // last column is stretch; other columns fixed width
         colEl.layoutAlign = 'STRETCH';
         return colEl;
     }
 
-    function createCellContainer(j: number): FrameNode {
+    function createCellContainer(row: number, col: number): FrameNode {
         const cellEl = figma.createFrame();
-        cellEl.name = 'cell-' + j;
+        // cellEl.name = 'cell-' + j;
+        cellEl.name = 'cell-row-' + row + '-col-' + col;
         cellEl.resize(defaultCellWidth, defaultCellHeight);
         // cellEl.fills = [{type: 'SOLID', color: {r: 242 / 255, g: 153 / 255, b: 74 / 255}}];
 
@@ -1872,7 +2172,7 @@ function __createTableBody({
     }
 }
 
-// The user can either draw an empty frame or not
+// The user can optionally draw an empty frame as a 'placeholder' for the table
 function __createTableBody_Simple({
     tableEl,
     width = 860,
@@ -2025,7 +2325,8 @@ function test1() {
     // add a rect to the selection
     const sel = figma.currentPage.selection[0] as FrameNode;
 
-    const tableEl = __createTableBody({dataframe: dataframe, tableEl: sel});
+    // const tableEl = __createTableBody({dataframe: dataframe, tableEl: sel});
+    const tableEl = __createTableBodyRetro({dataframe: dataframe, tableEl: sel});
 
     if (!sel) {
         tableEl.x = figma.viewport.center.x;
