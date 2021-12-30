@@ -882,109 +882,116 @@ function drawTableComp(data) {
         drawTableTitle(data),
         drawTableHeader(data),
         drawTableBody2({data: data, width: tableElWidth}),
-        drawTableBodyFixedColumns(data),
-    ]).then(([title, header, body, fixedbody]) => {
-        const bkg = allTableComponents
-            .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
-            ['component'].createInstance() as InstanceNode;
+        // drawTableBodyFixedColumns(data),
+    ]).then(
+        ([
+            title,
+            header,
+            body,
+            // fixedbody
+        ]) => {
+            const bkg = allTableComponents
+                .find((d) => d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Table - Background'])
+                ['component'].createInstance() as InstanceNode;
 
-        const tableContainerEl = figma.createFrame();
-        tableContainerEl.name = 'pa-table-container';
-        tableContainerEl.layoutMode = 'VERTICAL';
-        tableContainerEl.layoutGrow = 1;
-        tableContainerEl.clipsContent = false;
+            const tableContainerEl = figma.createFrame();
+            tableContainerEl.name = 'pa-table-container';
+            tableContainerEl.layoutMode = 'VERTICAL';
+            tableContainerEl.layoutGrow = 1;
+            tableContainerEl.clipsContent = false;
 
-        const _title = title as unknown as FrameNode;
+            const _title = title as unknown as FrameNode;
 
-        const _header = header as unknown as FrameNode;
-        _header.layoutGrow = 0; // Fixed height for header
+            const _header = header as unknown as FrameNode;
+            _header.layoutGrow = 0; // Fixed height for header
 
-        const paginationEl: FrameNode = drawPagination(data);
-        paginationEl.resize(tableElWidth, table_style.paginationHeight);
-        paginationEl.layoutAlign = 'STRETCH'; // fill container horizontally
-        paginationEl.layoutGrow = 0; // fixed height
+            const paginationEl: FrameNode = drawPagination(data);
+            paginationEl.resize(tableElWidth, table_style.paginationHeight);
+            paginationEl.layoutAlign = 'STRETCH'; // fill container horizontally
+            paginationEl.layoutGrow = 0; // fixed height
 
-        // TMP: set the width to 1440 for now.
-        // Record the "intrinsic" heights before appendment
-        const w = tableElWidth,
-            h = _header.height + body.height + table_style.paginationHeight + _title.height;
+            // TMP: set the width to 1440 for now.
+            // Record the "intrinsic" heights before appendment
+            const w = tableElWidth,
+                h = _header.height + body.height + table_style.paginationHeight + _title.height;
 
-        tableContainerEl.appendChild(_title);
+            tableContainerEl.appendChild(_title);
 
-        tableContainerEl.appendChild(_header);
+            tableContainerEl.appendChild(_header);
 
-        tableContainerEl.appendChild(body);
-        body.layoutGrow = 0;
-        body.layoutAlign = 'STRETCH'; // so that it can fill container horizontally
+            tableContainerEl.appendChild(body);
+            body.layoutGrow = 0;
+            body.layoutAlign = 'STRETCH'; // so that it can fill container horizontally
 
-        tableContainerEl.appendChild(paginationEl);
+            tableContainerEl.appendChild(paginationEl);
 
-        tableContainerEl.resize(w, h);
-        bkg.resize(w, h);
+            tableContainerEl.resize(w, h);
+            bkg.resize(w, h);
 
-        const overlayEl = figma.createFrame();
-        overlayEl.name = 'pa-table-overlay';
-        overlayEl.fills = [];
-        overlayEl.resize(w, h);
+            const overlayEl = figma.createFrame();
+            overlayEl.name = 'pa-table-overlay';
+            overlayEl.fills = [];
+            overlayEl.resize(w, h);
 
-        const tableCompContainer = figma.group([overlayEl, tableContainerEl, bkg], figma.currentPage);
+            const tableCompContainer = figma.group([overlayEl, tableContainerEl, bkg], figma.currentPage);
 
-        // In the GUI, the index starts from the bottom
-        tableCompContainer.insertChild(2, fixedbody);
-        fixedbody.x = 0;
-        fixedbody.y = _title.height + _header.height;
-        fixedbody.resize(tableContainerEl.width, fixedbody.height);
+            // // In the GUI, the index starts from the bottom
+            // tableCompContainer.insertChild(2, fixedbody);
+            // fixedbody.x = 0;
+            // fixedbody.y = _title.height + _header.height;
+            // fixedbody.resize(tableContainerEl.width, fixedbody.height);
 
-        tableCompContainer.name = 'pa-table-comp';
+            tableCompContainer.name = 'pa-table-comp';
 
-        // position the new table comp in the center of the viewport
-        tableCompContainer.x = figma.viewport.center.x - tableCompContainer.width / 2;
-        tableCompContainer.y = figma.viewport.center.y - tableCompContainer.height / 2;
+            // position the new table comp in the center of the viewport
+            tableCompContainer.x = figma.viewport.center.x - tableCompContainer.width / 2;
+            tableCompContainer.y = figma.viewport.center.y - tableCompContainer.height / 2;
 
-        // TODO: Attach to the current selection of frame node if any, and position it in the center of focus
-        // if(figma.currentPage.selection.length === 1
-        //     && figma.currentPage.selection[0].type === 'FRAME') {
-        //     const sel = figma.currentPage.selection[0] as FrameNode;
-        //     sel.appendChild(tableCompContainer);
-        // }
+            // TODO: Attach to the current selection of frame node if any, and position it in the center of focus
+            // if(figma.currentPage.selection.length === 1
+            //     && figma.currentPage.selection[0].type === 'FRAME') {
+            //     const sel = figma.currentPage.selection[0] as FrameNode;
+            //     sel.appendChild(tableCompContainer);
+            // }
 
-        // wire up table body and its header so we can handle deleted/reordered columns
+            // wire up table body and its header so we can handle deleted/reordered columns
 
-        let headerColIds: string[] = header.children.map((col) => col.id);
+            let headerColIds: string[] = header.children.map((col) => col.id);
 
-        const tableId = tableContainerEl.id;
+            const tableId = tableContainerEl.id;
 
-        body.children.forEach((col, i) => {
-            const headerColId = headerColIds[i];
-            col.setPluginData('assColId', headerColIds[i]);
-            col.setPluginData('tableId', tableId);
+            body.children.forEach((col, i) => {
+                const headerColId = headerColIds[i];
+                col.setPluginData('assColId', headerColIds[i]);
+                col.setPluginData('tableId', tableId);
 
-            const headerColEl = figma.getNodeById(headerColId);
-            headerColEl.setPluginData('assColId', col.id);
-            headerColEl.setPluginData('tableId', tableId);
-        });
+                const headerColEl = figma.getNodeById(headerColId);
+                headerColEl.setPluginData('assColId', col.id);
+                headerColEl.setPluginData('tableId', tableId);
+            });
 
-        //////// end of wiring
+            //////// end of wiring
 
-        // select it if the user has selected an empty frame
-        if (figma.currentPage.selection.length === 1) {
-            const sel = figma.currentPage.selection[0];
-            if (sel.type === 'FRAME' && sel.children.length === 0) {
-                sel.layoutMode = 'VERTICAL';
-                sel.primaryAxisSizingMode = 'AUTO';
-                sel.counterAxisSizingMode = 'AUTO';
-                sel.paddingBottom = sel.paddingTop = sel.paddingLeft = sel.paddingRight = 80;
-                sel.appendChild(tableCompContainer);
-                tableCompContainer.x = 0;
-                tableCompContainer.y = 0;
+            // select it if the user has selected an empty frame
+            if (figma.currentPage.selection.length === 1) {
+                const sel = figma.currentPage.selection[0];
+                if (sel.type === 'FRAME' && sel.children.length === 0) {
+                    sel.layoutMode = 'VERTICAL';
+                    sel.primaryAxisSizingMode = 'AUTO';
+                    sel.counterAxisSizingMode = 'AUTO';
+                    sel.paddingBottom = sel.paddingTop = sel.paddingLeft = sel.paddingRight = 80;
+                    sel.appendChild(tableCompContainer);
+                    tableCompContainer.x = 0;
+                    tableCompContainer.y = 0;
+                }
+
+                // } else {
+                figma.currentPage.selection = [tableCompContainer];
             }
 
-            // } else {
-            figma.currentPage.selection = [tableCompContainer];
+            figma.viewport.scrollAndZoomIntoView(figma.currentPage.selection);
         }
-
-        figma.viewport.scrollAndZoomIntoView(figma.currentPage.selection);
-    });
+    );
 }
 async function drawTableHeader(data) {
     await figma.loadFontAsync({family: 'Lato', style: 'Bold'});
@@ -1026,7 +1033,8 @@ async function drawTableHeader(data) {
 
         // column header
         const columnHeaderContainer = baseFrameWithAutoLayout({
-            name: 'col-' + (i + 1), // leave 0 for the checkbox
+            // name: 'col-' + (i + 1), // leave 0 for the checkbox
+            name: 'col-' + i, // leave 0 for the checkbox
             height: table_style.headerHeight,
             // width: table_style.columnWidth * headerTitles.length,
             width: table_style.columnWidth,
@@ -1043,7 +1051,7 @@ async function drawTableHeader(data) {
         headerContainer.appendChild(columnHeaderContainer);
     });
 
-    // Add checkbox at the beginning
+    /* // Add checkbox at the beginning
     const tableHeaderCheckboxDefaultComp = allTableComponents.find((d) => {
         return (
             d.compName === PRISMA_TABLE_COMPONENTS_INST_NAME['Header - Checkbox'] &&
@@ -1064,7 +1072,7 @@ async function drawTableHeader(data) {
     }) as FrameNode;
     checkboxInstContainer.layoutGrow = 0; // so that the container to be "hug content"
     checkboxInstContainer.appendChild(checkboxInst);
-    headerContainer.insertChild(0, checkboxInstContainer);
+    headerContainer.insertChild(0, checkboxInstContainer); */
 
     return headerContainer;
 }
