@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 // NOTE: Scrolling: Can't seem have one element with both scrolling and fixed... Rather to have vertical scrolling on table body.
 // Idea: Toggle on plugin GUI for horizontal or vertical scroll.
 
-import {baseFrameWithAutoLayout, loadFontForTextNode, transpose, charactersPerArea, dups} from '../shared/utils';
+import {baseFrameWithAutoLayout, loadFontForTextNode, transpose, charactersPerArea, dups, lorem} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
@@ -262,6 +262,8 @@ figma.on('selectionchange', () => {
 
         const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
 
+        console.log('>>>user just deselected a ', source, '; obj:', sourceObj);
+
         if (sourceObj.type === 'FRAME' || sourceObj.type === 'INSTANCE') {
             updateRow(source);
             updateColumnComps(source);
@@ -273,6 +275,7 @@ figma.on('selectionchange', () => {
             // const source = figma.currentPage.findOne((n) => n.id === sourceObj.id) as TextNode;
             // TMP. TODO
             updateColumnIcons(source as TextNode);
+            updateColumnTextFromHeader(source as TextNode);
         }
 
         updateTableColumns(sourceObj);
@@ -572,7 +575,9 @@ async function updateRow(source: SceneNode) {
         const insto = (cel as FrameNode).children[0] as InstanceNode;
 
         // Update the text
+
         if (text !== '') {
+            console.log('___>>is about to update text....');
             fillTableBodyCellWithText(inst, text);
         }
 
@@ -696,6 +701,21 @@ async function updateColumnIcons(source: TextNode) {
             targetIcon.characters = sourceIcon.characters;
         }
     });
+}
+
+async function updateColumnTextFromHeader(source: TextNode) {
+    // first scenario: user just changed header: Email
+    console.log('>>>updateColumnTextFromHeader source::', source);
+    if (source.name === 'Label') {
+        const sourceInst = source.parent as InstanceNode;
+        if (sourceInst.name == '_Header') {
+            // if the parent container of the text is named '_Header' (Prisma Component Library convention), we assume it's a header
+            console.log('YOU JUST UPDATED A HEADER');
+            // _find the corresponding column
+        }
+    }
+
+    // second scenario: user just changed body: att.com
 }
 
 function updateColumnHeader(source: any) {
@@ -1562,6 +1582,7 @@ async function fillTableBodyCellWithText(tableCell: InstanceNode, originalText: 
 
     const _text: string =
         originalText.substring(0, truncatedLength) + (originalText.length > truncatedLength ? '...' : '');
+
     textEl.characters = _text;
 }
 
@@ -1618,8 +1639,6 @@ async function loadAllTableComponents() {
     const component_samples = TABLE_COMPONENT_SAMPLES.find(
         (d) => d.library.name === 'Prisma Component Library (Copy)'
     ).components;
-
-    console.log('component_samples>>>', component_samples);
 
     for (const {key} of component_samples) {
         const comp = await figma.importComponentByKeyAsync(key);
@@ -2323,7 +2342,10 @@ function _layoutColV2_simple() {
 }
 
 function test1() {
+    console.log('lorem::::', lorem());
+    lorem();
     // mock:
+    return;
     const dataframe = [
         // 'Work Space', 'Channel', 'Members'
         ['Global', 'R&D', 'R&D', 'Global'],

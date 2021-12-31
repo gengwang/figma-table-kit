@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+// import * as d3 from './d3';
 /*
 // A master component in Figma are named something like
 // "Icon Left=True, Icon Right=False, Label=True, State=Default - Alt".
@@ -134,18 +135,27 @@ async function loadFontForTextNode(textEl: TextNode) {
 // It looks like the only solution would be to modify the Prisma DS "Cell - Text" component so that
 // it has an auto-layout frame wrapping the text with some top/bottom padding (6px), and then wrapping
 // the bottom line and this frame inside another, non auto-layout frame.
-function charactersPerArea(width: number, heigh: number, offsetChars = 14): number {
-    const fontConstant = 5.18333333333333;
+function charactersPerArea(width: number, height: number, offsetChars = 14): number {
+    // Not sure why the font constant has changed around end of Dec, 2021
+    const fontConstant = 5.18333333333333 * 1.7;
     const lineHeight = 20;
+
+    if (width <= 60) width -= 72;
+    if (width > 120 && width < 300) width -= 64;
+    if (width >= 500) width -= 56;
+
     let charCountPerLine = Math.floor(width / fontConstant);
-    const rowCount = Math.floor(heigh / lineHeight);
+
+    const rowCount = Math.floor(height / lineHeight);
 
     // We want some paddings on the top and the bottom
-    if (heigh > 40) heigh -= 24;
-    if (heigh <= 40 && heigh > 32) heigh -= 12;
+    if (height > 40) height -= 24;
+    if (height <= 40 && height > 32) height -= 12;
 
     // Manually cut off some characters since it appears we'd overcount if we didn't
     if (charCountPerLine > offsetChars + 2) charCountPerLine -= offsetChars;
+
+    // TODO. Make sure we are not getting negative numbers?
     return charCountPerLine * rowCount;
 }
 
@@ -187,6 +197,24 @@ function transpose(a) {
 function dups(arr) {
     return _.uniq(_.filter(arr, (v, i, a) => a.indexOf(v) !== i));
 }
+// Number of letters in an English word. The average is 4.79 letters per word, and 80% are between 2 and 7 letters long. [Reference](http://norvig.com/mayzner.html)
+function lorem(minLen = 3, maxLen = 8, minLetters = 2, maxLetters = 10) {
+    function randomLetters(len = 3) {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        return _.sampleSize(letters.split(''), len).join('').trim();
+    }
+    function randomWords(wordCount) {
+        return Array.from({length: wordCount}).map(() => {
+            // d3.randomExponential("hello");
+            //   const letterCount = Number.parseInt(
+            //     d3.randomExponential(4.75)(24) * 24 + 1
+            //   );
+            const letterCount = _.random(minLetters, maxLetters);
+            return randomLetters(letterCount);
+        });
+    }
+    return randomWords(_.random(minLen, maxLen)).join(' ');
+}
 
 export {
     baseFrameWithAutoLayout,
@@ -196,4 +224,5 @@ export {
     clone,
     transpose,
     dups,
+    lorem,
 };
