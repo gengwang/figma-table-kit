@@ -140,9 +140,10 @@ function charactersPerArea(width: number, height: number, offsetChars = 14): num
     const fontConstant = 5.18333333333333 * 1.7;
     const lineHeight = 20;
 
-    if (width <= 60) width -= 72;
-    if (width > 120 && width < 300) width -= 64;
-    if (width >= 500) width -= 56;
+    if (width <= 120) width -= 64;
+    else if (width > 120 && width < 200) width += 64;
+    else if (width >= 200 && width < 500) width += 136;
+    else if (width >= 500) width -= 56;
 
     let charCountPerLine = Math.floor(width / fontConstant);
 
@@ -197,23 +198,168 @@ function transpose(a) {
 function dups(arr) {
     return _.uniq(_.filter(arr, (v, i, a) => a.indexOf(v) !== i));
 }
-// Number of letters in an English word. The average is 4.79 letters per word, and 80% are between 2 and 7 letters long. [Reference](http://norvig.com/mayzner.html)
-function lorem(minLen = 3, maxLen = 8, minLetters = 2, maxLetters = 10) {
-    function randomLetters(len = 3) {
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        return _.sampleSize(letters.split(''), len).join('').trim();
+function smartLorem(type: string): string {
+    switch (type) {
+        case 'lorem':
+            return lorem();
+        case 'email':
+            return emailLorem();
     }
-    function randomWords(wordCount) {
-        return Array.from({length: wordCount}).map(() => {
-            // d3.randomExponential("hello");
-            //   const letterCount = Number.parseInt(
-            //     d3.randomExponential(4.75)(24) * 24 + 1
-            //   );
-            const letterCount = _.random(minLetters, maxLetters);
-            return randomLetters(letterCount);
+}
+
+// source: https://nordpass.com/blog/all-time-most-popular-usernames/
+function randomUserName(): string {
+    const USER_NAMES = [
+        'ยศกร',
+        'David',
+        'Alex',
+        'Maria',
+        'Anna',
+        'Marco',
+        'Antonio',
+        'Daniel',
+        'Andrea',
+        '집을뒤집자',
+        'Laura',
+        'Ali',
+        '박춘우',
+        'Jose',
+        'Sandra',
+        'พิมวิภา',
+        'Sara',
+        'Carlos',
+        'Ana',
+        'Michael',
+        'Marie',
+        'Francesco',
+        'Mehmet',
+        'Marta',
+        'Sarah',
+        'John',
+        'Luca',
+        'Martin',
+        'Murat',
+        'Mario',
+        'Juan',
+        'Thomas',
+        'Giuseppe',
+        'Chris',
+        'Peter',
+        'Mustafa',
+        'Jessica',
+        'Mohamed',
+        'Monika',
+        'Elena',
+        'Robert',
+        'Manuel',
+        'Christian',
+        'Roberto',
+        'Kevin',
+        'Pedro',
+        'Patrick',
+        'Ahmet',
+        'Luis',
+        'Cristina',
+        'Jan',
+        'Paul',
+        'Patricia',
+        'Eva',
+        'Ahmed',
+        'Mary',
+        'Eric',
+        'Alessandro',
+        'Miguel',
+        'Sergio',
+        'Tony',
+        'Alexandra',
+        'Ivan',
+        'Vanessa',
+        'Julie',
+        'Alberto',
+        'Nicolas',
+        'Sonia',
+        'Silvia',
+        'Claudia',
+        'Julien',
+        'Max',
+        'Adam',
+        'Mike',
+        'Hakan',
+        'Sabrina',
+        'Marina',
+        'Marc',
+        'Daniela',
+        'Julia',
+        'Nicole',
+        'Fabio',
+        'Francesca',
+        'Lisa',
+        'Angela',
+        'Jana',
+        'Natalia',
+        'Javier',
+        'Jorge',
+        'Angel',
+        'Sam',
+        'Bruno',
+        'Giovanni',
+        'Martina',
+        'Agnieszka',
+        'Paolo',
+        'Marcin',
+        'Carmen',
+        'Nathalie',
+        'Linda',
+    ];
+    return _.sample(USER_NAMES).toLowerCase();
+}
+function randomDomainName(): string {
+    const domains = [
+        'pan.io',
+        'company.com',
+        'test.com',
+        'micro.lab',
+        'toys.us',
+        'hacker.dr',
+        'self.dr',
+        'autonomous.dr',
+        'desk.com',
+        'remote.edu',
+    ];
+    return _.sample(domains);
+}
+// TODO: Severity lorem with icons???
+function emailLorem(): string {
+    // const userName = lorem(1, 1, 1, 6).toLowerCase();
+    const userName = randomUserName();
+    const domain = randomDomainName();
+    return userName + '@' + domain;
+}
+function lorem(minLetters = 5, maxLetters = 60) {
+    // source: https://loremipsum.io/generator/?n=10&t=p
+    const lo =
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam nulla facilisi. Auctor elit sed vulputate mi sit amet mauris. Mauris a diam maecenas sed. Ut tellus elementum sagittis vitae et leo duis. Vel risus commodo viverra maecenas. Quis lectus nulla at volutpat diam ut venenatis. Cursus metus aliquam eleifend mi in. Justo donec enim diam vulputate. A lacus vestibulum sed arcu non odio euismod lacinia. Nisl suscipit adipiscing bibendum est ultricies. Natoque penatibus et magnis dis parturient montes nascetur ridiculus. Quam nulla porttitor massa id neque aliquam vestibulum. Ultrices mi tempus imperdiet nulla malesuada pellentesque. Mauris in aliquam sem fringilla ut morbi tincidunt augue interdum. Purus semper eget duis at tellus at urna condimentum mattis. Cursus mattis molestie a iaculis at erat pellentesque adipiscing. Urna condimentum mattis pellentesque id nibh tortor id. Tortor id aliquet lectus proin. Nisl nisi scelerisque eu ultrices. Ullamcorper sit amet risus nullam eget felis. Volutpat consequat mauris nunc congue nisi vitae. Suspendisse faucibus interdum posuere lorem ipsum dolor sit amet. At in tellus integer feugiat scelerisque varius. In metus vulputate eu scelerisque felis. Et tortor at risus viverra adipiscing at in. Ultricies integer quis auctor elit sed vulputate mi sit amet. Et netus et malesuada fames ac turpis. Molestie nunc non blandit massa enim nec dui. Viverra aliquet eget sit amet. Sed adipiscing diam donec adipiscing. Amet nisl suscipit adipiscing bibendum. Mi in nulla posuere sollicitudin aliquam ultrices sagittis.';
+    const mid = Math.round(lo.length / 2);
+    const start = _.random(0, mid);
+    const end = _.random(mid, lo.length);
+    const len = _.random(minLetters, maxLetters);
+    const str = lo.substring(start, end).substring(0, len).trim();
+
+    return toTitleCase(str);
+
+    // Source: https://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
+    function toTitleCase(str) {
+        return str.replace(/\w\S*/g, function (txt) {
+            return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
         });
     }
-    return randomWords(_.random(minLen, maxLen)).join(' ');
+}
+
+// if str is an email address, returns its domain ("e.g., @gmail.com"); otherwise returns undefined
+function emailDomainFromString(str: string): string {
+    const pattern = /^\w+(@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$)/;
+    const match = str.match(pattern) || [];
+    return match[1];
 }
 
 export {
@@ -224,5 +370,7 @@ export {
     clone,
     transpose,
     dups,
-    lorem,
+    smartLorem,
+    emailDomainFromString,
+    randomUserName,
 };

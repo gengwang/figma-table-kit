@@ -5,7 +5,16 @@ import * as _ from 'lodash';
 // NOTE: Scrolling: Can't seem have one element with both scrolling and fixed... Rather to have vertical scrolling on table body.
 // Idea: Toggle on plugin GUI for horizontal or vertical scroll.
 
-import {baseFrameWithAutoLayout, loadFontForTextNode, transpose, charactersPerArea, dups, lorem} from '../shared/utils';
+import {
+    baseFrameWithAutoLayout,
+    loadFontForTextNode,
+    transpose,
+    charactersPerArea,
+    dups,
+    smartLorem,
+    emailDomainFromString,
+    randomUserName,
+} from '../shared/utils';
 
 // FIXME: If some columns are deleted, things will stop working
 // var meta_tables: {id: string, cols: number}[] = [];
@@ -250,19 +259,25 @@ function assignStyles() {
 // We store which node we are interacting with
 // TODO: store the whole array of current page selection
 figma.on('selectionchange', () => {
+    console.log('...selection change...');
+
     // We'll do nothing if the user wants manual upate
     if (settings['manual-update']) return;
 
     if (
-        figma.currentPage.getPluginData('selectedEl') !== '' &&
-        (figma.currentPage.selection.length === 0 || figma.currentPage.selection[0].name !== 'pa-table-comp')
+        figma.currentPage.getPluginData('selectedEl') !== ''
+        // && ( figma.currentPage.selection.length === 0 )
+        // (figma.currentPage.selection.length === 0 || figma.currentPage.selection[0].name !== 'pa-table-comp')
     ) {
         // if the user just de-selected something, we may want to update the row
         const sourceObj = JSON.parse(figma.currentPage.getPluginData('selectedEl'));
 
         const source = figma.currentPage.findOne((n) => n.id === sourceObj.id);
 
-        console.log('>>>user just deselected a ', source, '; obj:', sourceObj);
+        if (figma.currentPage.selection.length > 0) {
+            const sel = figma.currentPage.selection[0];
+            if (sel.id === sourceObj.id) return;
+        }
 
         if (sourceObj.type === 'FRAME' || sourceObj.type === 'INSTANCE') {
             updateRow(source);
@@ -271,11 +286,9 @@ figma.on('selectionchange', () => {
             updateColumn(source);
             updateTableSize(source);
         } else if (sourceObj.type === 'TEXT') {
-            // if the previous node was a text node and the rest of the column is not????
-            // const source = figma.currentPage.findOne((n) => n.id === sourceObj.id) as TextNode;
-            // TMP. TODO
             updateColumnIcons(source as TextNode);
             updateColumnTextFromHeader(source as TextNode);
+            updateColumnTextFromCell(source as TextNode);
         }
 
         updateTableColumns(sourceObj);
@@ -294,7 +307,16 @@ figma.on('selectionchange', () => {
             tableId: tableId,
             assColId: colId,
         };
-        figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
+        // 'selectedEl' is store on the current page
+
+        if (figma.currentPage.getPluginData('selectedEl')) {
+            const selectedElObj = figma.currentPage.getPluginData('selectedEl');
+            if (selectedElObj['id'] !== obj['id']) {
+                figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
+            }
+        } else {
+            figma.currentPage.setPluginData('selectedEl', JSON.stringify(obj));
+        }
     }
 });
 
@@ -702,20 +724,72 @@ async function updateColumnIcons(source: TextNode) {
         }
     });
 }
-
+// TODO: lorem email by a domain name from a body text cell
 async function updateColumnTextFromHeader(source: TextNode) {
     // first scenario: user just changed header: Email
-    console.log('>>>updateColumnTextFromHeader source::', source);
     if (source.name === 'Label') {
+        // see if we need to do "smart lorem"
+        const headerText = source.characters?.toLowerCase();
+
+        if (headerText !== 'lorem' && headerText !== 'email') return;
+
+        console.log('Smart lorem!!!');
+
         const sourceInst = source.parent as InstanceNode;
         if (sourceInst.name == '_Header') {
-            // if the parent container of the text is named '_Header' (Prisma Component Library convention), we assume it's a header
-            console.log('YOU JUST UPDATED A HEADER');
-            // _find the corresponding column
+            // if the parent container of the text is named '_Header' (Prisma Component Library convention), we assume it's a header, then try to  find the corresponding column and apply lorem text to each cell
+
+            const headerCellEl = sourceInst.parent?.parent;
+
+            if (!headerCellEl) return;
+
+            const reg = /(?<=col-)\d*/;
+            const matches = headerCellEl.name.match(reg);
+
+            if (matches !== null) {
+                const colIndex = matches[0];
+                // _apply lorem ipsum
+                const headerEl = headerCellEl.parent;
+                const tableEl = headerEl?.parent; //.name should be 'pa-table-container'
+                const tableBodyEl = tableEl.findChild((d) => d.name === 'pa-table-body') as FrameNode;
+                const bodyColEl = tableBodyEl.findChild((d) => d.name === 'col-' + colIndex) as FrameNode;
+
+                bodyColEl.children.forEach((cellEl) => {
+                    const cellInst = (cellEl as FrameNode)?.children[0] as InstanceNode;
+                    // const text = cellEl.getPluginData('cellText');
+                    if (cellInst) {
+                        const text = smartLorem(headerText);
+
+                        fillTableBodyCellWithText(cellInst, text);
+                        cellEl.setPluginData('cellText', text);
+                    }
+                });
+            }
         }
     }
 
     // second scenario: user just changed body: att.com
+}
+
+async function updateColumnTextFromCell(source: TextNode) {
+    // see if it's a cell and the text is an email
+    const emailDm = emailDomainFromString(source.characters);
+    if (emailDm) {
+        // TODO: refactor to a separate function?
+        if (source.name === 'Label' && source?.parent?.name === 'Cell - Text') {
+            if (tablePart(source?.parent?.parent?.parent as SceneNode) == TABLE_PART.BodyColumnFrame) {
+                const colEl = source?.parent?.parent?.parent as FrameNode;
+                colEl.children.forEach((cellEl) => {
+                    const cellInst = (cellEl as FrameNode)?.children[0] as InstanceNode;
+                    if (cellInst) {
+                        const text = randomUserName() + emailDm;
+                        fillTableBodyCellWithText(cellInst, text);
+                        cellEl.setPluginData('cellText', text);
+                    }
+                });
+            }
+        }
+    }
 }
 
 function updateColumnHeader(source: any) {
