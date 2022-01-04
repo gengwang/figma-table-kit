@@ -1703,6 +1703,9 @@ function logSelection() {
     console.log('sel: ', sel[0]);
 }
 
+// TODO: Make the plugin headless:
+// The idea is to have a default, out-of-box library as template
+// and the users of the plugin can plug in their own table part libraries.
 async function loadAllTableComponents() {
     if (_tableComponentsLoaded) {
         console.log('++++++we have all components: ', allTableComponents);
