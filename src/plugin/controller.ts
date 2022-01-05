@@ -865,7 +865,7 @@ function updateTableColumns(sourceObj: any) {
             const bodyEl = tableEl.findChild((o) => o.name === 'pa-table-body') as FrameNode;
             let bodyColInHeader = [];
             headerEl &&
-                headerEl.children.forEach((o, i) => {
+                headerEl.children.forEach((o, _) => {
                     bodyColInHeader.push(o.getPluginData('assColId'));
                 });
 
@@ -902,13 +902,22 @@ function updateTableColumns(sourceObj: any) {
 
                     const newCol = (figma.getNodeById(dupId) as FrameNode).clone();
                     bodyEl.insertChild(j, newCol);
+
+                    // // We also need to rename the new columns so that their "indices" are the largest
+                    // const dupIndex = colIndicesInBody[0]; // We now have 2 co-{dupIndex} in both header and body
+                    // const newIndex = headerEl.children.length - 1;
+                    // const dupHeaderCol = headerEl.children.find( el => el.name == 'col-' + dupIndex);
+                    // dupHeaderCol.name = 'col-' + newIndex;
+
+                    // const dupBodyCol = bodyEl.children.find( el => el.name == 'col-' + dupIndex);
+                    // dupBodyCol.name = 'col-' + newIndex;
                 }
             }
 
-            bodyEl &&
-                bodyEl.children.forEach((o, i) => {
-                    console.log('body #', i, ':', o.id);
-                });
+            // bodyEl &&
+            //     bodyEl.children.forEach((o, i) => {
+            //         console.log('body #', i, ':', o.id);
+            //     });
 
             // 1. find which id is duplicate
             // 2. find the counterpart (body<->header) to the existing id for where the id is
