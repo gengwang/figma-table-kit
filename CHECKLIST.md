@@ -1,4 +1,21 @@
-## Regression manual tests:
+## Manual Regression Testing
+
+### Short List  
+- Create a table
+- Add your own dataset
+- Density
+- Striped
+- Resize columns
+- Remove columns
+- Resize row height
+- Change state of columns
+- Generic lorem
+- Email lorem header
+- Email lorem body
+
+---
+### Long List
+
 1. *Resize Column* **Resize a header width** should resize body column accordingly
 1. *Resize Cell* **Resize a header/body column width** should refill the all cell text according to the column width
 1. *Resize Column* **Resize a body column width** should resize its header accordingly
@@ -17,4 +34,8 @@
 1. *Data Source*
     1. Custom dataset
     1. Canned datasets
+1. *Lorem*
+    1. Generic lorem
+    1. Email lorem in header
+    1. Email lorem in cell
 
