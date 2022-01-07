@@ -204,6 +204,10 @@ function smartLorem(type: string): string {
             return lorem();
         case 'email':
             return emailLorem();
+        case 'user':
+            return usernameLorem();
+        case 'severity':
+            return severityLorem();
     }
 }
 
@@ -325,6 +329,9 @@ function randomDomainName(): string {
         'autonomous.dr',
         'desk.com',
         'remote.edu',
+        'lola.run',
+        'cir.cle',
+        'do.it',
     ];
     return _.sample(domains);
 }
@@ -334,6 +341,13 @@ function emailLorem(): string {
     const userName = randomUserName();
     const domain = randomDomainName();
     return userName + '@' + domain;
+}
+function usernameLorem(): string {
+    return randomUserName();
+}
+function severityLorem(): string {
+    const severity = ['Critical', 'High', 'Medium', 'Low'];
+    return _.sample(severity);
 }
 function lorem(minLetters = 5, maxLetters = 60) {
     // source: https://loremipsum.io/generator/?n=10&t=p

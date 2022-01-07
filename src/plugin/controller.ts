@@ -731,10 +731,6 @@ async function updateColumnTextFromHeader(source: TextNode) {
         // see if we need to do "smart lorem"
         const headerText = source.characters?.toLowerCase();
 
-        if (headerText !== 'lorem' && headerText !== 'email') return;
-
-        console.log('Smart lorem!!!');
-
         const sourceInst = source.parent as InstanceNode;
         if (sourceInst.name == '_Header') {
             // if the parent container of the text is named '_Header' (Prisma Component Library convention), we assume it's a header, then try to  find the corresponding column and apply lorem text to each cell

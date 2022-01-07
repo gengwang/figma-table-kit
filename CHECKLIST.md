@@ -10,6 +10,7 @@
 - Resize row height
 - Change state of columns
 - Generic lorem
+- Severity lorem header
 - Email lorem header
 - Email lorem body
 
